@@ -587,7 +587,7 @@ end</script>
 				<script>
 local exitDir = matches[2]
 
-cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exitDir .. '... ' .. map.roomId .. '\n' )
+cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exitDir .. '... ' .. common.roomId .. '\n' )
 
 local exits = {
   east = {	
@@ -674,8 +674,8 @@ if exits[exitDir] then
 
 	local thisExit = exits[exitDir]
 	
-  if (thisExit[map.roomId]) then		
-  	send(thisExit[map.roomId])
+  if (thisExit[common.roomId]) then		
+  	send(thisExit[common.roomId])
 	else
 	
   	local exit = exitDir
@@ -764,7 +764,7 @@ end
 				<script>
 local exitDir = matches[2]
 
-cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to exit... ' .. map.roomId .. '\n' )
+cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to exit... ' .. common.roomId .. '\n' )
 
 local exits = { 
 	[27500] = 'knock three',
@@ -772,9 +772,9 @@ local exits = {
 }
 
 
-if exits[map.roomId] then
+if exits[common.roomId] then
 
-  send(exits[map.roomId])
+  send(exits[common.roomId])
 
 end
 
@@ -1189,7 +1189,7 @@ tempTimer(2, function ()
   
   murder.gotoRoom(rnum, function () 
   	tempTimer(1, function ()
-  		send('gt ' .. player.name .. ' is now at ' .. tostring(map.roomId))
+  		send('gt ' .. player.name .. ' is now at ' .. tostring(common.roomId))
   	end)
   end)
 end)</script>
@@ -1224,7 +1224,7 @@ if (pname == player.name) then
     
     murder.gotoRoom(rnum, function () 
     	tempTimer(1, function ()
-    		send('gt ' .. player.name .. ' is now at ' .. tostring(map.roomId))
+    		send('gt ' .. player.name .. ' is now at ' .. tostring(common.roomId))
     	end)
     end)
   end)
@@ -1377,6 +1377,20 @@ end</script>
 				<packageName></packageName>
 				<regex>^stop$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>resume movement</name>
+				<script>murder.resume()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^resume$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>pause movement</name>
+				<script>murder.pause()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^pause$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tfe-mapper</name>
@@ -1402,13 +1416,6 @@ updateMap()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^resetCurrentArea$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>resume speedwalk</name>
-				<script>murder.nextStep()</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^step$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>find me</name>
@@ -1524,6 +1531,8 @@ end</script>
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
+
+common = common or {}
 
 player = player or {}
 
@@ -1713,7 +1722,7 @@ end
 
 function murder.clearPendingMove ()
 	if (murder.move_pending) then
-		cecho('\n&lt;green&gt;MURDER: &lt;white&gt;Pending move cleared!')
+		-- cecho('\n&lt;green&gt;MURDER: &lt;white&gt;Pending move cleared!')
 		murder.move_pending()
 		murder.move_pending = nil
 	end
@@ -1740,10 +1749,7 @@ function murder.start ()
 	common.onNextEvent(common.events.PARSED_GROUP, function ()
 
   	murder.currentWaypointIdx = 0	
-  			
-  	murder.resetIdleTimer()	
-		murder.idleScanner()
-		
+  				
 		murder.advanceWaypoint()
 	
 	end)
@@ -1759,38 +1765,12 @@ function murder.stop ()
 	
 	map.mapping = map.pre_walk_mapping
 	
-	murder.setTargets({})	
 	murder.callback = nil
 	
-	murder.cancelIdleTimer()
 	murder.clearPendingMove()
 		
-	murder.clearIdleScanTimer()
-
 end
 
-
-
-function murder.resetIdleTimer ()
-
-	murder.cancelIdleTimer()
-	
-	murder.idleCheckTimer = tempTimer(60, function() 
-		cecho('\n\n\n&lt;red&gt;WARNING:: &lt;white&gt;IDLE FOR 60 seconds!!!\n\n\n')
-		murder.clearPendingMove()
-		combat.reset()
-		cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;scanning to invoke next step (idle timer)!\n')
-		send('scan')
-	end, 'murder idle check timer') 
-
-end
-
-function murder.cancelIdleTimer ()
-	if (murder.idleCheckTimer) then
-		killTimer(murder.idleCheckTimer)
-		murder.idleCheckTimer = nil
-	end 
-end
 
 
 function murder.advanceWaypoint ()
@@ -1801,9 +1781,8 @@ function murder.advanceWaypoint ()
 		
 		-- kill any outstanding timers:
 		murder.clearShortSpeedWalkTimer()
-		murder.cancelIdleTimer()
 		
-		cecho('\n\n&lt;green&gt;MURDER: &lt;yellow&gt;MURDER PATH COMPLETE\n\n')
+		-- cecho('\n\n&lt;green&gt;MURDER: &lt;yellow&gt;MURDER PATH COMPLETE\n\n')
 		
 		local cb = murder.callback
 			
@@ -1821,7 +1800,7 @@ function murder.advanceWaypoint ()
   	murder.currentWaypoint = tonumber(murder.waypoints[murder.currentWaypointIdx]) 	
   	murder.updatePath()
 		
-		cecho('\n&lt;blue&gt;MURDER: next invoked (from advancing waypoint)!\n')
+		-- cecho('\n&lt;blue&gt;MURDER: next invoked (from advancing waypoint)!\n')
 		murder.nextStep()			
 		
 	end
@@ -1834,7 +1813,7 @@ function murder.updatePath ()
   	getPath(common.roomId, murder.currentWaypoint)
   	murder.speedWalkDir = speedWalkDir
     murder.speedWalkPath = speedWalkPath
-  	murder.speedWalkPath[0] = map.roomId
+  	murder.speedWalkPath[0] = common.roomId
   	murder.walkPosition = 1	
 	else
 		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;unable to update path., current room not in map\n')
@@ -1854,11 +1833,9 @@ function murder.startShortSpeedWalkTimer ()
 	if (murder.enabled) then
   	-- give us 5 seconds to move...
   	shortSpeedWalkTimerId = tempTimer(5, function ()
-  		cecho('\n&lt;yellow:blue&gt;MURDER: &lt;white:black&gt;5 seconds without move!!! - updating path...\n')				
-  		murder.updatePath()
-  		murder.clearPendingMove()
-  		-- cecho('\n&lt;blue&gt;MURDER: next invoked (short idle timer)!\n')
-  		murder.nextStep()
+			shortSpeedWalkTimerId = nil
+  		cecho('\n&lt;yellow:yellow&gt;MURDER: &lt;white:black&gt;5 seconds without move!!! - updating path...\n')				
+  		murder.reroute()
   	end, 'short speed walk timer')
 	end
 		
@@ -1890,10 +1867,12 @@ function murder.move (cmd)
 			murder.walkPosition = murder.walkPosition + 1
 
 			
-			if (map.roomId == tonumber(murder.speedWalkPath[murder.walkPosition - 1])) then
+			if (common.roomId == tonumber(murder.speedWalkPath[murder.walkPosition - 1])) then
 				murder.nextStep()	
 			else
 				cecho('\n\n&lt;red&gt;MURDER: &lt;white&gt;unexpected room - rerouting\n\n')
+				display(murder.speedWalkPath[murder.walkPosition - 1])
+				display(common.roomId)
 				murder.reroute()
 			end
 			
@@ -1907,20 +1886,19 @@ function murder.move (cmd)
 	
 	end
 	
-	
 end
 
 function murder.reroute ()
 	murder.updatePath()
 	murder.clearPendingMove()
-	cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;next invoked (reroute)!\n')
+	-- cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;next invoked (reroute)!\n')
 	murder.nextStep()
 end
 
 
 function murder.resume ()
 	murder.paused = false
-	send('gt murdering will resume')
+	-- send('gt murdering will resume')
 	if (murder.speedwalking) then
 		-- update the route in case there were shenanigans
 		murder.reroute()
@@ -1931,20 +1909,19 @@ end
 
 function murder.pause ()
 	murder.paused = true
-	send('gt murdering will be suspendend after current tasks')
+	-- send('gt murdering will be suspendend after current tasks')
 end
 
 
 function murder.nextStep() 
 	
-	murder.resetIdleTimer()
 		
 	if (murder.enabled and not murder.paused) then
 	
 		-- if we're at the end of this waypoin then advance...
   	if (murder.walkPosition &gt; #murder.speedWalkDir) then
-			cecho('\n&lt;orange&gt;MURDER: &lt;white&gt;No commands left for this waypoint!\n')
-			echo('\n\nTIME to go to the next waypoint\n\n')
+			-- cecho('\n&lt;orange&gt;MURDER: &lt;white&gt;No commands left for this waypoint!\n')
+			-- echo('\n\nTIME to go to the next waypoint\n\n')
 			murder.advanceWaypoint()
 			return
 		end
@@ -1989,9 +1966,9 @@ function murder.nextStep()
 	else
 		
 		if(murder.paused) then
-			echo('\n\n -=[ murderer paused ]=-\n\n')
+			echo('\n\n -=[ walking paused ]=-\n\n')
 		else
-			echo('\n\n -=[ murderer disabled ]=-\n\n')
+			echo('\n\n -=[ walking disabled ]=-\n\n')
 		end
 			
 	end -- end if murder is enabled
@@ -2054,9 +2031,6 @@ end</script>
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 function addCurrentRoom () 
-
-	-- echo('\nDeleting room: ' .. common.roomId)
- 	-- deleteRoom(map.roomId)
 	
   if roomExists(common.roomId) then 
   
@@ -2288,7 +2262,7 @@ common.comeToMe = function (callback)
 		murder.paused = true
 	
   	atTrig = tempRegexTrigger([[^.+ tells the group[^:]*: "(\w+) is now at (\d+)"]], function ()
-  		if (tostring(map.roomId) == matches[3]) then
+  		if (tostring(common.roomId) == matches[3]) then
   			
 				roll[matches[2]] = true
 				
@@ -2301,12 +2275,12 @@ common.comeToMe = function (callback)
 				
 			else
 				send('mutter')
-				send('gt ' .. matches[2] .. ' go to ' .. tostring(map.roomId))
+				send('gt ' .. matches[2] .. ' go to ' .. tostring(common.roomId))
 			end
 			
   	end)
 
-		send('gt meet at ' .. tostring(map.roomId))
+		send('gt meet at ' .. tostring(common.roomId))
 		
 	
 	end, 'comeToMe')					
