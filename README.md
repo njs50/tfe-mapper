@@ -5,7 +5,7 @@ a quick n dirty mapper for the forests edge mud
 
 you can download my exported module/package from the [github release page](https://github.com/njs50/mudlet-tfe-mapper/releases) or [here](https://github.com/njs50/mudlet-tfe-mapper/releases/download/1.0.0/tfe-mapper.zip) and install it via packages or modules in mudlet 
 
-you can import my njs50-map.dat (either grab it from here or it's in the package in your mudlet profile) through the mudlet mapping prefrences if you want to grab a map that has most of the basic stuff filled out. beware tho it might have places you don't want to speed walk through mapped. i'd suggest if you don't want to go through chiiron or voaleth right clicking the gates on the map and picking "lock" so that it won't try and walk you through there.
+you can import my [njs50-map.dat](https://github.com/njs50/mudlet-tfe-mapper/raw/master/njs50-mapper/njs50-map.dat) through the mudlet mapping prefrences if you want to grab a map that has most of the basic stuff filled out. beware tho it might have places you don't want to speed walk through mapped. i'd suggest if you don't want to go through chiiron or voaleth right clicking the gates on the map and picking "lock" so that it won't try and walk you through there.
 
 **note** unless you want to rewrite the parse prompt trigger you will need to set your prompt to
 
