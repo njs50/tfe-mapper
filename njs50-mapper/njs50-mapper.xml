@@ -1,0 +1,2739 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage>
+		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>repeat stuff jammed in prompt</name>
+			<script>if (matches[3]) then
+	local prompt = matches[2]
+	local stuff = matches[3]
+  echo('\n^^ PROMPT FAIL: [' .. stuff .. ']\n')
+  feedTriggers(prompt .. '\n')
+  feedTriggers(stuff .. '\n')
+end</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList>
+				<string>^(&lt;[^&gt;]*&gt;)\s*(.+)$</string>
+			</regexCodeList>
+			<regexCodePropertyList>
+				<integer>1</integer>
+			</regexCodePropertyList>
+		</Trigger>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>parsing stuff</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse score (position and condition)</name>
+				<script>player.position = matches[2]
+player.condition = string.split(matches[3], ' ')
+
+if (common.tableHasValue(player.condition, 'delirious')) then
+	cecho('\n&lt;green&gt;SCORE: &lt;white&gt;tripping with the fishes\n')
+	player.tripping = true
+else
+	player.tripping = false
+end
+
+common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+	raiseEvent(common.events.PARSED_SCORE)
+end)	
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\s+Position:\s+\[\s+(\w+)\s+]\s+Condition: \[\s+(\w+)\s+\]</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse group</name>
+				<script>-- Leader: Darion
+--
+-- [ 14 Pal Dwf   ] Darion                209/209     94/94   138/138       122869
+-- [ 41 Pal Dwf L ] Darion                641/641   100/100   205/205     11787449
+
+-- pretend these players aren't in our group
+-- need to do this if they don't have the teamwork triggers
+-- i.e wont respond to commands / queries
+local playerIgnore = {
+	-- Marsuvious = true,
+	-- Bashukin = true,
+}
+
+-- group row
+if (matches[3]) then
+
+	if (matches[2] == player.name or not player.tripping) then
+	
+		if playerIgnore[matches[2]] then
+			echo(' &lt;-- ignored')
+			return
+		end
+	
+    local status = group[matches[2]] or {}
+    
+    status.hp = tonumber(matches[3])
+    status.hp_max = tonumber(matches[4])
+    status.mp = tonumber(matches[5])
+    status.mp_max = tonumber(matches[6])
+    status.moves = tonumber(matches[7])
+    status.moves_max = tonumber(matches[8])
+    
+    group[matches[2]] = status
+		
+		-- dupe into player info for conwenience
+		if (matches[2] == player.name) then
+			for key, val in pairs(status) do
+				player[key] = val
+			end
+		end
+		
+		if (not player.tripping) then
+			group.memberCount = group.memberCount + 1
+			group.members = group.members or {}
+			group.members[matches[2]] = true
+		end
+
+	else	
+		echo(' &lt;-- tripping')
+	end
+
+-- leader row
+else
+
+	if (matches[2] == player.name or not player.tripping) then
+		group.leader = matches[2]
+		if (not player.tripping) then
+  		group.memberCount = 0
+  		group.members = {}
+		end
+	else
+		echo(' &lt;-- tripping')
+	end
+	
+  common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+		-- echo('\n ^^ raising parsed group event\n\n')
+		player.initPending = false
+  	raiseEvent(common.events.PARSED_GROUP)
+  end)	
+
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\[\s+\d+\s+\w+\s+\w+\s+\w*\s*\]\s+(\S+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+\d+$</string>
+					<string>^Leader:\s+(.*)$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse prompt</name>
+				<script>-- set prompt to this:
+
+-- Prompt:
+-- ?p' -- MORE -- '&lt;%f?f|@R%hhp@n @G%ee@n @B?m'[%mmv]'!m'%vmv'@n %gwm %xxp?l' %llhp' %d?b' %c'&gt;
+
+
+-- need to have the group parsed aleady to have things to fill in
+if ( not group.leader ) then
+		
+		echo('\nWaiting for leader before parsing prompt...\n')
+		if (not player.initPending) then
+			player.initPending = true	
+			common.initPlayer()
+		end
+
+else
+  	
+  group[player.name].hp = tonumber(matches[3])
+  group[player.name].mp = tonumber(matches[4])
+  group[player.name].moves = tonumber(matches[5])
+  
+  player.hp = tonumber(matches[3])
+  player.mp = tonumber(matches[4])
+  player.moves = tonumber(matches[5])
+
+  group.lowest_moves = tonumber(matches[6])
+	
+	if (matches[7] and matches[7] ~= '') then
+		-- echo('\nsetting leader hp to ' .. tostring(matches[7]))
+  	if (group[group.leader]) then
+			group[group.leader].hp = tonumber(matches[7])
+		else
+			cecho('\n^^&lt;orange&gt;PROMPT &lt;white&gt; i spy leader hp but might not be grouped yet...\n')
+		end
+		
+	end
+	
+	if (matches[9] == '-Dark-') then
+		cecho('\n^^&lt;red&gt;\nIt\'s super dark yo! &lt;white&gt;-- make light\n')
+	end
+
+end
+
+raiseEvent(common.events.PARSED_PROMPT)
+
+
+
+-- examples...
+
+-- &lt;209hp 94e 138mv 138wm 122617xp NESW&gt;
+-- &lt;S|472hp 629e 150mv 150wm 12777631xp ??&gt;  &lt;-- sleeping prompt
+-- &lt;304hp 28e [375mv] 152wm 1260782xp -Dark-&gt; 
+
+-- &lt;209hp 94e 138mv 138wm 122751xp NESW leaking guts&gt; 
+-- &lt;527hp 27e 181mv 161wm 7020514xp 500lhp EW&gt;
+-- &lt;209hp 94e 138mv 138wm 122617xp NESW&gt;
+-- &lt;527hp 27e 182mv 182wm 7020514xp ?? NESW&gt; 
+-- &lt;527hp 27e 181mv 161wm 7026324xp 500lhp EW covered in blood&gt;</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^&lt;(\w+\|)?(\d+)hp (\d+)e \[?(\d+)mv\]? (\d+)wm\s+\d+xp (\d+)?(lhp\s|\?\?\s)?([NESWneswUDud]+|-Dark-|none|\?\?)(\s.+)?&gt;\s*$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse inventory</name>
+				<script>
+-- display(matches)
+
+-- a stick of blue chalk           1  .10   a simple mug of water           1  .27
+-- a fragment of burning red stone                                          1  .50
+
+if (matches[2] == 'Coins') then
+
+	-- start of inventory	
+	player.coins = tonumber(matches[3])
+	player.coinWeight = tonumber(matches[4])
+	player.parsingInventory = true
+	player.inventory = {}
+	
+
+else
+
+	if (matches[2] == 'Number') then
+		-- this is the end of the inventory
+	
+		raiseEvent(common.events.PARSED_INVENTORY)
+		player.parsingInventory = false
+		
+		
+	else
+	
+		-- inventory line
+		player.inventory[matches[2]] = tonumber(matches[3])
+		
+		if(matches[5]) then
+			player.inventory[matches[5]] = tonumber(matches[6])
+		end
+		
+	end
+
+end
+
+
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^(Coins): (\d+) = \[ .* \] \s+ Weight: (\d+\.\d+) lbs</string>
+					<string>^\s+(Number):\s+(\d+)\s+\( Max =\s+(\d+) \)</string>
+					<string>^(an? .+?)\s+(\d+)\s+(\d*\.\d+)\s+(an? .+?)\s+(\d+)\s+(\d*\.\d+)</string>
+					<string>^(an? .+?)\s+(\d+)\s+(\d*\.\d+)</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse affects</name>
+				<script>echo('^^ --- looking at affects...\n')
+player.affects = {}
+
+local affectWatcher = tempRegexTrigger([[^(Your? .+?)\s{3,}(\S.*)$]], function ()	
+	player.affects[matches[2]] = matches[3]	
+end)
+
+common.onNextEvent(common.events.PARSED_PROMPT, function()
+	
+	killTrigger(affectWatcher)
+	raiseEvent(common.events.PARSED_AFFECTS, player.affects)
+	
+end)</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^Affect\s+Source\s*$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse prepped</name>
+				<script>player.prepped = {}
+	
+local prepTrig = tempRegexTrigger([[^\s*(\d+)\s*(.+?)\s*\d+\s*$]], function ()
+	player.prepped[matches[3]] = tonumber(matches[2])
+end)
+
+common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+	killTrigger(prepTrig)
+	raiseEvent(common.events.PARSED_PREPARED, player.prepped)
+end)	</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You have no spells prepared.</string>
+					<string>^Num\s+Spell\s+Mana\s*$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>room info 1</name>
+				<script>-- showMultimatches()
+roomInfo = {}
+
+roomInfo.roomName  = multimatches[1][2]
+roomInfo.exits = string.split(rex.gsub(multimatches[2][2], [[\s*#\d+]], ''),  " ")
+
+if map.moveToProcess == 1 then
+	map.moveToProcess = 2
+end
+
+send('queue typo')
+
+raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>1</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^([^[].*)$</string>
+					<string>^\[Exits: (.*)]$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="yes" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>room info 2/3</name>
+				<script>roomInfo = {}
+
+-- showMultimatches()
+-- display(multimatches)
+roomInfo.roomName = multimatches[1][2]
+
+roomInfo.lighting = multimatches[3][2]
+roomInfo.time = multimatches[3][3]
+roomInfo.terrain = multimatches[3][4]
+
+
+roomInfo.exits = {}
+multimatches[4][2]:gsub(".", function(exit)
+    table.insert(roomInfo.exits, map.consts.exitmap[exit])
+end)
+
+
+roomInfo.moon = multimatches[4][3]
+roomInfo.roomSize = multimatches[4][4]
+
+roomInfo.weather = string.split(multimatches[5][2], '; ')
+
+if map.moveToProcess == 1 then
+	map.moveToProcess = 2
+end
+
+send('queue typo')
+
+raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
+
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>5</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\s+(.+?)\s+$</string>
+					<string>^\+=-+=\+$</string>
+					<string>^\|\s+Lighting:\s+(.+?)\s+Time:\s+(.+?)\s+Terrain:\s+(.+?)\s+\|$</string>
+					<string>^\|\s+Exits:\s+(.+?)\s+Moon:\s+(.+?)\s+Room Size:\s+(.+?)\s+\|$</string>
+					<string>^\|\s+Weather:\s+(.+?)\s+\|$</string>
+					<string>^\+=-+=\+$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>player status</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>not tripping anymore</name>
+				<script>player.tripping = false</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>The world returns to normal color.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>tripping</name>
+				<script>player.tripping = true</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You see colors.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>mapping</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>The x to the y is closed.</name>
+				<script>disableTrigger('The x to the y is closed.')
+
+local vic = common.dotCase(common.toMurderString(matches[2]))
+local dir = matches[3]
+
+send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
+send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
+send('open ' .. vic .. ' &amp; open ' .. dir)
+send('knock ' .. vic .. ' &amp; knock ' .. dir)
+send('pound ' .. vic .. ' &amp; pound ' .. dir)
+
+tempTimer(2, function () send('scan') end, 'scan after attempting to open')
+
+tempTimer(1, function ()
+	enableTrigger('The x to the y is closed.')
+end, 'reenable closed door trig')
+
+if (murder.speedwalking) then
+	send(dir)
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^The (.+) to the (.+) (is|are) closed.</string>
+					<string>^Perhaps you should open the (double) (doors)</string>
+					<string>^The (.*) (below|above) you (is|are) closed.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>no exit to the x</name>
+				<script>
+local exitDir = matches[2]
+
+cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exitDir .. '... ' .. map.roomId .. '\n' )
+
+local exits = {
+  east = {	
+  	[1022]  = 'move bush &amp; east',
+		[28102] = 'move moss &amp; east',
+		[28095] = 'move bush &amp; east',
+		[48175] = 'move landslide &amp; east',
+		[66014] = 'dig ice',
+	},
+	west = {
+		[28134] = 'move moss &amp; west',
+		[28102] = 'move bush &amp; west',
+		[37045] = 'move landslide &amp; west',
+		[48180] = 'touch lotus',
+		[47761] = 'move bush',
+		[32023] = 'pull lever &amp; west',
+		[66058] = 'dig ice',
+	},
+	north = {
+		[44908] = 'enter water',
+		[44885] = 'move bush &amp; north',
+		[44904] = 'jump north',
+		[27040] = 'jump north',
+		[27274] = 'move boulder &amp; scan',
+		[34500] = 'pull torch &amp; north',
+		[25004] = 'enter crev',
+		[2505]  = 'twist torch &amp; north',
+		[37037] = 'move branch &amp; enter veget',
+		[91679] = 'enter veget',
+		[74005] = 'move tree &amp; north',
+		[30000] = 'dig mound',
+		[66011] = 'spread ashes',
+		[66063] = 'move tapes',
+		[53000] = 'yell khiren',
+		[44765] = 'pull slab',
+		[30877] = 'enter crevice',
+	},
+	south = {
+		[44909] = 'enter water',
+		[44886] = 'move bush &amp; south',
+		[44905] = 'jump south',
+		[34501] = 'push stone &amp; south',
+		[25012] = 'enter crev',
+		[2517]  = 'push wall &amp; south',
+		[91683] = 'enter veget',
+		[91682] = 'move branch &amp; enter veget',
+		[74004] = 'move tree &amp; south',
+		[74061] = 'cut veg',
+		[47777] = 'dig drift',
+		[47767] = 'climb down',
+		[47773] = 'climb down',
+		[47772] = 'climb down',
+		[47771] = 'climb down',
+		[47770] = 'climb down',
+		[47769] = 'climb down',
+		[47777] = 'dig drift',
+		[47761] = 'move plant',
+		[19132] = 'dig mound',
+		[34579] = 'ask dwa demon',
+		[73500] = 'push stone',
+		
+	},
+	below = {
+		[48205] = 'move slab',
+		[40251] = 'enter hole',
+		[73502] = 'move stone',
+		[68051] = 'pull lever',
+		[68043] = 'push statue',
+		[21326] = 'call essyn',
+		[49783] = 'search',
+	},
+	above = {
+		[73606] = 'move stone',
+		[68029] = 'throw dart &amp; pull lever',
+		[68039] = 'pull lever',
+		[68027] = 'call dact &amp; place globe',
+		[21325] = 'ask essyn festival',
+		[49785] = 'search',
+	}
+}
+
+
+if exits[exitDir] then
+
+	local thisExit = exits[exitDir]
+	
+  if (thisExit[map.roomId]) then		
+  	send(thisExit[map.roomId])
+	else
+	
+  	local exit = exitDir
+  	if (exit == 'below') then exit = 'down' end
+  	if (exit == 'above') then exit = 'up' end
+  
+  	send('open ' .. exit .. ' &amp; scan')
+	
+  end
+
+end
+
+
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You see no exit to the (.*)\.</string>
+					<string>^You see no exit (.*) you\.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>climb up fail</name>
+				<script>send('climb up')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You grab the thick tree bark and begin upwards, but come sliding back down.</string>
+					<string>You slip on some slime and fall back into the water.</string>
+					<string>You will have to climb your way out of here it looks like.</string>
+					<string>Unable to get a good handhold, you slip and fall.</string>
+					<string>You grab ahold of the face of the cliff, but lose your grip.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+					<integer>2</integer>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>up failed</name>
+				<script>send('up')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You struggle up the steep slope, only to come sliding back down.</string>
+					<string>You try to tackle the large hill, but come sliding back down its grassy side.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>special doors/exits</name>
+				<script>
+local exitDir = matches[2]
+
+cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to exit... ' .. map.roomId .. '\n' )
+
+local exits = { 
+	[27500] = 'knock three',
+	[2522]  = 'jump pit',
+}
+
+
+if exits[map.roomId] then
+
+  send(exits[map.roomId])
+
+end
+
+
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>The oak door to the east is closed.</string>
+					<string>I dunno, it looks kinda like a long drop...</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You can't do that while mounted.</name>
+				<script>common.onNextEvent(common.events.ROOM_CHANGED, function ()
+	send('mount')
+end)
+send('dismount')
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You can't do that while mounted.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>need to climb up</name>
+				<script>send('climb up')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You see no exit above you.</string>
+					<string>There's no way to reach the top of the cliff unless you have the ability to climb it.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>need to climb down</name>
+				<script>send('climb down')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You see no exit below you.</string>
+					<string>You step toward the edge of the cliff and decide not to walk off the edge.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>tfe-mapper</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Movement Failed</name>
+				<script>-- RoomCount = RoomCount +1
+-- RoomT[RoomCount] = {}
+-- RoomT[RoomCount]["sd"] = "fail"
+
+map.move_queued = false
+echo(' &lt;--- cleaing move queue (went bad direction)')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You can't go that way!$</string>
+					<string>^You see no exit</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Movement</name>
+				<script>local badWords = {
+	lie = true,
+	sit = true,
+	stand = true,
+	wake = true,
+	jump = true,
+}
+
+
+if (not badWords[matches[2]]) then
+
+  if (map.move_queued) then
+  	echo(' &lt;--- unsetting move queued')
+  	map.move_queued = false
+  end
+  
+  map.lastMoveDirection = matches[3];
+  
+  -- we detected a move, but hadn't finished processing the previous move
+  if map.moveToProcess ~= 0 then
+  
+  	map.lost = true
+  	map.moveToProcess = 0
+  	-- try and find us on the map... we are lost!
+  	if (not murder.speedwalking) then
+  		echo('\n\n WE ARE LOST!!!! - stopping mapping (moved before processed the previous move)\n\n')	
+  		send('look')
+  	end	
+  
+  else	
+  
+  	map.moveToProcess = 1;
+  	
+  end
+  
+  echo(' &lt;-- sending move event: ' .. matches[3] .. '\n')
+  raiseEvent(common.events.MOVE_DETECTED, matches[3])
+  
+  -- skipStep()
+end
+
+-- for trigger that auto drops junk (rest on move)
+dropping_junk = false</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You (\w+) (east|west|north|south|up|down)\.$</string>
+					<string>^You follow (\w+) (east|west|north|south|up|down)\.$</string>
+					<string>^You ride (\S+) (east|west|north|south|up|down)</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>move - completed (room number found)</name>
+				<script>-- echo("arex " .. matches[3] .. "\n")
+-- echo("room id " .. matches[2])
+
+map.areaIdTFE = matches[3]
+map.areaId = getAreaIdByTfeId(map.areaIdTFE);
+
+local newRoomId = tonumber(matches[2])
+
+-- if this is different to the room we were just in, trigger a room change event
+if (newRoomId ~= common.roomId) then
+  
+	common.previousRoomId = common.roomId
+	common.roomId = newRoomId
+	
+  -- we detected a move, but didn't get a desc/title
+  if map.moveToProcess == 1 then
+  	-- try and find us on the map... we are lost!	
+  	map.lost = true
+  	map.moveToProcess = 0
+  	
+  	if (map.mapping) then
+    	echo('\n\n MAP - pausing mapping (move without getting title/exits)\n\n')	
+    	send('look')
+  	end
+  	
+  end
+  
+  -- we have detected a movement and got a room title+exists since then
+  if not map.lost and map.moveToProcess == 2 then
+
+    if (map.mapping) then
+			if (not roomExists(common.previousRoomId)) then
+    		cecho('\n\n &lt;red&gt;MAPPER: &lt;white&gt;pausing mapping (previous room wasn\'t mapped)\n\n')
+				map.lost = true
+				map.moveToProcess = 0
+			else 
+				addCurrentRoom()
+			end
+  	else
+  		centerview(newRoomId);
+    end
+  
+  	map.moveToProcess = 0
+  
+  else
+  
+  	-- if moveToProcess == 0 
+  	-- we didn't pick up a movement
+  	-- probably because we didn't move...
+  
+  	-- if we're in an unexpected roomId then update our position
+  	-- if we know about this room
+  	
+  
+		-- if this is a known room it will have a name
+    if(roomExists(newRoomId)) then 
+  	
+			if (map.mapping) then
+				echo('\n\nMAP: we are found again! (resuming)\n\n')
+    	end
+			
+			map.lost = false
+			map.moveToProcess = 0
+			centerview(newRoomId);		  	
+  	
+  	end
+	
+  
+  end
+
+	raiseEvent(common.events.ROOM_CHANGED, newRoomId)
+	
+end
+
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^Room #((\d?\d?)\d\d\d)$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>hide typo message spam</name>
+				<script>deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^What typo do you wish to report\?$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You are too exhausted.</name>
+				<script>if (murder.speedWalking) then
+
+	tempTimer(3, function () send('sleep') end)
+	murder.pause()
+	
+  tempTimer(40, function () 
+		murder.resume()
+  	send('stand')
+  	murder.nextStep()
+  end)
+	
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You are too exhausted.$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>move queued</name>
+				<script>map.move_queued = true
+echo('\n^^ &lt;--- setting move queued')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\[ Queued.*: (north|east|south|west|up|down) \]</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>clear queued move</name>
+				<script>map.move_queued = false
+echo('\n^^ &lt;--- clear move queue (combat)')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You can't walk away from a battle - use flee.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>teamwork</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>meet at x</name>
+				<script>local rnum = matches[3]
+send('look')
+
+tempTimer(2, function ()
+  expandAlias('findMe')
+  
+  murder.gotoRoom(rnum, function () 
+  	tempTimer(1, function ()
+  		send('gt ' .. player.name .. ' is now at ' .. tostring(map.roomId))
+  	end)
+  end)
+end)</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^(An? .+?|The .+?|\w+) tells the group[^:]*: "meet at (\d+)"</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>go to x</name>
+				<script>local pname = matches[3]
+local rnum = matches[4]
+
+if (pname == player.name) then
+	send('gt omw')
+  send('look')
+  
+  tempTimer(2, function ()
+    expandAlias('findMe')
+    
+    murder.gotoRoom(rnum, function () 
+    	tempTimer(1, function ()
+    		send('gt ' .. player.name .. ' is now at ' .. tostring(map.roomId))
+    	end)
+    end)
+  end)
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^(An? .+?|The .+?|\w+) tells the group[^:]*: "(\w+) go to (\d+)"</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>time for x</name>
+				<script>expandAlias(matches[4])</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^(An? .+?|The .+?|\w+) tells the group[^:]*: "time (for|to) (.*)"</string>
+					<string>^(You) tell your group[^:]*: "time (for|to) (.*)"</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>x time for y</name>
+				<script>
+if (matches[3] == player.name) then
+	expandAlias(matches[4])
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^(An? .+?|The .+?|\w+) tells the group[^:]*: "(\w+) can you (.*)"</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+	</TriggerPackage>
+	<TimerPackage />
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>speed walks</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>GOTO</name>
+				<script>
+if (matches[3]) then
+	
+	local endCmd = matches[3]
+	
+	common.onNextEvent(common.events.WALK_DONE, function () 	
+		-- send next move when the next prompt appears\
+		echo(' &lt;-- speed walk done: running command .. ')
+  	expandAlias(endCmd)
+	end)	
+
+end
+
+gotoRoom(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^goto (\S+)\s?&amp;?\s?(.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>go</name>
+				<script>local dest = matches[2]
+
+local lookup = {
+	hillies = 28018,
+	pixies = 44904,
+	kha = 27004,
+	khaBank = 27042,
+	med = 107,
+	medBank = 144,
+	pen = 37013,
+	penBank = 37249,
+	sos = 30752,
+	voal = 20088,
+	voalBank = 20027,
+	cairn = 26568,
+	knight = 21096,
+	blade = 19370,
+	wayward = 40585,
+	chi = 25000,
+	zaranders = 27500,
+	barbs = 66071,
+	denab = 28132,
+	brith = 63534,
+	tg = 17331,
+	cycs = 44765,
+	stonies = 19164,
+	toys = 39008,
+	vyans = 28146,
+	root = 19376,
+	yetis = 94611,
+	
+}
+
+local rnum = lookup[dest]
+
+
+
+if (rnum) then
+	cecho('&lt;green&gt;GO: &lt;white&gt;rnum #' .. tostring(rnum) .. '\n')
+	gotoRoom(rnum)
+else
+	echo('\nInvalid speed walk location\n')
+end</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^go (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>stop movement</name>
+				<script>murder.stop()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^stop$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>tfe-mapper</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>set area name</name>
+				<script>setAreaName(map.areaId, matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^setAreaName (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>reset current area</name>
+				<script>deleteArea(map.areaId)
+map.areaId = nil
+common.previousRoomId = nil
+map.lastMoveDirection = nil
+echo('\nDELETED CURRENT MAP\n')
+updateMap()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^resetCurrentArea$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>resume speedwalk</name>
+				<script>murder.nextStep()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^step$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>find me</name>
+				<script>findMe()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(findMe|find me)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>mapper start</name>
+				<script>send('look')
+tempTimer(2, function()
+	echo('\n\nMAPPER: staring!\n\n')
+  map.mapping = true
+  map.lost = false
+	common.previousRoomId = nil
+	addCurrentRoom()
+end)
+
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(mapperStart|mapper start|m start)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>mapper stop</name>
+				<script>map.mapping = false</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(mapperStop|mapper stop|m stop)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>mapper moved x</name>
+				<script>local dir = matches[3]
+
+if (map.consts.exitmap[dir]) then
+	dir = map.consts.exitmap[dir]
+end
+
+if (not map.consts.short[dir]) then
+
+	cecho('&lt;red&gt;MAPPER: &lt;white&gt; invalid direction! - ' .. tostring(dir) .. '\n')
+
+else
+
+	map.lastMoveDirection = dir
+  map.move_queued = false
+	map.lost = false
+	map.moveToProcess = 0
+	
+	addCurrentRoom()
+
+end
+	
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(m m|mapper moved) (.+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>fake move</name>
+				<script>fakeMove(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^fakeMove (.*)$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Misc</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>show triggers</name>
+				<script>displayTempTriggers()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^triggers$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>show timers</name>
+				<script>displayTempTimers()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^timers$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>killAll</name>
+				<script>display(tempTimers)
+display(tempTriggers)
+
+for id, val in pairs(tempTimers) do
+	killTimer(id)
+end
+
+for id, val in pairs(tempTriggers) do
+	killTrigger(id)
+end</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^killAll$</regex>
+			</Alias>
+		</AliasGroup>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage>
+		<Script isActive="yes" isFolder="no">
+			<name>initial player status / config</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+
+player = player or {}
+
+
+common.initPlayer = function ()  
+	
+	echo('\n\nINITIAL STATUS CHECK\n\n')
+	
+	-- GET PLAYER NAME
+  timedTempTrigger(5, 1, [[^\s*([A-Z][a-z]+)\s*$]], function ()
+		-- echo('\ncharacter is: [' .. matches[2] .. ']\n')
+		player.name = matches[2]
+
+		if (player.scripts and player.scripts[player.name]) then
+			echo('\nRunning player script for ' .. player.name .. '!\n')
+			player.scripts[player.name]()
+		end	
+		
+	end)
+	
+	send('score &amp; group &amp; inv &amp; typo &amp; prep')
+	
+end</script>
+			<eventHandlerList />
+		</Script>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>tfe-mapper</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>mapper variables / consts etc</name>
+				<packageName></packageName>
+				<script>mudlet = mudlet or {}; 
+mudlet.mapper_script = true
+map = map or {};
+
+map.consts = map.consts or {}
+
+map.move_queued = false
+
+map.mapping = false
+
+map.moveToProcess = 0
+
+map.lost = false
+
+
+map.consts.exitmap = {
+    n = 'north',    e = 'east',
+    w = 'west',     s = 'south',
+    u = 'up',       d = 'down', 
+	  N = 'north',    E = 'east',
+    W = 'west',     S = 'south',
+    U = 'up',       D = 'down', 	
+}
+
+
+map.consts.short = {}
+for k,v in pairs(map.consts.exitmap) do
+    map.consts.short[v] = k
+end
+
+-- for some reason the speed walker doesn't use shorts for up/down
+map.consts.exitmap['up'] = 'up'
+map.consts.exitmap['down'] = 'down'
+
+map.consts.stubmap = {
+    north = 1,      east = 4,
+    west = 5,       south = 6,
+    up = 9,         down = 10,          ["in"] = 11,        out = 12,
+    [1] = "north",  [4] = "east",
+    [5] = "west",   [6] = "south",
+    [9] = "up",     [10] = "down",
+}
+
+map.consts.coordmap = {
+    [1] = {0,1,0},      [4] = {1,0,0},
+    [5] = {-1,0,0},     [6] = {0,-1,0},
+    [9] = {0,0,1},      [10] = {0,0,-1},
+}
+
+map.consts.reverse_dirs = {
+    north = "south", south = "north", 
+		west = "east", east = "west", 
+		up = "down", down = "up", 
+}</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>speedwalking code</name>
+				<packageName></packageName>
+				<script>
+murder = murder or {
+	enabled=false,
+	speedwalking = false,
+	paused = false,
+	exits={},
+	waypoints = {},
+	currentWaypoint = 0,
+	events = {		
+		PATH_COMPLETE = 'MURDER:path_completed'
+	},
+	move_pending = nil,
+	idleCheckTimer = nil,
+	roomChangeHandler = nil,
+
+}
+
+
+
+function doSpeedWalk()
+
+	map.mapping = false
+	
+	murder.speedwalk()
+
+  -- echo("Path we need to take: " .. table.concat(speedWalkDir, ", ") .. "\n")
+  -- echo("Rooms we'll pass through: " .. table.concat(speedWalkPath, ", ") .. "\n")
+end
+
+
+function fakeMove (direction) 
+	cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;faking move...\n')
+	feedTriggers('You lumber ' .. direction .. '.\n')
+end
+
+
+function findMe ()
+	map.moveToProcess = 0
+	centerview(common.roomId);
+end
+
+
+
+function murder.speedwalk (callback)
+
+	-- make sure the destination is reachable
+	if (speedWalkPath and #speedWalkPath) then
+ 		
+		-- send('opt brief')
+ 		murder.gotoRoom(speedWalkPath[#speedWalkPath], function ()
+
+			send('queue look')
+			if (callback) then
+				callback()
+			end
+			
+		end)
+
+	else
+	
+		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;unable to reach requested room or already in it?\n')
+
+	end
+
+end
+
+
+function murder.gotoRoom (roomNum, callback)
+
+	-- make sure the destination is reachable
+	if (roomNum and roomExists(common.roomId)) then
+
+  	murder.speedwalking = true
+		
+		murder.setWaypoints({roomNum})
+				
+		murder.callback = callback
+		
+		murder.start()	
+		
+	else
+	
+		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;error, no path available to requested room \n')
+
+	end
+
+end
+
+function murder.setWaypoints (waypoints)
+	murder.waypoints = waypoints
+	murder.clearPendingMove()
+	murder.currentWaypointIdx = 0		
+	
+end
+
+function murder.clearPendingMove ()
+	if (murder.move_pending) then
+		cecho('\n&lt;green&gt;MURDER: &lt;white&gt;Pending move cleared!')
+		murder.move_pending()
+		murder.move_pending = nil
+	end
+end
+
+
+
+function murder.start ()
+	
+	map.pre_walk_mapping = map.mapping
+	
+	map.mapping = false
+
+	map.move_queued = false
+  murder.clearPendingMove()
+	
+  murder.enabled = true 
+	murder.paused = false
+	
+	send('typo &amp; group')
+	
+	-- cecho('\n\nwaiting for : ' .. common.events.PARSED_GROUP .. '\n')
+	
+	common.onNextEvent(common.events.PARSED_GROUP, function ()
+
+  	murder.currentWaypointIdx = 0	
+  			
+  	murder.resetIdleTimer()	
+		murder.idleScanner()
+		
+		murder.advanceWaypoint()
+	
+	end)
+
+end
+
+function murder.stop ()
+	-- echo('\n&lt;-- muder path stopped\n')
+	murder.enabled = false
+	
+	murder.speedwalking = false
+	murder.exploring = false
+	
+	map.mapping = map.pre_walk_mapping
+	
+	murder.setTargets({})	
+	murder.callback = nil
+	
+	murder.cancelIdleTimer()
+	murder.clearPendingMove()
+		
+	murder.clearIdleScanTimer()
+
+end
+
+
+
+function murder.resetIdleTimer ()
+
+	murder.cancelIdleTimer()
+	
+	murder.idleCheckTimer = tempTimer(60, function() 
+		cecho('\n\n\n&lt;red&gt;WARNING:: &lt;white&gt;IDLE FOR 60 seconds!!!\n\n\n')
+		murder.clearPendingMove()
+		combat.reset()
+		cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;scanning to invoke next step (idle timer)!\n')
+		send('scan')
+	end, 'murder idle check timer') 
+
+end
+
+function murder.cancelIdleTimer ()
+	if (murder.idleCheckTimer) then
+		killTimer(murder.idleCheckTimer)
+		murder.idleCheckTimer = nil
+	end 
+end
+
+
+function murder.advanceWaypoint ()
+
+	murder.currentWaypointIdx = murder.currentWaypointIdx + 1
+	
+	if (not murder.waypoints[murder.currentWaypointIdx]) then
+		
+		-- kill any outstanding timers:
+		murder.clearShortSpeedWalkTimer()
+		murder.cancelIdleTimer()
+		
+		cecho('\n\n&lt;green&gt;MURDER: &lt;yellow&gt;MURDER PATH COMPLETE\n\n')
+		
+		local cb = murder.callback
+			
+		murder.stop()
+		
+		if (cb) then
+			cb()
+		end
+		
+		raiseEvent(murder.events.PATH_COMPLETE)
+		
+	else		
+	
+		-- find the next waypoint...
+  	murder.currentWaypoint = tonumber(murder.waypoints[murder.currentWaypointIdx]) 	
+  	murder.updatePath()
+		
+		cecho('\n&lt;blue&gt;MURDER: next invoked (from advancing waypoint)!\n')
+		murder.nextStep()			
+		
+	end
+	
+end
+
+function murder.updatePath ()
+	cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(common.roomId) .. ' to ' .. tostring(murder.currentWaypoint))	
+	if (roomExists(common.roomId)) then
+  	getPath(common.roomId, murder.currentWaypoint)
+  	murder.speedWalkDir = speedWalkDir
+    murder.speedWalkPath = speedWalkPath
+  	murder.speedWalkPath[0] = map.roomId
+  	murder.walkPosition = 1	
+	else
+		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;unable to update path., current room not in map\n')
+	end
+end
+
+
+
+
+local shortSpeedWalkTimerId
+
+function murder.startShortSpeedWalkTimer ()
+
+	-- clear any existing timer
+	murder.clearShortSpeedWalkTimer()
+
+	if (murder.enabled) then
+  	-- give us 5 seconds to move...
+  	shortSpeedWalkTimerId = tempTimer(5, function ()
+  		cecho('\n&lt;yellow:blue&gt;MURDER: &lt;white:black&gt;5 seconds without move!!! - updating path...\n')				
+  		murder.updatePath()
+  		murder.clearPendingMove()
+  		-- cecho('\n&lt;blue&gt;MURDER: next invoked (short idle timer)!\n')
+  		murder.nextStep()
+  	end, 'short speed walk timer')
+	end
+		
+end
+
+function murder.clearShortSpeedWalkTimer ()
+	if (shortSpeedWalkTimerId) then
+		killTimer(shortSpeedWalkTimerId)
+	end
+	shortSpeedWalkTimerId = nil
+end
+
+
+
+function murder.move (cmd)
+						
+		-- send move command
+	if (not murder.move_pending) then
+	
+		local lastMoveDir = map.consts.exitmap[murder.speedWalkDir[murder.walkPosition]]
+		
+		murder.startShortSpeedWalkTimer()
+		
+		murder.move_pending = common.onNextEvent(common.events.ROOM_CHANGED, function (evt)
+			
+			murder.clearShortSpeedWalkTimer()
+			murder.clearPendingMove()
+
+			murder.walkPosition = murder.walkPosition + 1
+
+			
+			if (map.roomId == tonumber(murder.speedWalkPath[murder.walkPosition - 1])) then
+				murder.nextStep()	
+			else
+				cecho('\n\n&lt;red&gt;MURDER: &lt;white&gt;unexpected room - rerouting\n\n')
+				murder.reroute()
+			end
+			
+		end)
+
+		send(cmd)
+
+	else -- else murder.move_pending already exists
+	
+		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;attempted to move while move was already pending (prob impatient timer)\n')
+	
+	end
+	
+	
+end
+
+function murder.reroute ()
+	murder.updatePath()
+	murder.clearPendingMove()
+	cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;next invoked (reroute)!\n')
+	murder.nextStep()
+end
+
+
+function murder.resume ()
+	murder.paused = false
+	send('gt murdering will resume')
+	if (murder.speedwalking) then
+		-- update the route in case there were shenanigans
+		murder.reroute()
+	else 
+		send('scan')
+	end
+end
+
+function murder.pause ()
+	murder.paused = true
+	send('gt murdering will be suspendend after current tasks')
+end
+
+
+function murder.nextStep() 
+	
+	murder.resetIdleTimer()
+		
+	if (murder.enabled and not murder.paused) then
+	
+		-- if we're at the end of this waypoin then advance...
+  	if (murder.walkPosition &gt; #murder.speedWalkDir) then
+			cecho('\n&lt;orange&gt;MURDER: &lt;white&gt;No commands left for this waypoint!\n')
+			echo('\n\nTIME to go to the next waypoint\n\n')
+			murder.advanceWaypoint()
+			return
+		end
+
+		-- pause to get moves if someone is low on moves
+		if (group.lowest_moves &lt;= 30) then
+			send('gt someone be low on moves, waiting for 30...')
+			murder.paused = true
+						
+			send('gt time to rest')
+			tempTimer(25, function() 
+				send('gt time to stand')
+			end)
+
+			tempTimer(30, function()
+				murder.paused = false
+				murder.nextStep()
+			end)
+			
+			return -- low on moves. no moves to be done this time...
+			
+		end -- not low on moves
+		
+
+
+		-- /****** WE ARE MOVING IF WE GOT HERE ********/ --	
+		
+
+		-- get the next move direction
+		local dir = map.consts.exitmap[ murder.speedWalkDir[murder.walkPosition] ]
+
+
+		local cmd = dir
+	  if (murder.stepAction) then
+			cmd = cmd .. ' &amp; ' .. murder.stepAction
+		end
+		murder.move(cmd)
+		map.lastMoveDirection = dir
+		return
+
+	
+	else
+		
+		if(murder.paused) then
+			echo('\n\n -=[ murderer paused ]=-\n\n')
+		else
+			echo('\n\n -=[ murderer disabled ]=-\n\n')
+		end
+			
+	end -- end if murder is enabled
+	
+	
+end
+
+
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>get areaID from TFE Area ID</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function getAreaIdByTfeId (tfeID)
+	
+	local areas = getAreaTable()
+	 for area, id in pairs(areas) do
+		-- deleteArea(id)
+    if getAreaUserData(id, "tfe-zone-id") == tfeID then
+			echo('\nfound existing area! - '.. id .. ' ..\n')
+      return id
+    end
+  end
+	
+	if map.mapping then
+  	
+  	local areaId = addAreaName("NEW: " .. map.roomName);
+		
+		-- in case this area name already exists. bleh
+		local inc = 1
+		while (not areaId) do
+			inc = inc + 1
+			areaId = addAreaName("NEW: " .. map.roomName .. ' - ' .. tostring(inc));
+		end
+		
+		echo('\nMAPPER: creating new area... ' .. tostring(areaId) .. ' : ' .. tostring(tfeID) .. '\n')
+
+		
+		setAreaUserData(areaId, "tfe-zone-id", tfeID)
+  	
+  	return areaId
+	end
+
+
+end</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>add the current room to map</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function addCurrentRoom () 
+
+	-- echo('\nDeleting room: ' .. common.roomId)
+ 	-- deleteRoom(map.roomId)
+	
+  if roomExists(common.roomId) then 
+  
+		centerview(common.roomId)
+  	
+  else
+		
+		local x = 0; local y = 0; local z = 0;
+		
+    -- calculate new x/y/z
+  	if common.previousRoomId and roomExists(common.previousRoomId) then
+  		-- echo('\n HAD PREVIOUS ROOM!!! - \n' .. common.previousRoomId)
+  		x,y,z = getRoomCoordinates(common.previousRoomId);
+  		-- echo('\nold location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
+  		local dx, dy, dz = unpack(map.consts.coordmap[map.consts.stubmap[map.lastMoveDirection]])
+  		x = x + dx
+  		y = y + dy
+  		z = z + dz
+  		-- echo('new location is: (' .. tostring(dx) .. ', ' .. tostring(dy) .. ', ' .. tostring(dz) .. ')')
+  	end		
+		
+		
+  	-- echo('moved direction: ' .. map.consts.short[map.lastMoveDirection] ) 
+  	  
+		echo('\nmap area id is: ' .. map.areaId)
+    
+    addRoom(common.roomId)
+		
+		setRoomArea(common.roomId, map.areaId);
+		
+		-- echo('\nlocation is: (' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
+  	
+  	-- echo('\nadding room... ' .. common.roomId)
+  	
+  	setRoomName(common.roomId, roomInfo.roomName)	
+  	
+  	setRoomCoordinates(common.roomId, x, y, z)
+		
+		-- add room exit stubs
+		for i, exit in ipairs(roomInfo.exits) do
+			if(map.consts.short[exit]) then
+      	setExitStub(common.roomId, map.consts.short[exit], true)
+			end
+    end
+		
+  	centerview(common.roomId)
+  
+  end
+	
+	if common.previousRoomId then
+		cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(common.roomId) ..' to room: ' .. tostring(common.previousRoomId))
+		setExit(common.previousRoomId, common.roomId, map.consts.stubmap[map.lastMoveDirection])	
+		setExit(common.roomId, common.previousRoomId, map.consts.stubmap[map.consts.reverse_dirs[map.lastMoveDirection]])	
+	end
+	
+	
+	
+end</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>common</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>common</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+
+common = common or {}
+player = player or {}
+roomInfo = roomInfo or {}
+group = group or {
+	combat = false
+}
+
+
+common.events = {
+	PARSED_PROMPT = 'COMMON::parsed_prompt',
+	PARSED_EXITS = 'COMMON::parsed_room_exits',
+	PARSED_ROOM_INFO = 'COMMON::parsed_room_info',
+	PARSED_SCORE = 'COMMON::parsed_score_page',
+	PARSED_GROUP = 'COMMON::parsed_group_status',
+	PARSED_AFFECTS = 'COMMON::parsed_player_affects',
+	PARSED_INVENTORY = 'COMMON:parsed_inventory_contents',
+	PARSED_PREPARED = 'COMMON:parsed_prepared_spells', 
+	MOVE_DETECTED = 'COMMON::move_detected',
+	ROOM_CHANGED = 'COMMON::room_changed',
+	COMBAT_ENDED = 'COMMON::combat_ended',
+	COMBAT_STARTED = 'COMMON::combat_started',
+	WALK_DONE = 'COMMON::speedwalk_completed',
+	ROOM_CLEAR = 'COMMON::current_room_is_clear'
+}
+
+common.tableHasValue =  function (tab, val)
+  for index, value in ipairs(tab) do
+    if tab[index] == val then
+    	return true
+    end
+  end
+  return false
+end
+
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>trigger helpers</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+
+
+common.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, failcallback)
+	
+	local fcb = failcallback
+	local ocb = callback
+	
+	local cb = function ()
+		fcb = nil;
+		if (ocb) then
+			ocb()	
+		end
+	end
+	
+	
+	local triggerId = tempRegexTrigger(pattern, cb, maxTriggerCount)
+	
+	local tempTimerId = tempTimer(timeout, function () 
+		-- echo('\n -- killing temp timed trigger\n')
+		killTrigger(triggerId)
+		if (fcb) then
+			fcb()
+		end
+	end, 'timed temp trigger')
+
+end
+
+timedTempTrigger = common.timedTempTrigger
+
+
+common.onNextEvent = function (evt, callback) 
+	
+	if not evt then
+		
+		echo('no event defined!!!')
+		error()
+	
+	end
+	
+	
+	local handlerId = nil	
+	local cb2 = callback
+	
+	local cb = function (evt, args)		
+		-- kill the event handler now in case the event errors preventing it's destruction
+		killAnonymousEventHandler(handlerId)
+		-- cecho('\n&lt;blue&gt;self destructing handler: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
+		cb2(evt, args)
+	end
+	
+	handlerId = registerAnonymousEventHandler(evt, cb, true)
+	
+	-- cecho('\n&lt;green&gt;registering self destruct event: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
+	
+	return function ()
+		-- cecho('\n&lt;orange&gt;destructing handler: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
+		killAnonymousEventHandler(handlerId)
+	end
+
+end
+
+onNextEvent = common.onNextEvent
+
+common.oneRoomExitTrig = function (direction, code)
+
+  local tempTrigId = tempRegexTrigger('^You see no exit to the (' .. direction .. ')\.$', function ()
+		code(matches[2])		
+	end, 1)
+  
+  echo(' &lt;- room sepecific trig: ' .. tostring(tempTrigId))
+  
+	-- need to dest these as the first room change will be entering the room where we 
+	-- want to watch for the event
+	common.onNextEvent(common.events.ROOM_CHANGED, function ()
+		-- got to wait for a prompt or else this will trigger on the same event as the first
+		common.onNextEvent(common.events.PARSED_PROMPT, function ()
+      common.onNextEvent(common.events.ROOM_CHANGED, function ()
+      	echo('\n ^^ killed room specific trig : '  .. tostring(tempTrigId) .. '\n')
+        killTrigger(tempTrigId)
+      end)	
+		end)
+	end)
+	
+end
+
+oneRoomExitTrig = common.oneRoomExitTrig</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>team</name>
+				<packageName></packageName>
+				<script>
+common.comeToMe = function (callback)
+	
+	local mcb = callback
+	local roll = common.newRollCall(true)
+
+	tempTimer(2, function ()
+	
+		local atTrig
+		
+		local preFetchState = murder.paused
+		
+		murder.paused = true
+	
+  	atTrig = tempRegexTrigger([[^.+ tells the group[^:]*: "(\w+) is now at (\d+)"]], function ()
+  		if (tostring(map.roomId) == matches[3]) then
+  			
+				roll[matches[2]] = true
+				
+				if (common.rollCheck(roll)) then
+					murder.paused = preFetchState
+					send('gt all here - moving...')
+  				killTrigger(atTrig)
+  				mcb()
+				end
+				
+			else
+				send('mutter')
+				send('gt ' .. matches[2] .. ' go to ' .. tostring(map.roomId))
+			end
+			
+  	end)
+
+		send('gt meet at ' .. tostring(map.roomId))
+		
+	
+	end, 'comeToMe')					
+			
+end
+
+
+common.newRollCall = function (excludeSelf)
+	
+	local roll = {}
+	
+	for name, value in pairs(group.members) do
+		roll[name] = false
+	end
+	
+	if (excludeSelf) then
+		roll[player.name] = true
+	end
+	
+	return roll
+	
+end
+
+common.rollCheck = function(roll)
+	
+	for key, value in pairs(roll) do
+		if (not value) then
+			return false
+		end
+	end
+	return true
+
+end
+
+
+
+common.sendPlayer = function (player, rnum, callback) 
+
+	local ncb = callback
+	tempRegexTrigger([[^.+ tells the group[^:]*: "]] .. player .. [[ is now at ]] .. tostring(rnum) .. [["]], function ()
+		ncb()
+	end, 1)
+	
+	send('gt ' .. player .. ' go to ' .. tostring(rnum))
+
+end
+
+common.groupOnReady = function (cb)
+			
+	local grcb = cb
+	
+	local rct
+	
+	local roll = common.newRollCall(false)
+
+	
+	local readyCheck = function ()
+		if (common.rollCheck(roll)) then -- group members		
+			killTrigger(rct)		
+  		if (grcb) then
+  			grcb()
+  		end
+		end
+	end
+
+	rct = tempRegexTrigger([[^.* (tells the|tell your) group[^:]*: "ready \((.*)\)"]], function ()
+		roll[matches[3]] = true
+		readyCheck()
+	end) 
+		
+end
+
+
+common.groupPrepFull = function (cb)
+			
+	local pfcb = cb
+	
+	common.groupOnReady(function ()
+		send('gt going')					
+		if (pfcb) then
+			pfcb()
+		end
+	end)
+
+	send('gt get full')			
+
+end
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>debug helpers</name>
+				<packageName></packageName>
+				<script>-- preserve functions we are about to decorate
+oKillTimer = oKillTimer or killTimer
+oTempTimer = oTempTimer or tempTimer
+oTempRegexTrigger = oTempRegexTrigger or tempRegexTrigger
+oTempTrigger = oTempTrigger or tempTrigger
+
+
+
+-- triggers
+
+local oKillTrigger = oKillTrigger or killTrigger
+tempTriggers = tempTriggers or {}
+
+
+
+local wrapTrigger = function (triggerCommand)
+
+	local oCommand = triggerCommand
+	
+	return function (regex, code, expireAfter) 
+  	
+  	local trigId = nil
+  	local oCode = code
+  	local expires = expireAfter
+  	
+  	local newCode = function (...)
+		
+			if (tempTriggers[trigId]) then
+    		tempTriggers[trigId].calls = tempTriggers[trigId].calls + 1
+    		if (tempTriggers[trigId].calls == expires) then
+  	  		tempTriggers[trigId] = nil
+    			-- cecho('\n&lt;orange&gt;trigger died of natural causes - ' .. trigId .. ' : ' .. regex .. '\n')
+    		end
+			end
+			
+  		return oCode(...)
+  	end
+  	
+  	trigId = oCommand(regex, newCode, expires)
+		
+  	tempTriggers[trigId] = tempTriggers[trigId] or { calls = 0, regex = regex }
+  	 
+  	return trigId
+  end
+	
+
+end
+
+
+
+tempRegexTrigger = wrapTrigger(oTempRegexTrigger)
+tempTrigger = wrapTrigger(oTempTrigger)
+
+killTrigger = function(id)
+	if (tempTriggers[id] ) then
+		tempTriggers[id] = nil
+	end
+	return oKillTrigger(id)
+end
+
+displayTempTriggers = function()
+	display(tempTriggers)
+end
+
+
+-- timers
+
+
+
+tempTimers = tempTimers or {}
+
+tempTimer = function(seconds, code, description)
+	
+	local timerId 
+	
+	local oCode = code
+	
+	local decoratedCode = function (...)	
+		-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer ran - ' .. tostring(timerId)  .. ' : ' .. (tempTimers[timerId] or '???') .. '\n')
+		-- display(tempTimers)
+		tempTimers[timerId] = nil
+		oCode(...)
+	end
+	
+	timerId = oTempTimer(seconds, decoratedCode)
+	
+	tempTimers[timerId] = (description or 'mystery timer') .. ' - ' .. tostring(seconds) .. ' seconds'
+	
+	-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer setup - ' .. tostring(timerId) .. ' : ' .. tempTimers[timerId] .. '\n') 
+	
+	return timerId
+	
+end
+
+
+killTimer = function(timerId)
+
+	if (tempTimers[timerId] ) then
+  	-- cecho('\n&lt;orange&gt;TIMER: &lt;white&gt;killed with fire - ' .. timerId .. ' : ' .. tempTimers[timerId] .. '\n')
+  	tempTimers[timerId] = nil
+  	oKillTimer(timerId)
+	else
+		cecho('\n&lt;red&gt;TIMER: &lt;white&gt;attempted to kill missing timer - ' .. timerId .. '\n')
+	end
+end
+
+displayTempTimers = function()
+	display(tempTimers)
+end
+
+
+
+
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>formatters</name>
+				<packageName></packageName>
+				<script>
+common.formatElapsedTime = function (time) 
+	
+	local ts = '';
+	
+	if (not time) then
+		return '0 seconds'
+	end
+	
+	if (time &gt;= 3600) then
+		hrs = math.floor(time / 3600)
+		time = time - (hrs * 3600)
+		ts = ts .. tostring(hrs) .. ' hrs, '
+	end
+	
+		
+	if (time &gt;= 60 or hrs &gt; 0) then
+		mins = math.floor(time / 60)
+		time = time - (mins * 60)
+		ts = ts .. tostring(mins) .. ' mins, '
+	end
+
+	secs = math.floor(time)
+	time = time - secs
+	ts = ts .. tostring(secs) .. ' seconds'
+
+
+	return ts
+	
+end
+
+
+common.getNumber = function (text)
+	
+	local wordToNumberData = {
+  	a = 1,
+  	an = 1,
+  	the = 1,
+		one = 1,
+		two = 2,
+		three = 3,
+		four = 4,
+		five = 5,
+		six = 6,
+		seven = 7,
+		eight = 8,
+		nine = 9,
+		ten = 10, 
+		eleven = 11,
+		twelve = 12,
+		thrirteen = 13,
+		fourteen = 14,
+	}
+	
+	local numTxt = rex.match(text, [[^\S+]])
+	
+	if (numTxt) then 
+		return wordToNumberData[string.lower(numTxt)] or 1
+	else
+		-- either it's more than 14 or a proper noun. i.e Stinky (your mount
+		return 1
+	end
+
+end
+
+
+common.dotCase = function(string)
+	
+	if (not string or string == '') then
+		return ''
+	end
+	return rex.gsub(string, [[\b(the|or|an|a|of|with|and|A|An|The) ]], ''):gsub(' ', '.')
+end
+
+common.commaCase = function (str)
+    local extra = #str%3
+    if string.sub(str,1,1) == "-" then
+        if extra == 0 then
+            extra = 3
+        else
+            extra = extra + 1
+        end
+    end
+    local result = ""
+    if extra &gt; 0 then
+        result = string.sub(str,1,extra)
+        str = string.sub(str,extra+1)
+    end
+    for w in string.gmatch(str,"%d%d%d") do
+        result = result .. "," .. w
+    end
+    return result
+end
+
+
+
+
+common.toMurderString = function (victim)
+	
+	-- remove any articles etc
+	victim = rex.gsub(victim, [[^(a|an|the|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+
+	-- turn elves back into elf, dwarves etc
+	victim = rex.gsub(victim, [[ves$]], 'f')
+	
+	-- turn women back to womans
+	victim = rex.gsub(victim, [[women\b]], 'woman')
+	
+	 -- turn mercenaries back into mercanary
+	victim = rex.gsub(victim, [[ies$]], 'y')
+	
+	-- dump any s's or es's on the end of a plural  west : two greater cyclopes, vs a greater cyclops
+	victim = rex.gsub(victim, [[(es|'?s'?)\b]], '')
+
+	-- dump any random commas
+	victim = rex.gsub(victim, [[,]], '')
+	
+	-- kill any parts less than 3 charaters
+	victim = rex.gsub(victim, [[(\b|\.|\s)\w\w?(\s|\.|\b)]], '%1%2')	
+	
+	-- kill any extra whitepsace or multiple .'s
+	victim = rex.gsub(victim, [[(\s\s+|\.\.+)]], ' ')	
+	victim = string.trim(victim)
+	
+	-- kill any . at start or end.
+	victim = rex.gsub(victim, [[^\.]], '')
+	victim = rex.gsub(victim, [[\.$]], '')		
+		
+	return victim
+	
+end
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>check resources</name>
+				<packageName></packageName>
+				<script>
+common.updateStatus = function(callback) 
+  common.onNextEvent(common.events.PARSED_GROUP, function () 
+  	callback()
+  end)		
+	send('group')
+end
+
+common.checkFull = function(callback)
+	common.checkResources(player.hp_max, player.mp_max, player.moves_max, callback)
+end
+
+
+common.onOffsetReady = function(lessHp, lessMp, lessMoves, callback)
+
+	common.checkResources(player.hp_max - lessHp, player.mp_max - lessMp, player.moves_max - lessMoves, function(readyStatus)
+		if(readyStatus) then
+			callback()
+		else
+			tempTimer(10, function ()
+				common.onOffsetReady(lessHp, lessMp, lessMoves, callback)
+			end, 'on offset ready')
+		end	
+	end)
+	
+end
+
+
+common.onManaReady = function(mana, callback)
+
+	common.checkResources(0, mana, 0, function(readyStatus)
+		if(readyStatus) then
+			callback()
+		else
+			tempTimer(10, function ()
+				common.onManaReady(mana, callback)
+			end, 'on mana ready')
+		end	
+	end)
+	
+end
+
+
+common.checkResources = function(hp, mp, moves, callback)
+	common.updateStatus( function () 
+		
+		if (player.hp &gt;= hp and player.mp &gt;= mp and player.moves &gt;= moves) then
+			echo('\n\n .. READY TO KILL\n')
+			callback(true)
+		else
+			echo('\n\n .. sleep more little tank\n')
+			callback(false)
+		end
+	end)
+end
+
+
+common.onFull = function (callback) 
+	
+	common.checkFull( function(readyStatus) 
+		if(readyStatus) then
+			callback()
+		else
+			tempTimer(10, function ()
+				common.onFull(callback)
+			end, 'on full')
+		end
+	end)	
+	
+	
+end
+</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage />
+	<VariablePackage>
+		<HiddenVariables />
+	</VariablePackage>
+</MudletPackage>
