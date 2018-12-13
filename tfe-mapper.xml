@@ -55,9 +55,9 @@ else
 	player.tripping = false
 end
 
-common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args)
 	raiseEvent(common.events.PARSED_SCORE)
-end)	
+end)
 </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -95,37 +95,37 @@ local playerIgnore = {
 if (matches[3]) then
 
 	if (matches[2] == player.name or not player.tripping) then
-	
+
 		if playerIgnore[matches[2]] then
 			echo(' &lt;-- ignored')
 			return
 		end
-	
+
     local status = group[matches[2]] or {}
-    
+
     status.hp = tonumber(matches[3])
     status.hp_max = tonumber(matches[4])
     status.mp = tonumber(matches[5])
     status.mp_max = tonumber(matches[6])
     status.moves = tonumber(matches[7])
     status.moves_max = tonumber(matches[8])
-    
+
     group[matches[2]] = status
-		
+
 		-- dupe into player info for conwenience
 		if (matches[2] == player.name) then
 			for key, val in pairs(status) do
 				player[key] = val
 			end
 		end
-		
+
 		if (not player.tripping) then
 			group.memberCount = group.memberCount + 1
 			group.members = group.members or {}
 			group.members[matches[2]] = true
 		end
 
-	else	
+	else
 		echo(' &lt;-- tripping')
 	end
 
@@ -141,12 +141,12 @@ else
 	else
 		echo(' &lt;-- tripping')
 	end
-	
-  common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+
+  common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args)
 		-- echo('\n ^^ raising parsed group event\n\n')
 		player.initPending = false
   	raiseEvent(common.events.PARSED_GROUP)
-  end)	
+  end)
 
 end</script>
 				<triggerType>0</triggerType>
@@ -178,25 +178,25 @@ end</script>
 
 -- need to have the group parsed aleady to have things to fill in
 if ( not group.leader ) then
-		
+
 		echo('\nWaiting for leader before parsing prompt...\n')
 		if (not player.initPending) then
-			player.initPending = true	
+			player.initPending = true
 			common.initPlayer()
 		end
 
 else
-  	
+
   group[player.name].hp = tonumber(matches[3])
   group[player.name].mp = tonumber(matches[4])
   group[player.name].moves = tonumber(matches[5])
-  
+
   player.hp = tonumber(matches[3])
   player.mp = tonumber(matches[4])
   player.moves = tonumber(matches[5])
 
   group.lowest_moves = tonumber(matches[6])
-	
+
 	if (matches[7] and matches[7] ~= '') then
 		-- echo('\nsetting leader hp to ' .. tostring(matches[7]))
   	if (group[group.leader]) then
@@ -204,9 +204,9 @@ else
 		else
 			cecho('\n^^&lt;orange&gt;PROMPT &lt;white&gt; i spy leader hp but might not be grouped yet...\n')
 		end
-		
+
 	end
-	
+
 	if (matches[9] == '-Dark-') then
 		cecho('\n^^&lt;red&gt;\nIt\'s super dark yo! &lt;white&gt;-- make light\n')
 	end
@@ -221,12 +221,12 @@ raiseEvent(common.events.PARSED_PROMPT)
 
 -- &lt;209hp 94e 138mv 138wm 122617xp NESW&gt;
 -- &lt;S|472hp 629e 150mv 150wm 12777631xp ??&gt;  &lt;-- sleeping prompt
--- &lt;304hp 28e [375mv] 152wm 1260782xp -Dark-&gt; 
+-- &lt;304hp 28e [375mv] 152wm 1260782xp -Dark-&gt;
 
--- &lt;209hp 94e 138mv 138wm 122751xp NESW leaking guts&gt; 
+-- &lt;209hp 94e 138mv 138wm 122751xp NESW leaking guts&gt;
 -- &lt;527hp 27e 181mv 161wm 7020514xp 500lhp EW&gt;
 -- &lt;209hp 94e 138mv 138wm 122617xp NESW&gt;
--- &lt;527hp 27e 182mv 182wm 7020514xp ?? NESW&gt; 
+-- &lt;527hp 27e 182mv 182wm 7020514xp ?? NESW&gt;
 -- &lt;527hp 27e 181mv 161wm 7026324xp 500lhp EW covered in blood&gt;</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -255,31 +255,31 @@ raiseEvent(common.events.PARSED_PROMPT)
 
 if (matches[2] == 'Coins') then
 
-	-- start of inventory	
+	-- start of inventory
 	player.coins = tonumber(matches[3])
 	player.coinWeight = tonumber(matches[4])
 	player.parsingInventory = true
 	player.inventory = {}
-	
+
 
 else
 
 	if (matches[2] == 'Number') then
 		-- this is the end of the inventory
-	
+
 		raiseEvent(common.events.PARSED_INVENTORY)
 		player.parsingInventory = false
-		
-		
+
+
 	else
-	
+
 		-- inventory line
 		player.inventory[matches[2]] = tonumber(matches[3])
-		
+
 		if(matches[5]) then
 			player.inventory[matches[5]] = tonumber(matches[6])
 		end
-		
+
 	end
 
 end
@@ -314,15 +314,15 @@ end
 				<script>echo('^^ --- looking at affects...\n')
 player.affects = {}
 
-local affectWatcher = tempRegexTrigger([[^(Your? .+?)\s{3,}(\S.*)$]], function ()	
-	player.affects[matches[2]] = matches[3]	
+local affectWatcher = tempRegexTrigger([[^(Your? .+?)\s{3,}(\S.*)$]], function ()
+	player.affects[matches[2]] = matches[3]
 end)
 
 common.onNextEvent(common.events.PARSED_PROMPT, function()
-	
+
 	killTrigger(affectWatcher)
 	raiseEvent(common.events.PARSED_AFFECTS, player.affects)
-	
+
 end)</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -344,12 +344,12 @@ end)</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>parse prepped</name>
 				<script>player.prepped = {}
-	
+
 local prepTrig = tempRegexTrigger([[^\s*(\d+)\s*(.+?)\s*\d+\s*$]], function ()
 	player.prepped[matches[3]] = tonumber(matches[2])
 end)
 
-common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args) 
+common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args)
 	killTrigger(prepTrig)
 	raiseEvent(common.events.PARSED_PREPARED, player.prepped)
 end)	</script>
@@ -558,7 +558,7 @@ tempTimer(1, function ()
 	enableTrigger('The x to the y is closed.')
 end, 'reenable closed door trig')
 
-if (murder.speedwalking) then
+if (mapper.speedwalking) then
 	send(dir)
 end</script>
 				<triggerType>0</triggerType>
@@ -590,7 +590,7 @@ local exitDir = matches[2]
 cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exitDir .. '... ' .. common.roomId .. '\n' )
 
 local exits = {
-  east = {	
+  east = {
   	[1022]  = 'move bush &amp; east',
 		[28102] = 'move moss &amp; east',
 		[28095] = 'move bush &amp; east',
@@ -648,7 +648,7 @@ local exits = {
 		[19132] = 'dig mound',
 		[34579] = 'ask dwa demon',
 		[73500] = 'push stone',
-		
+
 	},
 	below = {
 		[48205] = 'move slab',
@@ -673,17 +673,17 @@ local exits = {
 if exits[exitDir] then
 
 	local thisExit = exits[exitDir]
-	
-  if (thisExit[common.roomId]) then		
+
+  if (thisExit[common.roomId]) then
   	send(thisExit[common.roomId])
 	else
-	
+
   	local exit = exitDir
   	if (exit == 'below') then exit = 'down' end
   	if (exit == 'above') then exit = 'up' end
-  
+
   	send('open ' .. exit .. ' &amp; scan')
-	
+
   end
 
 end
@@ -766,7 +766,7 @@ local exitDir = matches[2]
 
 cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to exit... ' .. common.roomId .. '\n' )
 
-local exits = { 
+local exits = {
 	[27500] = 'knock three',
 	[2522]  = 'jump pit',
 }
@@ -927,29 +927,29 @@ if (not badWords[matches[2]]) then
   	echo(' &lt;--- unsetting move queued')
   	map.move_queued = false
   end
-  
+
   map.lastMoveDirection = matches[3];
-  
+
   -- we detected a move, but hadn't finished processing the previous move
   if map.moveToProcess ~= 0 then
-  
+
   	map.lost = true
   	map.moveToProcess = 0
   	-- try and find us on the map... we are lost!
-  	if (not murder.speedwalking) then
-  		echo('\n\n WE ARE LOST!!!! - stopping mapping (moved before processed the previous move)\n\n')	
+  	if (not mapper.speedwalking) then
+  		echo('\n\n WE ARE LOST!!!! - stopping mapping (moved before processed the previous move)\n\n')
   		send('look')
-  	end	
-  
-  else	
-  
+  	end
+
+  else
+
   	map.moveToProcess = 1;
-  	
+
   end
-  
+
   echo(' &lt;-- sending move event: ' .. matches[3] .. '\n')
   raiseEvent(common.events.MOVE_DETECTED, matches[3])
-  
+
   -- skipStep()
 end
 
@@ -988,23 +988,23 @@ local newRoomId = tonumber(matches[2])
 
 -- if this is different to the room we were just in, trigger a room change event
 if (newRoomId ~= common.roomId) then
-  
+
 	common.previousRoomId = common.roomId
 	common.roomId = newRoomId
-	
+
   -- we detected a move, but didn't get a desc/title
   if map.moveToProcess == 1 then
-  	-- try and find us on the map... we are lost!	
+  	-- try and find us on the map... we are lost!
   	map.lost = true
   	map.moveToProcess = 0
-  	
+
   	if (map.mapping) then
-    	echo('\n\n MAP - pausing mapping (move without getting title/exits)\n\n')	
+    	echo('\n\n MAP - pausing mapping (move without getting title/exits)\n\n')
     	send('look')
   	end
-  	
+
   end
-  
+
   -- we have detected a movement and got a room title+exists since then
   if not map.lost and map.moveToProcess == 2 then
 
@@ -1013,43 +1013,43 @@ if (newRoomId ~= common.roomId) then
     		cecho('\n\n &lt;red&gt;MAPPER: &lt;white&gt;pausing mapping (previous room wasn\'t mapped)\n\n')
 				map.lost = true
 				map.moveToProcess = 0
-			else 
+			else
 				addCurrentRoom()
 			end
   	else
   		centerview(newRoomId);
     end
-  
+
   	map.moveToProcess = 0
-  
+
   else
-  
-  	-- if moveToProcess == 0 
+
+  	-- if moveToProcess == 0
   	-- we didn't pick up a movement
   	-- probably because we didn't move...
-  
+
   	-- if we're in an unexpected roomId then update our position
   	-- if we know about this room
-  	
-  
+
+
 		-- if this is a known room it will have a name
-    if(roomExists(newRoomId)) then 
-  	
+    if(roomExists(newRoomId)) then
+
 			if (map.mapping) then
 				echo('\n\nMAP: we are found again! (resuming)\n\n')
     	end
-			
+
 			map.lost = false
 			map.moveToProcess = 0
-			centerview(newRoomId);		  	
-  	
+			centerview(newRoomId);
+
   	end
-	
-  
+
+
   end
 
 	raiseEvent(common.events.ROOM_CHANGED, newRoomId)
-	
+
 end
 
 </script>
@@ -1092,17 +1092,17 @@ end
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are too exhausted.</name>
-				<script>if (murder.speedWalking) then
+				<script>if (mapper.speedWalking) then
 
 	tempTimer(3, function () send('sleep') end)
-	murder.pause()
-	
-  tempTimer(40, function () 
-		murder.resume()
+	mapper.pause()
+
+  tempTimer(40, function ()
+		mapper.resume()
   	send('stand')
-  	murder.nextStep()
+  	mapper.nextStep()
   end)
-	
+
 end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1186,8 +1186,8 @@ send('look')
 
 tempTimer(2, function ()
   expandAlias('findMe')
-  
-  murder.gotoRoom(rnum, function () 
+
+  mapper.gotoRoom(rnum, function ()
   	tempTimer(1, function ()
   		send('gt ' .. player.name .. ' is now at ' .. tostring(common.roomId))
   	end)
@@ -1218,11 +1218,11 @@ local rnum = matches[4]
 if (pname == player.name) then
 	send('gt omw')
   send('look')
-  
+
   tempTimer(2, function ()
     expandAlias('findMe')
-    
-    murder.gotoRoom(rnum, function () 
+
+    mapper.gotoRoom(rnum, function ()
     	tempTimer(1, function ()
     		send('gt ' .. player.name .. ' is now at ' .. tostring(common.roomId))
     	end)
@@ -1305,14 +1305,14 @@ end</script>
 				<name>GOTO</name>
 				<script>
 if (matches[3]) then
-	
+
 	local endCmd = matches[3]
-	
-	common.onNextEvent(common.events.WALK_DONE, function () 	
+
+	common.onNextEvent(common.events.WALK_DONE, function ()
 		-- send next move when the next prompt appears\
 		echo(' &lt;-- speed walk done: running command .. ')
   	expandAlias(endCmd)
-	end)	
+	end)
 
 end
 
@@ -1353,7 +1353,7 @@ local lookup = {
 	vyans = 28146,
 	root = 19376,
 	yetis = 94611,
-	
+
 }
 
 local rnum = lookup[dest]
@@ -1372,21 +1372,21 @@ end</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>stop movement</name>
-				<script>murder.stop()</script>
+				<script>mapper.stop()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^stop$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>resume movement</name>
-				<script>murder.resume()</script>
+				<script>mapper.resume()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^resume$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>pause movement</name>
-				<script>murder.pause()</script>
+				<script>mapper.pause()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^pause$</regex>
@@ -1465,11 +1465,11 @@ else
   map.move_queued = false
 	map.lost = false
 	map.moveToProcess = 0
-	
+
 	addCurrentRoom()
 
 end
-	
+
 </script>
 				<command></command>
 				<packageName></packageName>
@@ -1537,10 +1537,10 @@ common = common or {}
 player = player or {}
 
 
-common.initPlayer = function ()  
-	
+common.initPlayer = function ()
+
 	echo('\n\nINITIAL STATUS CHECK\n\n')
-	
+
 	-- GET PLAYER NAME
   timedTempTrigger(5, 1, [[^\s*([A-Z][a-z]+)\s*$]], function ()
 		-- echo('\ncharacter is: [' .. matches[2] .. ']\n')
@@ -1549,12 +1549,12 @@ common.initPlayer = function ()
 		if (player.scripts and player.scripts[player.name]) then
 			echo('\nRunning player script for ' .. player.name .. '!\n')
 			player.scripts[player.name]()
-		end	
-		
+		end
+
 	end)
-	
+
 	send('score &amp; group &amp; inv &amp; typo &amp; prep')
-	
+
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -1566,7 +1566,7 @@ end</script>
 			<Script isActive="yes" isFolder="no">
 				<name>mapper variables / consts etc</name>
 				<packageName></packageName>
-				<script>mudlet = mudlet or {}; 
+				<script>mudlet = mudlet or {};
 mudlet.mapper_script = true
 map = map or {};
 
@@ -1584,10 +1584,10 @@ map.lost = false
 map.consts.exitmap = {
     n = 'north',    e = 'east',
     w = 'west',     s = 'south',
-    u = 'up',       d = 'down', 
+    u = 'up',       d = 'down',
 	  N = 'north',    E = 'east',
     W = 'west',     S = 'south',
-    U = 'up',       D = 'down', 	
+    U = 'up',       D = 'down',
 }
 
 
@@ -1616,9 +1616,9 @@ map.consts.coordmap = {
 }
 
 map.consts.reverse_dirs = {
-    north = "south", south = "north", 
-		west = "east", east = "west", 
-		up = "down", down = "up", 
+    north = "south", south = "north",
+		west = "east", east = "west",
+		up = "down", down = "up",
 }</script>
 				<eventHandlerList />
 			</Script>
@@ -1633,7 +1633,7 @@ murder = murder or {
 	exits={},
 	waypoints = {},
 	currentWaypoint = 0,
-	events = {		
+	events = {
 		PATH_COMPLETE = 'MURDER:path_completed'
 	},
 	move_pending = nil,
@@ -1647,15 +1647,15 @@ murder = murder or {
 function doSpeedWalk()
 
 	map.mapping = false
-	
-	murder.speedwalk()
+
+	mapper.speedwalk()
 
   -- echo("Path we need to take: " .. table.concat(speedWalkDir, ", ") .. "\n")
   -- echo("Rooms we'll pass through: " .. table.concat(speedWalkPath, ", ") .. "\n")
 end
 
 
-function fakeMove (direction) 
+function fakeMove (direction)
 	cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;faking move...\n')
 	feedTriggers('You lumber ' .. direction .. '.\n')
 end
@@ -1668,23 +1668,23 @@ end
 
 
 
-function murder.speedwalk (callback)
+function mapper.speedwalk (callback)
 
 	-- make sure the destination is reachable
 	if (speedWalkPath and #speedWalkPath) then
- 		
+
 		-- send('opt brief')
- 		murder.gotoRoom(speedWalkPath[#speedWalkPath], function ()
+ 		mapper.gotoRoom(speedWalkPath[#speedWalkPath], function ()
 
 			send('queue look')
 			if (callback) then
 				callback()
 			end
-			
+
 		end)
 
 	else
-	
+
 		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;unable to reach requested room or already in it?\n')
 
 	end
@@ -1692,129 +1692,129 @@ function murder.speedwalk (callback)
 end
 
 
-function murder.gotoRoom (roomNum, callback)
+function mapper.gotoRoom (roomNum, callback)
 
 	-- make sure the destination is reachable
 	if (roomNum and roomExists(common.roomId)) then
 
-  	murder.speedwalking = true
-		
-		murder.setWaypoints({roomNum})
-				
-		murder.callback = callback
-		
-		murder.start()	
-		
+  	mapper.speedwalking = true
+
+		mapper.setWaypoints({roomNum})
+
+		mapper.callback = callback
+
+		mapper.start()
+
 	else
-	
+
 		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;error, no path available to requested room \n')
 
 	end
 
 end
 
-function murder.setWaypoints (waypoints)
-	murder.waypoints = waypoints
-	murder.clearPendingMove()
-	murder.currentWaypointIdx = 0		
-	
+function mapper.setWaypoints (waypoints)
+	mapper.waypoints = waypoints
+	mapper.clearPendingMove()
+	mapper.currentWaypointIdx = 0
+
 end
 
-function murder.clearPendingMove ()
-	if (murder.move_pending) then
+function mapper.clearPendingMove ()
+	if (mapper.move_pending) then
 		-- cecho('\n&lt;green&gt;MURDER: &lt;white&gt;Pending move cleared!')
-		murder.move_pending()
-		murder.move_pending = nil
+		mapper.move_pending()
+		mapper.move_pending = nil
 	end
 end
 
 
 
-function murder.start ()
-	
+function mapper.start ()
+
 	map.pre_walk_mapping = map.mapping
-	
+
 	map.mapping = false
 
 	map.move_queued = false
-  murder.clearPendingMove()
-	
-  murder.enabled = true 
-	murder.paused = false
-	
+  mapper.clearPendingMove()
+
+  mapper.enabled = true
+	mapper.paused = false
+
 	send('typo &amp; group')
-	
+
 	-- cecho('\n\nwaiting for : ' .. common.events.PARSED_GROUP .. '\n')
-	
+
 	common.onNextEvent(common.events.PARSED_GROUP, function ()
 
-  	murder.currentWaypointIdx = 0	
-  				
-		murder.advanceWaypoint()
-	
+  	mapper.currentWaypointIdx = 0
+
+		mapper.advanceWaypoint()
+
 	end)
 
 end
 
-function murder.stop ()
+function mapper.stop ()
 	-- echo('\n&lt;-- muder path stopped\n')
-	murder.enabled = false
-	
-	murder.speedwalking = false
-	murder.exploring = false
-	
+	mapper.enabled = false
+
+	mapper.speedwalking = false
+	mapper.exploring = false
+
 	map.mapping = map.pre_walk_mapping
-	
-	murder.callback = nil
-	
-	murder.clearPendingMove()
-		
+
+	mapper.callback = nil
+
+	mapper.clearPendingMove()
+
 end
 
 
 
-function murder.advanceWaypoint ()
+function mapper.advanceWaypoint ()
 
-	murder.currentWaypointIdx = murder.currentWaypointIdx + 1
-	
-	if (not murder.waypoints[murder.currentWaypointIdx]) then
-		
+	mapper.currentWaypointIdx = mapper.currentWaypointIdx + 1
+
+	if (not mapper.waypoints[mapper.currentWaypointIdx]) then
+
 		-- kill any outstanding timers:
-		murder.clearShortSpeedWalkTimer()
-		
+		mapper.clearShortSpeedWalkTimer()
+
 		-- cecho('\n\n&lt;green&gt;MURDER: &lt;yellow&gt;MURDER PATH COMPLETE\n\n')
-		
-		local cb = murder.callback
-			
-		murder.stop()
-		
+
+		local cb = mapper.callback
+
+		mapper.stop()
+
 		if (cb) then
 			cb()
 		end
-		
-		raiseEvent(murder.events.PATH_COMPLETE)
-		
-	else		
-	
+
+		raiseEvent(mapper.events.PATH_COMPLETE)
+
+	else
+
 		-- find the next waypoint...
-  	murder.currentWaypoint = tonumber(murder.waypoints[murder.currentWaypointIdx]) 	
-  	murder.updatePath()
-		
+  	mapper.currentWaypoint = tonumber(mapper.waypoints[mapper.currentWaypointIdx])
+  	mapper.updatePath()
+
 		-- cecho('\n&lt;blue&gt;MURDER: next invoked (from advancing waypoint)!\n')
-		murder.nextStep()			
-		
+		mapper.nextStep()
+
 	end
-	
+
 end
 
-function murder.updatePath ()
-	cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(common.roomId) .. ' to ' .. tostring(murder.currentWaypoint))	
+function mapper.updatePath ()
+	cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(common.roomId) .. ' to ' .. tostring(mapper.currentWaypoint))
 	if (roomExists(common.roomId)) then
-  	getPath(common.roomId, murder.currentWaypoint)
-  	murder.speedWalkDir = speedWalkDir
-    murder.speedWalkPath = speedWalkPath
-  	murder.speedWalkPath[0] = common.roomId
-  	murder.walkPosition = 1	
+  	getPath(common.roomId, mapper.currentWaypoint)
+  	mapper.speedWalkDir = speedWalkDir
+    mapper.speedWalkPath = speedWalkPath
+  	mapper.speedWalkPath[0] = common.roomId
+  	mapper.walkPosition = 1
 	else
 		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;unable to update path., current room not in map\n')
 	end
@@ -1825,23 +1825,23 @@ end
 
 local shortSpeedWalkTimerId
 
-function murder.startShortSpeedWalkTimer ()
+function mapper.startShortSpeedWalkTimer ()
 
 	-- clear any existing timer
-	murder.clearShortSpeedWalkTimer()
+	mapper.clearShortSpeedWalkTimer()
 
-	if (murder.enabled) then
+	if (mapper.enabled) then
   	-- give us 5 seconds to move...
   	shortSpeedWalkTimerId = tempTimer(5, function ()
 			shortSpeedWalkTimerId = nil
-  		cecho('\n&lt;yellow:yellow&gt;MURDER: &lt;white:black&gt;5 seconds without move!!! - updating path...\n')				
-  		murder.reroute()
+  		cecho('\n&lt;yellow:yellow&gt;MURDER: &lt;white:black&gt;5 seconds without move!!! - updating path...\n')
+  		mapper.reroute()
   	end, 'short speed walk timer')
 	end
-		
+
 end
 
-function murder.clearShortSpeedWalkTimer ()
+function mapper.clearShortSpeedWalkTimer ()
 	if (shortSpeedWalkTimerId) then
 		killTimer(shortSpeedWalkTimerId)
 	end
@@ -1850,130 +1850,130 @@ end
 
 
 
-function murder.move (cmd)
-						
+function mapper.move (cmd)
+
 		-- send move command
-	if (not murder.move_pending) then
-	
-		local lastMoveDir = map.consts.exitmap[murder.speedWalkDir[murder.walkPosition]]
-		
-		murder.startShortSpeedWalkTimer()
-		
-		murder.move_pending = common.onNextEvent(common.events.ROOM_CHANGED, function (evt)
-			
-			murder.clearShortSpeedWalkTimer()
-			murder.clearPendingMove()
+	if (not mapper.move_pending) then
 
-			murder.walkPosition = murder.walkPosition + 1
+		local lastMoveDir = map.consts.exitmap[mapper.speedWalkDir[mapper.walkPosition]]
 
-			
-			if (common.roomId == tonumber(murder.speedWalkPath[murder.walkPosition - 1])) then
-				murder.nextStep()	
+		mapper.startShortSpeedWalkTimer()
+
+		mapper.move_pending = common.onNextEvent(common.events.ROOM_CHANGED, function (evt)
+
+			mapper.clearShortSpeedWalkTimer()
+			mapper.clearPendingMove()
+
+			mapper.walkPosition = mapper.walkPosition + 1
+
+
+			if (common.roomId == tonumber(mapper.speedWalkPath[mapper.walkPosition - 1])) then
+				mapper.nextStep()
 			else
 				cecho('\n\n&lt;red&gt;MURDER: &lt;white&gt;unexpected room - rerouting\n\n')
-				display(murder.speedWalkPath[murder.walkPosition - 1])
+				display(mapper.speedWalkPath[mapper.walkPosition - 1])
 				display(common.roomId)
-				murder.reroute()
+				mapper.reroute()
 			end
-			
+
 		end)
 
 		send(cmd)
 
-	else -- else murder.move_pending already exists
-	
+	else -- else mapper.move_pending already exists
+
 		cecho('\n&lt;red&gt;MURDER: &lt;white&gt;attempted to move while move was already pending (prob impatient timer)\n')
-	
+
 	end
-	
+
 end
 
-function murder.reroute ()
-	murder.updatePath()
-	murder.clearPendingMove()
+function mapper.reroute ()
+	mapper.updatePath()
+	mapper.clearPendingMove()
 	-- cecho('\n&lt;blue&gt;MURDER: &lt;white&gt;next invoked (reroute)!\n')
-	murder.nextStep()
+	mapper.nextStep()
 end
 
 
-function murder.resume ()
-	murder.paused = false
+function mapper.resume ()
+	mapper.paused = false
 	-- send('gt murdering will resume')
-	if (murder.speedwalking) then
+	if (mapper.speedwalking) then
 		-- update the route in case there were shenanigans
-		murder.reroute()
-	else 
+		mapper.reroute()
+	else
 		send('scan')
 	end
 end
 
-function murder.pause ()
-	murder.paused = true
+function mapper.pause ()
+	mapper.paused = true
 	-- send('gt murdering will be suspendend after current tasks')
 end
 
 
-function murder.nextStep() 
-	
-		
-	if (murder.enabled and not murder.paused) then
-	
+function mapper.nextStep()
+
+
+	if (mapper.enabled and not mapper.paused) then
+
 		-- if we're at the end of this waypoin then advance...
-  	if (murder.walkPosition &gt; #murder.speedWalkDir) then
+  	if (mapper.walkPosition &gt; #mapper.speedWalkDir) then
 			-- cecho('\n&lt;orange&gt;MURDER: &lt;white&gt;No commands left for this waypoint!\n')
 			-- echo('\n\nTIME to go to the next waypoint\n\n')
-			murder.advanceWaypoint()
+			mapper.advanceWaypoint()
 			return
 		end
 
 		-- pause to get moves if someone is low on moves
 		if (group.lowest_moves &lt;= 30) then
 			send('gt someone be low on moves, waiting for 30...')
-			murder.paused = true
-						
+			mapper.paused = true
+
 			send('gt time to rest')
-			tempTimer(25, function() 
+			tempTimer(25, function()
 				send('gt time to stand')
 			end)
 
 			tempTimer(30, function()
-				murder.paused = false
-				murder.nextStep()
+				mapper.paused = false
+				mapper.nextStep()
 			end)
-			
+
 			return -- low on moves. no moves to be done this time...
-			
+
 		end -- not low on moves
-		
 
 
-		-- /****** WE ARE MOVING IF WE GOT HERE ********/ --	
-		
+
+		-- /****** WE ARE MOVING IF WE GOT HERE ********/ --
+
 
 		-- get the next move direction
-		local dir = map.consts.exitmap[ murder.speedWalkDir[murder.walkPosition] ]
+		local dir = map.consts.exitmap[ mapper.speedWalkDir[mapper.walkPosition] ]
 
 
 		local cmd = dir
-	  if (murder.stepAction) then
-			cmd = cmd .. ' &amp; ' .. murder.stepAction
+	  if (mapper.stepAction) then
+			cmd = cmd .. ' &amp; ' .. mapper.stepAction
 		end
-		murder.move(cmd)
+		mapper.move(cmd)
 		map.lastMoveDirection = dir
 		return
 
-	
+
 	else
-		
-		if(murder.paused) then
+
+		if(mapper.paused) then
 			echo('\n\n -=[ walking paused ]=-\n\n')
 		else
 			echo('\n\n -=[ walking disabled ]=-\n\n')
 		end
-			
+
 	end -- end if murder is enabled
-	
-	
+
+
 end
 
 
@@ -1989,7 +1989,7 @@ end
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 function getAreaIdByTfeId (tfeID)
-	
+
 	local areas = getAreaTable()
 	 for area, id in pairs(areas) do
 		-- deleteArea(id)
@@ -1998,23 +1998,23 @@ function getAreaIdByTfeId (tfeID)
       return id
     end
   end
-	
+
 	if map.mapping then
-  	
+
   	local areaId = addAreaName("NEW: " .. map.roomName);
-		
+
 		-- in case this area name already exists. bleh
 		local inc = 1
 		while (not areaId) do
 			inc = inc + 1
 			areaId = addAreaName("NEW: " .. map.roomName .. ' - ' .. tostring(inc));
 		end
-		
+
 		echo('\nMAPPER: creating new area... ' .. tostring(areaId) .. ' : ' .. tostring(tfeID) .. '\n')
 
-		
+
 		setAreaUserData(areaId, "tfe-zone-id", tfeID)
-  	
+
   	return areaId
 	end
 
@@ -2030,16 +2030,16 @@ end</script>
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
-function addCurrentRoom () 
-	
-  if roomExists(common.roomId) then 
-  
+function addCurrentRoom ()
+
+  if roomExists(common.roomId) then
+
 		centerview(common.roomId)
-  	
+
   else
-		
+
 		local x = 0; local y = 0; local z = 0;
-		
+
     -- calculate new x/y/z
   	if common.previousRoomId and roomExists(common.previousRoomId) then
   		-- echo('\n HAD PREVIOUS ROOM!!! - \n' .. common.previousRoomId)
@@ -2050,44 +2050,44 @@ function addCurrentRoom ()
   		y = y + dy
   		z = z + dz
   		-- echo('new location is: (' .. tostring(dx) .. ', ' .. tostring(dy) .. ', ' .. tostring(dz) .. ')')
-  	end		
-		
-		
-  	-- echo('moved direction: ' .. map.consts.short[map.lastMoveDirection] ) 
-  	  
+  	end
+
+
+  	-- echo('moved direction: ' .. map.consts.short[map.lastMoveDirection] )
+
 		echo('\nmap area id is: ' .. map.areaId)
-    
+
     addRoom(common.roomId)
-		
+
 		setRoomArea(common.roomId, map.areaId);
-		
+
 		-- echo('\nlocation is: (' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
-  	
+
   	-- echo('\nadding room... ' .. common.roomId)
-  	
-  	setRoomName(common.roomId, roomInfo.roomName)	
-  	
+
+  	setRoomName(common.roomId, roomInfo.roomName)
+
   	setRoomCoordinates(common.roomId, x, y, z)
-		
+
 		-- add room exit stubs
 		for i, exit in ipairs(roomInfo.exits) do
 			if(map.consts.short[exit]) then
       	setExitStub(common.roomId, map.consts.short[exit], true)
 			end
     end
-		
+
   	centerview(common.roomId)
-  
+
   end
-	
+
 	if common.previousRoomId then
 		cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(common.roomId) ..' to room: ' .. tostring(common.previousRoomId))
-		setExit(common.previousRoomId, common.roomId, map.consts.stubmap[map.lastMoveDirection])	
-		setExit(common.roomId, common.previousRoomId, map.consts.stubmap[map.consts.reverse_dirs[map.lastMoveDirection]])	
+		setExit(common.previousRoomId, common.roomId, map.consts.stubmap[map.lastMoveDirection])
+		setExit(common.roomId, common.previousRoomId, map.consts.stubmap[map.consts.reverse_dirs[map.lastMoveDirection]])
 	end
-	
-	
-	
+
+
+
 end</script>
 				<eventHandlerList />
 			</Script>
@@ -2127,7 +2127,7 @@ common.events = {
 	PARSED_GROUP = 'COMMON::parsed_group_status',
 	PARSED_AFFECTS = 'COMMON::parsed_player_affects',
 	PARSED_INVENTORY = 'COMMON:parsed_inventory_contents',
-	PARSED_PREPARED = 'COMMON:parsed_prepared_spells', 
+	PARSED_PREPARED = 'COMMON:parsed_prepared_spells',
 	MOVE_DETECTED = 'COMMON::move_detected',
 	ROOM_CHANGED = 'COMMON::room_changed',
 	COMBAT_ENDED = 'COMMON::combat_ended',
@@ -2159,21 +2159,21 @@ end
 
 
 common.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, failcallback)
-	
+
 	local fcb = failcallback
 	local ocb = callback
-	
+
 	local cb = function ()
 		fcb = nil;
 		if (ocb) then
-			ocb()	
+			ocb()
 		end
 	end
-	
-	
+
+
 	local triggerId = tempRegexTrigger(pattern, cb, maxTriggerCount)
-	
-	local tempTimerId = tempTimer(timeout, function () 
+
+	local tempTimerId = tempTimer(timeout, function ()
 		-- echo('\n -- killing temp timed trigger\n')
 		killTrigger(triggerId)
 		if (fcb) then
@@ -2186,30 +2186,30 @@ end
 timedTempTrigger = common.timedTempTrigger
 
 
-common.onNextEvent = function (evt, callback) 
-	
+common.onNextEvent = function (evt, callback)
+
 	if not evt then
-		
+
 		echo('no event defined!!!')
 		error()
-	
+
 	end
-	
-	
-	local handlerId = nil	
+
+
+	local handlerId = nil
 	local cb2 = callback
-	
-	local cb = function (evt, args)		
+
+	local cb = function (evt, args)
 		-- kill the event handler now in case the event errors preventing it's destruction
 		killAnonymousEventHandler(handlerId)
 		-- cecho('\n&lt;blue&gt;self destructing handler: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
 		cb2(evt, args)
 	end
-	
+
 	handlerId = registerAnonymousEventHandler(evt, cb, true)
-	
+
 	-- cecho('\n&lt;green&gt;registering self destruct event: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
-	
+
 	return function ()
 		-- cecho('\n&lt;orange&gt;destructing handler: ' .. evt .. ' : ' .. tostring(handlerId) .. '\n')
 		killAnonymousEventHandler(handlerId)
@@ -2222,12 +2222,12 @@ onNextEvent = common.onNextEvent
 common.oneRoomExitTrig = function (direction, code)
 
   local tempTrigId = tempRegexTrigger('^You see no exit to the (' .. direction .. ')\.$', function ()
-		code(matches[2])		
+		code(matches[2])
 	end, 1)
-  
+
   echo(' &lt;- room sepecific trig: ' .. tostring(tempTrigId))
-  
-	-- need to dest these as the first room change will be entering the room where we 
+
+	-- need to dest these as the first room change will be entering the room where we
 	-- want to watch for the event
 	common.onNextEvent(common.events.ROOM_CHANGED, function ()
 		-- got to wait for a prompt or else this will trigger on the same event as the first
@@ -2235,10 +2235,10 @@ common.oneRoomExitTrig = function (direction, code)
       common.onNextEvent(common.events.ROOM_CHANGED, function ()
       	echo('\n ^^ killed room specific trig : '  .. tostring(tempTrigId) .. '\n')
         killTrigger(tempTrigId)
-      end)	
+      end)
 		end)
 	end)
-	
+
 end
 
 oneRoomExitTrig = common.oneRoomExitTrig</script>
@@ -2249,63 +2249,63 @@ oneRoomExitTrig = common.oneRoomExitTrig</script>
 				<packageName></packageName>
 				<script>
 common.comeToMe = function (callback)
-	
+
 	local mcb = callback
 	local roll = common.newRollCall(true)
 
 	tempTimer(2, function ()
-	
+
 		local atTrig
-		
-		local preFetchState = murder.paused
-		
-		murder.paused = true
-	
+
+		local preFetchState = mapper.paused
+
+		mapper.paused = true
+
   	atTrig = tempRegexTrigger([[^.+ tells the group[^:]*: "(\w+) is now at (\d+)"]], function ()
   		if (tostring(common.roomId) == matches[3]) then
-  			
+
 				roll[matches[2]] = true
-				
+
 				if (common.rollCheck(roll)) then
-					murder.paused = preFetchState
+					mapper.paused = preFetchState
 					send('gt all here - moving...')
   				killTrigger(atTrig)
   				mcb()
 				end
-				
+
 			else
 				send('mutter')
 				send('gt ' .. matches[2] .. ' go to ' .. tostring(common.roomId))
 			end
-			
+
   	end)
 
 		send('gt meet at ' .. tostring(common.roomId))
-		
-	
-	end, 'comeToMe')					
-			
+
+
+	end, 'comeToMe')
+
 end
 
 
 common.newRollCall = function (excludeSelf)
-	
+
 	local roll = {}
-	
+
 	for name, value in pairs(group.members) do
 		roll[name] = false
 	end
-	
+
 	if (excludeSelf) then
 		roll[player.name] = true
 	end
-	
+
 	return roll
-	
+
 end
 
 common.rollCheck = function(roll)
-	
+
 	for key, value in pairs(roll) do
 		if (not value) then
 			return false
@@ -2317,29 +2317,29 @@ end
 
 
 
-common.sendPlayer = function (player, rnum, callback) 
+common.sendPlayer = function (player, rnum, callback)
 
 	local ncb = callback
 	tempRegexTrigger([[^.+ tells the group[^:]*: "]] .. player .. [[ is now at ]] .. tostring(rnum) .. [["]], function ()
 		ncb()
 	end, 1)
-	
+
 	send('gt ' .. player .. ' go to ' .. tostring(rnum))
 
 end
 
 common.groupOnReady = function (cb)
-			
+
 	local grcb = cb
-	
+
 	local rct
-	
+
 	local roll = common.newRollCall(false)
 
-	
+
 	local readyCheck = function ()
-		if (common.rollCheck(roll)) then -- group members		
-			killTrigger(rct)		
+		if (common.rollCheck(roll)) then -- group members
+			killTrigger(rct)
   		if (grcb) then
   			grcb()
   		end
@@ -2349,23 +2349,23 @@ common.groupOnReady = function (cb)
 	rct = tempRegexTrigger([[^.* (tells the|tell your) group[^:]*: "ready \((.*)\)"]], function ()
 		roll[matches[3]] = true
 		readyCheck()
-	end) 
-		
+	end)
+
 end
 
 
 common.groupPrepFull = function (cb)
-			
+
 	local pfcb = cb
-	
+
 	common.groupOnReady(function ()
-		send('gt going')					
+		send('gt going')
 		if (pfcb) then
 			pfcb()
 		end
 	end)
 
-	send('gt get full')			
+	send('gt get full')
 
 end
 </script>
@@ -2392,15 +2392,15 @@ tempTriggers = tempTriggers or {}
 local wrapTrigger = function (triggerCommand)
 
 	local oCommand = triggerCommand
-	
-	return function (regex, code, expireAfter) 
-  	
+
+	return function (regex, code, expireAfter)
+
   	local trigId = nil
   	local oCode = code
   	local expires = expireAfter
-  	
+
   	local newCode = function (...)
-		
+
 			if (tempTriggers[trigId]) then
     		tempTriggers[trigId].calls = tempTriggers[trigId].calls + 1
     		if (tempTriggers[trigId].calls == expires) then
@@ -2408,17 +2408,17 @@ local wrapTrigger = function (triggerCommand)
     			-- cecho('\n&lt;orange&gt;trigger died of natural causes - ' .. trigId .. ' : ' .. regex .. '\n')
     		end
 			end
-			
+
   		return oCode(...)
   	end
-  	
+
   	trigId = oCommand(regex, newCode, expires)
-		
+
   	tempTriggers[trigId] = tempTriggers[trigId] or { calls = 0, regex = regex }
-  	 
+
   	return trigId
   end
-	
+
 
 end
 
@@ -2446,26 +2446,26 @@ end
 tempTimers = tempTimers or {}
 
 tempTimer = function(seconds, code, description)
-	
-	local timerId 
-	
+
+	local timerId
+
 	local oCode = code
-	
-	local decoratedCode = function (...)	
+
+	local decoratedCode = function (...)
 		-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer ran - ' .. tostring(timerId)  .. ' : ' .. (tempTimers[timerId] or '???') .. '\n')
 		-- display(tempTimers)
 		tempTimers[timerId] = nil
 		oCode(...)
 	end
-	
+
 	timerId = oTempTimer(seconds, decoratedCode)
-	
+
 	tempTimers[timerId] = (description or 'mystery timer') .. ' - ' .. tostring(seconds) .. ' seconds'
-	
-	-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer setup - ' .. tostring(timerId) .. ' : ' .. tempTimers[timerId] .. '\n') 
-	
+
+	-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer setup - ' .. tostring(timerId) .. ' : ' .. tempTimers[timerId] .. '\n')
+
 	return timerId
-	
+
 end
 
 
@@ -2494,21 +2494,21 @@ end
 				<name>formatters</name>
 				<packageName></packageName>
 				<script>
-common.formatElapsedTime = function (time) 
-	
+common.formatElapsedTime = function (time)
+
 	local ts = '';
-	
+
 	if (not time) then
 		return '0 seconds'
 	end
-	
+
 	if (time &gt;= 3600) then
 		hrs = math.floor(time / 3600)
 		time = time - (hrs * 3600)
 		ts = ts .. tostring(hrs) .. ' hrs, '
 	end
-	
-		
+
+
 	if (time &gt;= 60 or hrs &gt; 0) then
 		mins = math.floor(time / 60)
 		time = time - (mins * 60)
@@ -2521,12 +2521,12 @@ common.formatElapsedTime = function (time)
 
 
 	return ts
-	
+
 end
 
 
 common.getNumber = function (text)
-	
+
 	local wordToNumberData = {
   	a = 1,
   	an = 1,
@@ -2540,16 +2540,16 @@ common.getNumber = function (text)
 		seven = 7,
 		eight = 8,
 		nine = 9,
-		ten = 10, 
+		ten = 10,
 		eleven = 11,
 		twelve = 12,
 		thrirteen = 13,
 		fourteen = 14,
 	}
-	
+
 	local numTxt = rex.match(text, [[^\S+]])
-	
-	if (numTxt) then 
+
+	if (numTxt) then
 		return wordToNumberData[string.lower(numTxt)] or 1
 	else
 		-- either it's more than 14 or a proper noun. i.e Stinky (your mount
@@ -2560,7 +2560,7 @@ end
 
 
 common.dotCase = function(string)
-	
+
 	if (not string or string == '') then
 		return ''
 	end
@@ -2591,38 +2591,38 @@ end
 
 
 common.toMurderString = function (victim)
-	
+
 	-- remove any articles etc
 	victim = rex.gsub(victim, [[^(a|an|the|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
 
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
-	
+
 	-- turn women back to womans
 	victim = rex.gsub(victim, [[women\b]], 'woman')
-	
+
 	 -- turn mercenaries back into mercanary
 	victim = rex.gsub(victim, [[ies$]], 'y')
-	
+
 	-- dump any s's or es's on the end of a plural  west : two greater cyclopes, vs a greater cyclops
 	victim = rex.gsub(victim, [[(es|'?s'?)\b]], '')
 
 	-- dump any random commas
 	victim = rex.gsub(victim, [[,]], '')
-	
+
 	-- kill any parts less than 3 charaters
-	victim = rex.gsub(victim, [[(\b|\.|\s)\w\w?(\s|\.|\b)]], '%1%2')	
-	
+	victim = rex.gsub(victim, [[(\b|\.|\s)\w\w?(\s|\.|\b)]], '%1%2')
+
 	-- kill any extra whitepsace or multiple .'s
-	victim = rex.gsub(victim, [[(\s\s+|\.\.+)]], ' ')	
+	victim = rex.gsub(victim, [[(\s\s+|\.\.+)]], ' ')
 	victim = string.trim(victim)
-	
+
 	-- kill any . at start or end.
 	victim = rex.gsub(victim, [[^\.]], '')
-	victim = rex.gsub(victim, [[\.$]], '')		
-		
+	victim = rex.gsub(victim, [[\.$]], '')
+
 	return victim
-	
+
 end
 </script>
 				<eventHandlerList />
@@ -2631,10 +2631,10 @@ end
 				<name>check resources</name>
 				<packageName></packageName>
 				<script>
-common.updateStatus = function(callback) 
-  common.onNextEvent(common.events.PARSED_GROUP, function () 
+common.updateStatus = function(callback)
+  common.onNextEvent(common.events.PARSED_GROUP, function ()
   	callback()
-  end)		
+  end)
 	send('group')
 end
 
@@ -2652,9 +2652,9 @@ common.onOffsetReady = function(lessHp, lessMp, lessMoves, callback)
 			tempTimer(10, function ()
 				common.onOffsetReady(lessHp, lessMp, lessMoves, callback)
 			end, 'on offset ready')
-		end	
+		end
 	end)
-	
+
 end
 
 
@@ -2667,15 +2667,15 @@ common.onManaReady = function(mana, callback)
 			tempTimer(10, function ()
 				common.onManaReady(mana, callback)
 			end, 'on mana ready')
-		end	
+		end
 	end)
-	
+
 end
 
 
 common.checkResources = function(hp, mp, moves, callback)
-	common.updateStatus( function () 
-		
+	common.updateStatus( function ()
+
 		if (player.hp &gt;= hp and player.mp &gt;= mp and player.moves &gt;= moves) then
 			echo('\n\n .. READY TO KILL\n')
 			callback(true)
@@ -2687,9 +2687,9 @@ common.checkResources = function(hp, mp, moves, callback)
 end
 
 
-common.onFull = function (callback) 
-	
-	common.checkFull( function(readyStatus) 
+common.onFull = function (callback)
+
+	common.checkFull( function(readyStatus)
 		if(readyStatus) then
 			callback()
 		else
@@ -2697,9 +2697,9 @@ common.onFull = function (callback)
 				common.onFull(callback)
 			end, 'on full')
 		end
-	end)	
-	
-	
+	end)
+
+
 end
 </script>
 				<eventHandlerList />
