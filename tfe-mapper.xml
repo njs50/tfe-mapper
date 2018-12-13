@@ -1626,7 +1626,7 @@ map.consts.reverse_dirs = {
 				<name>speedwalking code</name>
 				<packageName></packageName>
 				<script>
-murder = murder or {
+mapper = mapper or {
 	enabled=false,
 	speedwalking = false,
 	paused = false,
@@ -2707,7 +2707,7 @@ end
 		</ScriptGroup>
 	</ScriptPackage>
 	<KeyPackage />
-	<VariablePackage>
-		<HiddenVariables />
-	</VariablePackage>
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
 </MudletPackage>
