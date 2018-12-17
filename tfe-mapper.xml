@@ -1013,7 +1013,7 @@ if (not badWords[matches[2]]) then
 
   end
 
-  echo(' &lt;-- sending move event: ' .. matches[3] .. '\n')
+  -- echo(' &lt;-- sending move event: ' .. matches[3] .. '\n')
   raiseEvent(common.events.MOVE_DETECTED, matches[3])
 
   -- skipStep()
@@ -2090,7 +2090,7 @@ function getAreaIdByTfeId (tfeID)
 	 for area, id in pairs(areas) do
 		-- deleteArea(id)
     if getAreaUserData(id, "tfe-zone-id") == tfeID then
-			echo('\nfound existing area! - '.. id .. ' ..\n')
+			-- echo('\nfound existing area! - '.. id .. ' ..\n')
       return id
     end
   end
