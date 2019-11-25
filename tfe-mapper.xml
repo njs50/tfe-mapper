@@ -520,6 +520,20 @@ end</script>
 			<packageName></packageName>
 			<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>^(stop|pause|resume)$</name>
+			<script>
+local commands = {
+  stop = tfe.speedwalkStop,
+  pause = tfe.speedwalkPause,
+  resume = tfe.speedwalkResume,
+}
+
+commands[matches[2]]()</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(stop|pause|resume)$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage>
@@ -651,6 +665,44 @@ tfe.clearShortSpeedWalkTimer = function()
 	shortSpeedWalkTimerId = nil
 end
 
+tfe.speedwalkPause = function ()
+  if (tfe.speedwalking) then
+    tfe.speedwalking.paused = true
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking paused\n')
+  else
+   cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;not currently speedwalking\n')
+  end
+end
+
+tfe.speedwalkResume = function ()
+  if (tfe.speedwalking) then
+    tfe.speedwalking.paused = nil
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking resumed\n')
+    tfe.speedWalkStep()
+  else
+     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;not currently speedwalking\n')
+  end
+end
+
+tfe.speedwalkStop = function ()
+ 
+ if (tfe.speedwalking) then
+    tfe.clearShortSpeedWalkTimer()
+    -- clear any room change watcher if it exists
+    if (tfe.speedwalking.roomChangeWatcher) then
+      tfe.speedwalking.roomChangeWatcher()
+      tfe.speedwalking.roomChangeWatcher = nil
+    end
+    
+    tfe.speedwalking = nil
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking stopped\n')
+  else
+     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;not currently speedwalking\n')
+  end
+  
+end
+
+
 tfe.speedWalkStep = function ()
   
   tfe.clearShortSpeedWalkTimer()
@@ -687,12 +739,16 @@ tfe.speedWalkStep = function ()
       
         -- we are where we should be. send a move etc
         
-        -- setup a single event watcher for a room change
-        tfe.speedwalking.roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, tfe.speedWalkStep)
-        
-        tfe.startShortSpeedWalkTimer()
-        send( tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ])    
-        tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
+        if (not tfe.speedwalking.paused) then
+          -- setup a single event watcher for a room change
+          tfe.speedwalking.roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, tfe.speedWalkStep)
+          
+          tfe.startShortSpeedWalkTimer()
+          send( tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ])    
+          tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
+        else
+          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking halted\n')
+        end
       
       
       end
