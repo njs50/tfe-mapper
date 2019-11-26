@@ -5,7 +5,7 @@ a quick n dirty mudlet mapper for the forests edge mud
 
 install instructions coming at some point (when i figure out how it works :p)
 
-you can import my [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) through the mudlet mapping prefrences if you want to grab a map that has most of the basic stuff filled out. beware tho it might have places you don't want to speed walk through mapped. i'd suggest if you don't want to go through chiiron or voaleth right clicking the gates on the map and picking "lock" so that it won't try and walk you through there.
+you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/njs50-mapper.xml) and install it via package managemer
 
 
 ## map commands

@@ -3,23 +3,14 @@
 <MudletPackage version="1.001">
 	<TriggerPackage>
 		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>room number displayed</name>
-			<script>local newRoomId = tonumber(matches[2])
-local newAreaId = tfe.getAreaIdFromRoomId(matches[2]);
-
-tfe.roomInfo.roomId = tostring(newRoomId)
-tfe.roomInfo.areaId = tostring(newAreaId)
-
--- display(tfe.roomInfo)
-
-if (tfe.roomInfo.roomId ~= tfe.previousRoomInfo.roomId) then
-  
-  raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
-  
+			<name>repeat stuff jammed in prompt</name>
+			<script>if (matches[3]) then
+	local prompt = matches[2]
+	local stuff = matches[3]
+  -- echo('\n^^ PROMPT FAIL: [' .. stuff .. ']\n')
+  feedTriggers(prompt .. '\n')
+  feedTriggers(stuff .. '\n')
 end
-
-centerview(tfe.roomInfo.roomId)
-
 </script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
@@ -32,9 +23,47 @@ centerview(tfe.roomInfo.roomId)
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList>
-				<string>^Room #(\d+)$</string>
+				<string>^(&lt;[^&gt;]*&gt;)(.+)$</string>
 			</regexCodeList>
 			<regexCodePropertyList>
+				<integer>1</integer>
+			</regexCodePropertyList>
+		</Trigger>
+		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>room info 1</name>
+			<script>-- showMultimatches()
+local roomInfo = {}
+
+roomInfo.roomName  = multimatches[1][2]
+roomInfo.exits = string.split(rex.gsub(multimatches[2][2], [[\s*#\d+]], ''),  " ")
+
+send('queue typo &amp; scan')
+
+-- if we had previously identified a room update previous room
+if (tfe.roomInfo and tfe.roomInfo.roomId) then
+  tfe.previousRoomInfo = tfe.roomInfo 
+end
+
+tfe.roomInfo = roomInfo
+
+
+</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>1</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList>
+				<string>^([^[].*)$</string>
+				<string>^\[Exits: (.*)]$</string>
+			</regexCodeList>
+			<regexCodePropertyList>
+				<integer>1</integer>
 				<integer>1</integer>
 			</regexCodePropertyList>
 		</Trigger>
@@ -65,7 +94,7 @@ roomInfo.weather = string.split(multimatches[5][2], '; ')
 send('queue typo &amp; scan')
 
 -- if we had previously identified a room update previous room
-if (tfe.roomInfo.roomId) then
+if (tfe.roomInfo and tfe.roomInfo.roomId) then
   tfe.previousRoomInfo = tfe.roomInfo
 end
 
@@ -100,53 +129,24 @@ tfe.roomInfo = roomInfo
 				<integer>1</integer>
 			</regexCodePropertyList>
 		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>room info 1</name>
-			<script>-- showMultimatches()
-local roomInfo = {}
-
-roomInfo.roomName  = multimatches[1][2]
-roomInfo.exits = string.split(rex.gsub(multimatches[2][2], [[\s*#\d+]], ''),  " ")
-
-send('queue typo &amp; scan')
-
--- if we had previously identified a room update previous room
-if (tfe.roomInfo.roomId) then
-  tfe.previousRoomInfo = tfe.roomInfo 
-end
-
-tfe.roomInfo = roomInfo
-
-
-</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>1</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^([^[].*)$</string>
-				<string>^\[Exits: (.*)]$</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>1</integer>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
 		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>repeat stuff jammed in prompt</name>
-			<script>if (matches[3]) then
-	local prompt = matches[2]
-	local stuff = matches[3]
-  -- echo('\n^^ PROMPT FAIL: [' .. stuff .. ']\n')
-  feedTriggers(prompt .. '\n')
-  feedTriggers(stuff .. '\n')
+			<name>room number displayed</name>
+			<script>local newRoomId = tonumber(matches[2])
+local newAreaId = tfe.getAreaIdFromRoomId(matches[2]);
+
+tfe.roomInfo.roomId = tostring(newRoomId)
+tfe.roomInfo.areaId = tostring(newAreaId)
+
+-- display(tfe.roomInfo)
+
+if (tfe.previousRoomInfo and tfe.roomInfo.roomId ~= tfe.previousRoomInfo.roomId) then
+  
+  raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+  
 end
+
+centerview(tfe.roomInfo.roomId)
+
 </script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
@@ -159,7 +159,7 @@ end
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList>
-				<string>^(&lt;[^&gt;]*&gt;)(.+)$</string>
+				<string>^Room #(\d+)$</string>
 			</regexCodeList>
 			<regexCodePropertyList>
 				<integer>1</integer>
