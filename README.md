@@ -7,6 +7,7 @@ install instructions coming at some point (when i figure out how it works :p)
 
 you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/njs50-mapper.xml) and install it via package managemer
 
+you can import my [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) through the mudlet mapping prefrences if you want to grab a map that has some of the basic stuff filled out.
 
 ## map commands
 

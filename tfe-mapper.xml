@@ -568,11 +568,13 @@ if (type(rnum) == 'number' and roomExists(rnum)) then
  
   local endCmd = matches[3]
 
-	tfe.gotoRoom(rnum, function () 
-		if (endCmd) then
-			expandAlias(endCmd)
-		end
-	end)
+	tfe.gotoRoom(rnum, { 
+    callback = function () 
+  		if (endCmd) then
+  			expandAlias(endCmd)
+  		end
+  	end
+  })
 	
 else
 	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location\n')
@@ -805,6 +807,12 @@ tfe.speedWalkStep = function ()
           tfe.speedwalking.roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, tfe.speedWalkStep)
           
           tfe.startShortSpeedWalkTimer()
+          
+          -- in case we use a speed walk while mapping set these
+          tfe.lastMoveDirection = tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ]
+          tfe.currentMoveStep = tfe.consts.moveSteps[1]
+          
+          -- send command
           send( tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ])    
           tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
         else
@@ -832,7 +840,7 @@ tfe.rerouteSpeedwalk = function ()
     tfe.speedwalking.roomChangeWatcher()
     tfe.speedwalking.roomChangeWatcher = nil
   end
-  tfe.gotoRoom(tfe.speedwalking.destination, tfe.speedwalking.callback)
+  tfe.gotoRoom(tfe.speedwalking.destination, tfe.speedwalking.options)
 end
 
 
