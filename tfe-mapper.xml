@@ -10,7 +10,8 @@
   echo('\n^^ PROMPT FAIL: [' .. stuff .. ']\n')
   feedTriggers(prompt .. '\n')
   feedTriggers(stuff .. '\n')
-end</script>
+end
+</script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
@@ -22,7 +23,7 @@ end</script>
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList>
-				<string>^(&lt;[^&gt;]*&gt;)\s*(.+)$</string>
+				<string>^(&lt;[^&gt;]*&gt;)(.+)$</string>
 			</regexCodeList>
 			<regexCodePropertyList>
 				<integer>1</integer>
@@ -109,6 +110,11 @@ if (matches[3]) then
     status.mp_max = tonumber(matches[6])
     status.moves = tonumber(matches[7])
     status.moves_max = tonumber(matches[8])
+    status.xp = matches[9]
+
+    -- 
+    selectString(matches[1],1)
+    replace(matches[1]:gsub(matches[9], common.commaCase(matches[9])))
 
     group[matches[2]] = status
 
@@ -160,7 +166,7 @@ end</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^\[\s+\d+\s+\w+\s+\w+\s+\w*\s*\]\s+(\S+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+\d+$</string>
+					<string>^\[\s+\d+\s+\w+\s+\w+\s+\w*\s*\]\s+(\S+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+(\d+)/(\d+)\s+(\d+)$</string>
 					<string>^Leader:\s+(.*)$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
@@ -186,6 +192,30 @@ if ( not group.leader ) then
 		end
 
 else
+
+	-- prompt flags:
+	-- c - camouflaged
+  -- h - hidden
+  -- i - invisible
+  -- P - player killing ok
+  -- A - arena
+  -- p - parry on
+  -- S - sanctuary
+  -- s - sneaking
+  -- t - tracking
+  -- x - searching
+  -- B - burdened
+  -- b - berserk skill active
+  -- f - focus skill active
+  -- M - you have new mudmail
+	
+	local promptFlags = matches[2]
+	
+	-- set parry state
+	if string.find(promptFlags, 'p') then player.parry = true else player.parry = false end
+
+	
+	if string.find(promptFlags, '[chi]') then player.hidden = true else player.hidden = false end
 
   group[player.name].hp = tonumber(matches[3])
   group[player.name].mp = tonumber(matches[4])
@@ -299,8 +329,8 @@ end
 				<regexCodeList>
 					<string>^(Coins): (\d+) = \[ .* \] \s+ Weight: (\d+\.\d+) lbs</string>
 					<string>^\s+(Number):\s+(\d+)\s+\( Max =\s+(\d+) \)</string>
-					<string>^(an? .+?)\s+(\d+)\s+(\d*\.\d+)\s+(an? .+?)\s+(\d+)\s+(\d*\.\d+)</string>
-					<string>^(an? .+?)\s+(\d+)\s+(\d*\.\d+)</string>
+					<string>^(an? .+?)\s+(\d+)\s+(\d*\.?\d+?)\s+(an? .+?)\s+(\d+)\s+(\d*\.?\d+?)</string>
+					<string>^(an? .+?)\s+(\d+)\s+(\d*\.?\d+?)</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
@@ -384,7 +414,7 @@ if map.moveToProcess == 1 then
 	map.moveToProcess = 2
 end
 
-send('queue typo')
+send('queue typo &amp; scan')
 
 raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
 </script>
@@ -435,7 +465,7 @@ if map.moveToProcess == 1 then
 	map.moveToProcess = 2
 end
 
-send('queue typo')
+send('queue typo &amp; scan')
 
 raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
 
@@ -462,6 +492,70 @@ raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parse equipment</name>
+				<script>player = player or {}
+player.gear = player.gear or {}
+player.itemSlot = player.itemSlot or {}
+
+if (matches[2] == 'Equipment') then
+	-- start of parsing
+	
+	player.gear.parsing = true
+	player.gear = {}
+	-- cecho(' &lt;--- parsing start')
+	
+elseif (matches[2] == 'Weight') then
+	
+	-- end of parsing
+	player.gear.parsing = nil
+	player.gear.currentSlot = nil
+	
+	raiseEvent(common.events.PARSED_EQUIPMENT)
+	-- cecho(' &lt; --- parsing end')
+	-- display(player.gear)
+
+else
+ 
+ 	-- if this line has a slot, get rid of the redundant part and set it to be the current slot
+	if (matches[2] ~= '') then
+		player.gear.currentSlot = rex.gsub(matches[2], [[^(floating|worn on|worn around|worn about) ]], "", 1)
+	end
+	
+	local item = common.itemSanitize(matches[4])
+	
+	player.gear[player.gear.currentSlot] = player.gear[player.gear.currentSlot] or {}
+	player.gear[player.gear.currentSlot][matches[3]] = {item = item, condition = matches[5] }
+	
+	player.itemSlot[item] = {slot=player.gear.currentSlot, layer=matches[3]}
+	-- cecho(' &lt;--- its some gear ')
+
+end
+
+
+
+           </script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\s+ \+\+\+ (Equipment) \+\+\+</string>
+					<string>^(Weight):</string>
+					<string>^(.*?)\s+(bottom|under|base|over|top)\s+(.*?)\s+(worthless|damaged|very worn|worn|very scratch|scratched|reasonable|good|very good|excellent|perfect)</string>
+				</regexCodeList>
+				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
@@ -589,6 +683,50 @@ raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Parry set to x.</name>
+				<script>if (matches[2] == 'true') then
+	player.parry = true
+else
+	player.parry = false
+end
+
+player.parryQueue = (player.parryQueue or 1) - 1
+cecho('&lt;yellow&gt; &lt;-- parry queue -- (' .. player.parryQueue .. ')')
+
+if player.parryQueue &lt; 0 then
+  player.parryQueue = 0
+  cecho('\n&lt;red&gt;PARRY: &lt;white&gt;attempted to reduce queue below zero\n')
+end
+
+if (player.pendingParryChange ~= true) then
+  
+	player.pendingParryChange = true
+  
+  common.onNextEvent(common.events.PARSED_PROMPT, function (evt, args)
+  	raiseEvent(common.events.PARRY_STATE_CHANGE)
+  	player.pendingParryChange = false
+  end)
+	
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^Parry set to (true|false)\.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>mapping</name>
@@ -610,6 +748,10 @@ raiseEvent(common.events.PARSED_ROOM_INFO, roomInfo)
 				<script>disableTrigger('The x to the y is closed.')
 
 local vic = common.dotCase(common.toMurderString(matches[2]))
+
+-- convert north gate etc -&gt; gate
+vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '') 
+
 local dir = matches[3]
 
 send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
@@ -662,6 +804,17 @@ local exits = {
 		[28095] = 'move bush &amp; east',
 		[48175] = 'move landslide &amp; east',
 		[66014] = 'dig ice',
+		[75000] = 'move rock',
+		[21135] = 'enter crack &amp; get chain &amp; queue loop chain &amp; queue drop chain',
+		[65503] = 'enter crev',
+		[91662] = 'open crack',
+		[37161] = 'move board &amp; enter hole',
+		[23502] = 'enter break',
+    [82021] = 'stand &amp; break ice',
+    [82012] = 'enter crev',
+    [82002] = 'dig drift &amp; scan',
+    [4008] = 'enter water',
+    [48152] = 'move pile',
 	},
 	west = {
 		[28134] = 'move moss &amp; west',
@@ -671,6 +824,17 @@ local exits = {
 		[47761] = 'move bush',
 		[32023] = 'pull lever &amp; west',
 		[66058] = 'dig ice',
+		[35963] = 'move rock',
+		[26542] = 'enter crev',
+		[65502] = 'enter crack',
+		[37055] = 'move board &amp; enter hole',
+		[37160] = 'twist knob',
+		[48169] = 'lift beam &amp; pull lever',
+		[23506] = 'enter break',
+    [82024] = 'stand &amp; break ice',
+    [82013] = 'enter crev',
+    [82003] = 'dig drift &amp; queue scan',
+    [48153] = 'move pile',
 	},
 	north = {
 		[44908] = 'enter water',
@@ -690,6 +854,20 @@ local exits = {
 		[53000] = 'yell khiren',
 		[44765] = 'pull slab',
 		[30877] = 'enter crevice',
+		[51064] = 'move drift',
+		[39348] = 'move bush',
+		[75013] = 'jump north',
+		[23091] = 'cross stream',
+		[65504] = 'enter crack',
+		[47000] = 'move bush',
+    [82035] = 'stand &amp; break ice',
+    [34518] = 'dig drift &amp; scan',
+    [94604] = 'touch stone',
+    [27255] = 'push circ &amp; push squar &amp; push diam &amp; push triang',
+    [2037] = 'enter hole',
+    [48152] = 'open beam',
+    [48165] = 'open slab',
+    [566] = 'pull lever',
 	},
 	south = {
 		[44909] = 'enter water',
@@ -714,6 +892,21 @@ local exits = {
 		[19132] = 'dig mound',
 		[34579] = 'ask dwa demon',
 		[73500] = 'push stone',
+		[37045] = 'move bush',
+		[75014] = 'climb south',
+		[37546] = 'move moss',
+		[51753] = 'cross stream',
+		[65505] = 'enter crack',
+		[40534] = 'move bush',
+    [82036] = 'stand &amp; break ice',
+    [82000] = 'dig drift &amp; scan',
+    [5110] = 'touch stone',
+    [2039] = 'climb up',
+    [2040] = 'climb up',
+    [48150] = 'move beam',
+    [48149] = 'get pebble',
+    [48168] = 'open slab',
+    [481] = 'push rock',
 
 	},
 	below = {
@@ -724,6 +917,17 @@ local exits = {
 		[68043] = 'push statue',
 		[21326] = 'call essyn',
 		[49783] = 'search',
+		[39510] = 'pull chain',
+		[94274] = 'move log',
+		[94264] = 'move brush',
+		[20086] = 'move floor',
+		[91668] = 'climb bould',
+		[31000] = 'climb stone',
+    [3813] = 'move needles &amp; trace pent',
+    [95768] = 'search plant &amp; enter opening',
+    [95750] = 'enter log',
+    [30402] = 'move granite',
+   
 	},
 	above = {
 		[73606] = 'move stone',
@@ -732,6 +936,15 @@ local exits = {
 		[68027] = 'call dact &amp; place globe',
 		[21325] = 'ask essyn festival',
 		[49785] = 'search',
+		[94251] = 'move brush',
+		[94268] = 'move log',
+		[71625] = 'move rock',
+		[91667] = 'climb bould',
+    [95785] = 'enter fissure',
+    [95769] = 'search plant &amp; enter opening',
+	},
+	that = {
+		[33357] = 'move crates',
 	}
 }
 
@@ -769,8 +982,10 @@ end
 				<regexCodeList>
 					<string>^You see no exit to the (.*)\.</string>
 					<string>^You see no exit (.*) you\.</string>
+					<string>^There is no exit in (that) direction\.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
@@ -794,8 +1009,10 @@ end
 					<string>You will have to climb your way out of here it looks like.</string>
 					<string>Unable to get a good handhold, you slip and fall.</string>
 					<string>You grab ahold of the face of the cliff, but lose your grip.</string>
+					<string>You can't fly!</string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
@@ -933,6 +1150,102 @@ send('dismount')
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>blind</name>
+				<script>send('typo')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You can't see a thing!</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>disbelieve illusion</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>A face emerges from the living wall of sand</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>special exits</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>woodworms</name>
+					<script>send('enter gap')</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>The gap is too small for you to just walk in.</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>raven wood - dive</name>
+					<script>send('dive water')</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>You will have to dive into the water.</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>tfe-mapper</name>
@@ -994,6 +1307,12 @@ if (not badWords[matches[2]]) then
   	map.move_queued = false
   end
 
+	-- replace data from keypress with the parsed data
+	if (map.lastMoveKey ~= '') then
+		map.lastMoveKey = ''
+		map.moveToProcess = 0
+	end
+	
   map.lastMoveDirection = matches[3];
 
   -- we detected a move, but hadn't finished processing the previous move
@@ -1018,9 +1337,7 @@ if (not badWords[matches[2]]) then
 
   -- skipStep()
 end
-
--- for trigger that auto drops junk (rest on move)
-dropping_junk = false</script>
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1032,7 +1349,7 @@ dropping_junk = false</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^You (\w+) (east|west|north|south|up|down)\.$</string>
+					<string>^You (\w+) (east|west|north|south|up|down)( through the dark webbing)?\.$</string>
 					<string>^You follow (\w+) (east|west|north|south|up|down)\.$</string>
 					<string>^You ride (\S+) (east|west|north|south|up|down)</string>
 				</regexCodeList>
@@ -1051,6 +1368,15 @@ map.areaIdTFE = matches[3]
 map.areaId = getAreaIdByTfeId(map.areaIdTFE);
 
 local newRoomId = tonumber(matches[2])
+
+-- if we moved due to a keypress without a leave message being triggered
+-- aka a fake move (fancy room exit/enter message)
+if (map.lastMoveKey ~= '') then
+	local dir = map.consts.exitmap[map.lastMoveKey]
+	map.lastMoveKey = ''
+	map.lastMoveDirection = dir;
+	raiseEvent(common.events.MOVE_DETECTED, dir)
+end
 
 -- if this is different to the room we were just in, trigger a room change event
 if (newRoomId ~= common.roomId) then
@@ -1398,32 +1724,14 @@ send('group')</script>
 			<packageName></packageName>
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>GOTO</name>
-				<script>
-if (matches[3]) then
-
-	local endCmd = matches[3]
-
-	common.onNextEvent(common.events.WALK_DONE, function ()
-		-- send next move when the next prompt appears\
-		echo(' &lt;-- speed walk done: running command .. ')
-  	expandAlias(endCmd)
-	end)
-
-end
-
-gotoRoom(matches[2])</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^goto (\S+)\s?&amp;?\s?(.*)$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
 				<name>go</name>
 				<script>local dest = matches[2]
 
 local lookup = {
 	hillies = 28018,
 	pixies = 44904,
+  denab = 28132,
+  denabBank = 30389,
 	kha = 27004,
 	khaBank = 27042,
 	med = 107,
@@ -1435,8 +1743,10 @@ local lookup = {
 	voalBank = 20027,
 	cairn = 26568,
 	knight = 21096,
+	hollow = 91675,
 	blade = 19370,
 	wayward = 40585,
+  whisper = 28134,
 	chi = 25000,
 	zaranders = 27500,
 	barbs = 66071,
@@ -1449,22 +1759,49 @@ local lookup = {
 	vyans = 28146,
 	root = 19376,
 	yetis = 94611,
-
+	ettercaps = 70104,
+	cairnValley = 57258,
+	temple = 21257,
+	narak = 36070,
+	halflings = 21076,
+	mirrors = 51500,
+	ironwood = 499,
+  mojBase = 3813,
+  mojBank = 3814,
+  soup = 170,
+  bots = 94604,
 }
 
-local rnum = lookup[dest]
+local rnum = lookup[dest] or dest
+
+if (not roomExists(rnum) and murder.xpoints) then
+	-- rnum = murder.xpoints[dest].roomId
+	local xpoint = murder.xpoints[tonumber(dest)]
+	
+	if (xpoint) then rnum = xpoint.roomId end
+	
+end
 
 
+if (roomExists(rnum)) then
 
-if (rnum) then
 	cecho('&lt;green&gt;GO: &lt;white&gt;rnum #' .. tostring(rnum) .. '\n')
-	gotoRoom(rnum)
+  local endCmd = matches[3]
+
+
+	mapper.gotoRoom(rnum, function () 
+		if (endCmd) then
+			expandAlias(endCmd)
+		end
+	end)
+	
 else
 	echo('\nInvalid speed walk location\n')
+	mapper.stop()
 end</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^go (.*)$</regex>
+				<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>stop movement</name>
@@ -1578,6 +1915,35 @@ end
 				<packageName></packageName>
 				<regex>^fakeMove (.*)$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>^fm([neswud])</name>
+				<script>local dir = map.consts.exitmap[matches[2]]
+
+fakeMove(dir)
+send(dir)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^fm([neswud])</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>movemen( by n e s w u d keys)</name>
+				<script>-- deleteLine()
+map.lastMoveKey = matches[2]
+send(matches[1], false)
+map.moveToProcess = 1;
+-- echo('setting last move key to ' .. matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^([neswud])\b\s?(.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>setup.prompt</name>
+				<script>send("prompt ?p' -- MORE -- '&lt;%f?f|@R%hhp@n @G%ee@n @B?m'[%mmv]'!m'%vmv'@n %gwm %xxp?l' %llhp' %d?b' %c'&gt;")
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>setup.prompt</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Misc</name>
@@ -1598,6 +1964,13 @@ end
 				<command></command>
 				<packageName></packageName>
 				<regex>^timers$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>show event handlers</name>
+				<script>displayEventHandlers()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^events$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>killAll</name>
@@ -1636,6 +2009,8 @@ player = player or {}
 common.initPlayer = function ()
 
 	echo('\n\nINITIAL STATUS CHECK\n\n')
+	
+	loadSavedGearSets()
 
 	-- GET PLAYER NAME
   timedTempTrigger(5, 1, [[^\s*([A-Z][a-z]+)\s*$]], function ()
@@ -1647,9 +2022,62 @@ common.initPlayer = function ()
 			player.scripts[player.name]()
 		end
 
+
+		-- if (not common.topContainer) then
+  		
+			-- init windows
+      common.topContainer = Geyser.Container:new({
+        name = "top_container",    -- give it a unique name here
+  			x=0,
+  			y=0,                   
+        width = "100%", 
+				color = "green",
+  			height="25%",
+      })
+			
+			common.mapContainer = Geyser.Container:new({
+        name = "map_container",    -- give it a unique name here
+  			x=0,
+  			y=0,                   
+        width = "40%", 
+  			height="100%",
+      }, common.topContainer)
+			
+			common.chatContainer = Geyser.Container:new({
+        name = "chat_container",    -- give it a unique name here
+  			x="40%",
+  			y=0,                   
+        width = "60%", 
+  			height="100%",
+      }, common.topContainer)
+  		
+  				-- init windows
+      common.mapper = Geyser.Mapper:new({
+        name = "geyser_map",    -- give it a unique name here
+  			x="2%",
+  			y="2%",                   
+        width = "96%", 
+  			height="96%",
+      }, common.mapContainer)
+  		
+      common.chatConsole = Geyser.MiniConsole:new({
+        name = "geyser_chat",    -- give it a unique name here
+  			x="2%",
+  			y="2%",                   
+        width = "96%", 
+  			height="96%",
+  			autoWrap = true,
+        color = "black",
+        scrollBar = true,
+        fontSize = 14,
+      }, common.chatContainer)
+  		
+		-- end
+
+
 	end)
 
-	send('score &amp; group &amp; inv &amp; typo &amp; prep')
+	send('score &amp; eq &amp; group &amp; inv &amp; typo &amp; prep')
 
 end</script>
 			<eventHandlerList />
@@ -1676,6 +2104,7 @@ map.moveToProcess = 0
 
 map.lost = false
 
+map.lastMoveKey = ''
 
 map.consts.exitmap = {
     n = 'north',    e = 'east',
@@ -1853,7 +2282,7 @@ function mapper.start ()
 end
 
 function mapper.stop ()
-	-- echo('\n&lt;-- muder path stopped\n')
+	cecho('\n\n&lt;red&gt;MAPPER: &lt;white&gt;muder path stopped\n\n')
 	mapper.enabled = false
 
 	mapper.speedwalking = false
@@ -2097,13 +2526,13 @@ function getAreaIdByTfeId (tfeID)
 
 	if map.mapping then
 
-  	local areaId = addAreaName("NEW: " .. map.roomName);
+  	local areaId = addAreaName("NEW: " .. roomInfo.roomName);
 
 		-- in case this area name already exists. bleh
 		local inc = 1
 		while (not areaId) do
 			inc = inc + 1
-			areaId = addAreaName("NEW: " .. map.roomName .. ' - ' .. tostring(inc));
+			areaId = addAreaName("NEW: " .. roomInfo.roomName .. ' - ' .. tostring(inc));
 		end
 
 		echo('\nMAPPER: creating new area... ' .. tostring(areaId) .. ' : ' .. tostring(tfeID) .. '\n')
@@ -2224,12 +2653,15 @@ common.events = {
 	PARSED_AFFECTS = 'COMMON::parsed_player_affects',
 	PARSED_INVENTORY = 'COMMON:parsed_inventory_contents',
 	PARSED_PREPARED = 'COMMON:parsed_prepared_spells',
+	PARSED_EQUIPMENT = 'COMMON:parsed_equipment',
+	CHANGED_EQUIPMENT = 'COMMON:changed_equipment',
 	MOVE_DETECTED = 'COMMON::move_detected',
 	ROOM_CHANGED = 'COMMON::room_changed',
 	COMBAT_ENDED = 'COMMON::combat_ended',
 	COMBAT_STARTED = 'COMMON::combat_started',
 	WALK_DONE = 'COMMON::speedwalk_completed',
-	ROOM_CLEAR = 'COMMON::current_room_is_clear'
+	ROOM_CLEAR = 'COMMON::current_room_is_clear',
+	PARRY_STATE_CHANGE = 'COMMON::parry_state_change',
 }
 
 common.tableHasValue =  function (tab, val)
@@ -2241,7 +2673,97 @@ common.tableHasValue =  function (tab, val)
   return false
 end
 
-</script>
+
+common.tfeItemListAdd = function (list, item)
+  
+	local idx = 0
+	local match = nil
+	
+	-- see if this value is already in the list
+	for index, value in ipairs(list) do
+		match = rex.match(value, '^(\\d+)?\\*?' .. item .. '$')
+    if match ~= nil then
+    	idx = index
+			break
+    end
+  end
+	
+	--  if we found a match, see how many of this item are already in the list
+	if (idx &gt; 0) then
+		local count = 1
+		if (match ~= false) then
+			count = tonumber(match)
+		end
+		count = count + 1
+		list[idx] = tostring(count) .. '*' .. item
+	else -- this is a new item
+		table.insert(list, item)
+	end
+
+	return list
+end
+
+common.reverseList = function(list)
+	
+	local i = 1
+	local j = #list
+
+	while i &lt; j do
+		list[i], list[j] = list[j], list[i]
+		i = i + 1
+		j = j - 1
+	end
+	
+	return list
+
+end
+
+
+common.setParryState = function (state, reason, callback, permanent)
+
+	local cb = callback
+
+	player.parryQueue = player.parryQueue or 0
+	
+	local currentState = player.parry
+	
+	if (player.parryQueue % 2 == 1) then
+		currentState = not currentState
+	end
+	
+		
+	if (player.parryRevertTimer) then
+		killTimer(player.parryRevertTimer)
+		player.parryRevertTimer = nil
+	end 
+
+	-- if we are turning parry on, make sure we have a plan to turn it off again
+	if (not permanent) then 
+		player.parryRevertTimer = tempTimer(15, function ()
+			if (player.parry) then
+				common.setParryState(false, 'opt parry has been on too long!')
+			end
+		end)
+	end
+	
+
+	-- if we need to swap opt parry
+	if (currentState ~= state) then	
+  
+  	cecho('\n&lt;green&gt;PARRY: &lt;white&gt;setting  - ' .. tostring(state) .. ' - ' .. reason or '?' .. '\n')
+  	send('opt parry')	
+		player.parryQueue = player.parryQueue + 1
+  	
+  	common.onNextEvent(common.events.PARRY_STATE_CHANGE, function (evt, args)
+  		if (cb) then cb() end
+    end)
+		
+	else	
+		cecho('\n&lt;green&gt;PARRY: &lt;white&gt;setting  - ' .. tostring(state) .. ' - skipping as no change needed\n')
+		if (cb) then cb() end
+	end
+
+end</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -2276,6 +2798,8 @@ common.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback,
 			fcb()
 		end
 	end, 'timed temp trigger')
+	
+	return {triggerId = triggerId, timerId = tempTimerId}
 
 end
 
@@ -2346,6 +2870,13 @@ oneRoomExitTrig = common.oneRoomExitTrig</script>
 				<script>
 common.comeToMe = function (callback)
 
+  if (group.memberCount == 1) then
+    cecho('\n&lt;yellow&gt;COMMON: &lt;white&gt;skipping regroup due to only one party member\n\n')
+    callback()
+    return
+  end
+
+
 	local mcb = callback
 	local roll = common.newRollCall(true)
 
@@ -2387,9 +2918,18 @@ end
 common.newRollCall = function (excludeSelf)
 
 	local roll = {}
+  
+  local exludeFromRollCall = { 
+    Ghosty = true,
+    BatsoFour = true,
+  }
 
 	for name, value in pairs(group.members) do
 		roll[name] = false
+	end
+  
+  for name, value in pairs(exludeFromRollCall) do
+		roll[name] = true
 	end
 
 	if (excludeSelf) then
@@ -2449,6 +2989,21 @@ common.groupOnReady = function (cb)
 
 end
 
+common.groupPrepIfUnder = function (mana, heals, cb)
+			
+	local pfcb = cb
+	
+	common.groupOnReady(function ()
+		send('gt Going!!!')					
+		if (pfcb) then
+			pfcb()
+		end
+	end)
+
+	send('gt prep full if less than ' .. tostring(heals) .. ' cure criticals')
+	send('gt get full if under ' .. tostring(mana) .. '% mana')
+
+end
 
 common.groupPrepFull = function (cb)
 
@@ -2476,6 +3031,65 @@ oTempTimer = oTempTimer or tempTimer
 oTempRegexTrigger = oTempRegexTrigger or tempRegexTrigger
 oTempTrigger = oTempTrigger or tempTrigger
 
+oRaiseEvent = oRaiseEvent or raiseEvent
+oRegisterAnonymousEventHandler = oRegisterAnonymousEventHandler or registerAnonymousEventHandler
+oKillAnonymousEventHandler = oKillAnonymousEventHandler or killAnonymousEventHandler
+
+
+eventHandlers = eventHandlers or {}
+
+function registerAnonymousEventHandler(evt, fn, selfDestruct)
+
+	local thisData = {
+		handlerId = 0,
+		thisEvt = evt,
+		lcb = fn,
+	}
+
+  local callback
+	
+	if (type(thisData.lcb) == 'string') then
+  		callback =thisData.lcb
+			cecho('\n&lt;red&gt;EVENT: &lt;white&gt;event handler defined as string - ' .. thisData.lcb .. ' : ' .. '\n')	
+	else
+		callback = function (...)
+    		local cb = thisData.lcb
+    		-- cecho('\n&lt;green&gt;EVENT: &lt;white&gt;event handler triggered - ' .. tostring(thisData.handlerId) .. ' : ' .. thisData.thisEvt .. '\n')
+				-- display(arg)
+    		return cb(unpack(arg))
+    	end
+	end
+	
+	thisData.handlerId = oRegisterAnonymousEventHandler(evt, callback, selfDestruct)
+	eventHandlers[thisData.handlerId] = evt
+	
+	return thisData.handlerId
+	
+end
+
+function killAnonymousEventHandler(id)
+
+	if (eventHandlers[id] ~= nil) then
+		-- cecho('\n&lt;green&gt;EVENT: &lt;white&gt;killed handler - ' .. tostring(id) .. ' : ' .. eventHandlers[id] .. '\n')
+		eventHandlers[id] = nil
+	else
+		-- cecho('\n&lt;red&gt;TIMER: &lt;white&gt;attempted to kill missing event handler - ' .. id .. '\n')
+	end
+	
+	return oKillAnonymousEventHandler(id)
+
+end
+
+		
+-- allow us to track raised events
+function raiseEvent(...)
+	-- cecho('\n&lt;green&gt;EVENT: &lt;white&gt;raised - ' .. arg[1] .. '\n')
+	return oRaiseEvent(unpack(arg))
+end
+
+function displayEventHandlers()
+	display(eventHandlers)
+end
 
 
 -- triggers
@@ -2498,11 +3112,11 @@ local wrapTrigger = function (triggerCommand)
   	local newCode = function (...)
 
 			if (tempTriggers[trigId]) then
-    		tempTriggers[trigId].calls = tempTriggers[trigId].calls + 1
-    		if (tempTriggers[trigId].calls == expires) then
-  	  		tempTriggers[trigId] = nil
-    			-- cecho('\n&lt;orange&gt;trigger died of natural causes - ' .. trigId .. ' : ' .. regex .. '\n')
-    		end
+      		tempTriggers[trigId].calls = tempTriggers[trigId].calls + 1
+      		if (tempTriggers[trigId].calls == expires) then
+    	  			tempTriggers[trigId] = nil
+      			-- cecho('\n&lt;orange&gt;trigger died of natural causes - ' .. trigId .. ' : ' .. regex .. '\n')
+      		end
 			end
 
   		return oCode(...)
@@ -2550,7 +3164,12 @@ tempTimer = function(seconds, code, description)
 	local decoratedCode = function (...)
 		-- cecho('\n&lt;green&gt;TIMER: &lt;white&gt;timer ran - ' .. tostring(timerId)  .. ' : ' .. (tempTimers[timerId] or '???') .. '\n')
 		-- display(tempTimers)
+    -- rabies. next to check if oCode is a string and eval it or something lke that. bleh
 		tempTimers[timerId] = nil
+    if (type(oCode) == 'string') then
+      cecho('\n\nERROR in timer code, not a function: ' .. oCode .. '\n\n')
+    end
+    
 		oCode(...)
 	end
 
@@ -2590,6 +3209,20 @@ end
 				<name>formatters</name>
 				<packageName></packageName>
 				<script>
+common.consoleMessage = function(console, message, statusColor)
+
+  local color = 'green'
+  
+  if (statusColor) then 
+    color = statusColor 
+  end
+  
+  console:cecho('&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n")
+end
+
+
+
+
 common.formatElapsedTime = function (time)
 
 	local ts = '';
@@ -2597,6 +3230,10 @@ common.formatElapsedTime = function (time)
 	if (not time) then
 		return '0 seconds'
 	end
+	
+	local hrs = 0
+	local mins = 0
+	local secs = 0
 
 	if (time &gt;= 3600) then
 		hrs = math.floor(time / 3600)
@@ -2663,6 +3300,25 @@ common.dotCase = function(string)
 	return rex.gsub(string, [[\b(the|or|an|a|of|with|and|A|An|The) ]], ''):gsub(' ', '.')
 end
 
+
+common.itemSanitize = function(string)
+
+	if (not string or string == '') then
+		return ''
+	end
+	return rex.gsub(string, [[(empty, |flaming, frost-covered |flaming |frost-covered |labeled |empty |\s\+\d)]], '')
+end
+
+common.itemShorten = function(item)
+
+  return rex.gsub(
+		rex.gsub(common.dotCase(common.itemSanitize(item)),"'(.*)'",'%1'), 
+		'([^.][^.][^.][^.]?)[^.]+', 
+		'%1'
+	)
+	
+end
+
 common.commaCase = function (str)
     local extra = #str%3
     if string.sub(str,1,1) == "-" then
@@ -2680,16 +3336,15 @@ common.commaCase = function (str)
     for w in string.gmatch(str,"%d%d%d") do
         result = result .. "," .. w
     end
-    return result
+    return result:gsub([[^,?]],'')
 end
-
 
 
 
 common.toMurderString = function (victim)
 
 	-- remove any articles etc
-	victim = rex.gsub(victim, [[^(a|an|the|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+	victim = rex.gsub(victim, [[\b(a|an|the|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
 
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
@@ -2697,17 +3352,31 @@ common.toMurderString = function (victim)
 	-- turn women back to womans
 	victim = rex.gsub(victim, [[women\b]], 'woman')
 
+	-- drop i from end (plurals like homonculi
+	victim = rex.gsub(victim, [[i\b]], '')
+
+
+
 	 -- turn mercenaries back into mercanary
 	victim = rex.gsub(victim, [[ies$]], 'y')
 
-	-- dump any s's or es's on the end of a plural  west : two greater cyclopes, vs a greater cyclops
-	victim = rex.gsub(victim, [[(es|'?s'?)\b]], '')
+	-- dump any s's or es's on the end of a plural  
+	-- west : two greater cyclopses, vs a greater cyclops
+	-- drudges should go to drudge tho...
+	if (rex.find(victim, [[ses\b]])) then
+		victim = rex.gsub(victim, [[ses\b]], 's')
+	elseif (rex.find(victim, [[es\b]])) then
+		victim = rex.gsub(victim, [[es\b]], 'e')
+	else
+		victim = rex.gsub(victim, [[('?s'?)\b]], '')
+	end
 
 	-- dump any random commas
 	victim = rex.gsub(victim, [[,]], '')
 
 	-- kill any parts less than 3 charaters
-	victim = rex.gsub(victim, [[(\b|\.|\s)\w\w?(\s|\.|\b)]], '%1%2')
+	
+	victim = rex.gsub(victim, [[(^|\.|\s)\S\S?(\s|\.|$)]], '%1%2')
 
 	-- kill any extra whitepsace or multiple .'s
 	victim = rex.gsub(victim, [[(\s\s+|\.\.+)]], ' ')
@@ -2789,7 +3458,8 @@ common.onFull = function (callback)
 		if(readyStatus) then
 			callback()
 		else
-			tempTimer(10, function ()
+			common.checkFullTimer = tempTimer(10, function ()
+				common.checkFullTimer = nil
 				common.onFull(callback)
 			end, 'on full')
 		end
@@ -2798,6 +3468,418 @@ common.onFull = function (callback)
 
 end
 </script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>JSON</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+common = common or {}
+
+--
+-- json.lua
+--
+-- Copyright (c) 2019 rxi
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+--
+
+local json = { _version = "0.1.2" }
+
+-------------------------------------------------------------------------------
+-- Encode
+-------------------------------------------------------------------------------
+
+local encode
+
+local escape_char_map = {
+  [ "\\" ] = "\\\\",
+  [ "\"" ] = "\\\"",
+  [ "\b" ] = "\\b",
+  [ "\f" ] = "\\f",
+  [ "\n" ] = "\\n",
+  [ "\r" ] = "\\r",
+  [ "\t" ] = "\\t",
+}
+
+local escape_char_map_inv = { [ "\\/" ] = "/" }
+for k, v in pairs(escape_char_map) do
+  escape_char_map_inv[v] = k
+end
+
+
+local function escape_char(c)
+  return escape_char_map[c] or string.format("\\u%04x", c:byte())
+end
+
+
+local function encode_nil(val)
+  return "null"
+end
+
+
+local function encode_table(val, stack)
+  local res = {}
+  stack = stack or {}
+
+  -- Circular reference?
+  if stack[val] then error("circular reference") end
+
+  stack[val] = true
+
+  if rawget(val, 1) ~= nil or next(val) == nil then
+    -- Treat as array -- check keys are valid and it is not sparse
+    local n = 0
+    for k in pairs(val) do
+      if type(k) ~= "number" then
+        error("invalid table: mixed or invalid key types")
+      end
+      n = n + 1
+    end
+    if n ~= #val then
+      error("invalid table: sparse array")
+    end
+    -- Encode
+    for i, v in ipairs(val) do
+      table.insert(res, encode(v, stack))
+    end
+    stack[val] = nil
+    return "[" .. table.concat(res, ",") .. "]"
+
+  else
+    -- Treat as an object
+    for k, v in pairs(val) do
+      if type(k) ~= "string" then
+        error("invalid table: mixed or invalid key types")
+      end
+      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+    end
+    stack[val] = nil
+    return "{" .. table.concat(res, ",") .. "}"
+  end
+end
+
+
+local function encode_string(val)
+  return '"' .. val:gsub('[%z\1-\31\\"]', escape_char) .. '"'
+end
+
+
+local function encode_number(val)
+  -- Check for NaN, -inf and inf
+  if val ~= val or val &lt;= -math.huge or val &gt;= math.huge then
+    error("unexpected number value '" .. tostring(val) .. "'")
+  end
+  return string.format("%.14g", val)
+end
+
+
+local type_func_map = {
+  [ "nil"     ] = encode_nil,
+  [ "table"   ] = encode_table,
+  [ "string"  ] = encode_string,
+  [ "number"  ] = encode_number,
+  [ "boolean" ] = tostring,
+}
+
+
+encode = function(val, stack)
+  local t = type(val)
+  local f = type_func_map[t]
+  if f then
+    return f(val, stack)
+  end
+  error("unexpected type '" .. t .. "'")
+end
+
+
+function json.encode(val)
+  return ( encode(val) )
+end
+
+
+-------------------------------------------------------------------------------
+-- Decode
+-------------------------------------------------------------------------------
+
+local parse
+
+local function create_set(...)
+  local res = {}
+  for i = 1, select("#", ...) do
+    res[ select(i, ...) ] = true
+  end
+  return res
+end
+
+local space_chars   = create_set(" ", "\t", "\r", "\n")
+local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
+local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
+local literals      = create_set("true", "false", "null")
+
+local literal_map = {
+  [ "true"  ] = true,
+  [ "false" ] = false,
+  [ "null"  ] = nil,
+}
+
+
+local function next_char(str, idx, set, negate)
+  for i = idx, #str do
+    if set[str:sub(i, i)] ~= negate then
+      return i
+    end
+  end
+  return #str + 1
+end
+
+
+local function decode_error(str, idx, msg)
+  local line_count = 1
+  local col_count = 1
+  for i = 1, idx - 1 do
+    col_count = col_count + 1
+    if str:sub(i, i) == "\n" then
+      line_count = line_count + 1
+      col_count = 1
+    end
+  end
+  error( string.format("%s at line %d col %d", msg, line_count, col_count) )
+end
+
+
+local function codepoint_to_utf8(n)
+  -- http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&amp;id=iws-appendixa
+  local f = math.floor
+  if n &lt;= 0x7f then
+    return string.char(n)
+  elseif n &lt;= 0x7ff then
+    return string.char(f(n / 64) + 192, n % 64 + 128)
+  elseif n &lt;= 0xffff then
+    return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
+  elseif n &lt;= 0x10ffff then
+    return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
+                       f(n % 4096 / 64) + 128, n % 64 + 128)
+  end
+  error( string.format("invalid unicode codepoint '%x'", n) )
+end
+
+
+local function parse_unicode_escape(s)
+  local n1 = tonumber( s:sub(3, 6),  16 )
+  local n2 = tonumber( s:sub(9, 12), 16 )
+  -- Surrogate pair?
+  if n2 then
+    return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+  else
+    return codepoint_to_utf8(n1)
+  end
+end
+
+
+local function parse_string(str, i)
+  local has_unicode_escape = false
+  local has_surrogate_escape = false
+  local has_escape = false
+  local last
+  for j = i + 1, #str do
+    local x = str:byte(j)
+
+    if x &lt; 32 then
+      decode_error(str, j, "control character in string")
+    end
+
+    if last == 92 then -- "\\" (escape char)
+      if x == 117 then -- "u" (unicode escape sequence)
+        local hex = str:sub(j + 1, j + 5)
+        if not hex:find("%x%x%x%x") then
+          decode_error(str, j, "invalid unicode escape in string")
+        end
+        if hex:find("^[dD][89aAbB]") then
+          has_surrogate_escape = true
+        else
+          has_unicode_escape = true
+        end
+      else
+        local c = string.char(x)
+        if not escape_chars[c] then
+          decode_error(str, j, "invalid escape char '" .. c .. "' in string")
+        end
+        has_escape = true
+      end
+      last = nil
+
+    elseif x == 34 then -- '"' (end of string)
+      local s = str:sub(i + 1, j - 1)
+      if has_surrogate_escape then
+        s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
+      end
+      if has_unicode_escape then
+        s = s:gsub("\\u....", parse_unicode_escape)
+      end
+      if has_escape then
+        s = s:gsub("\\.", escape_char_map_inv)
+      end
+      return s, j + 1
+
+    else
+      last = x
+    end
+  end
+  decode_error(str, i, "expected closing quote for string")
+end
+
+
+local function parse_number(str, i)
+  local x = next_char(str, i, delim_chars)
+  local s = str:sub(i, x - 1)
+  local n = tonumber(s)
+  if not n then
+    decode_error(str, i, "invalid number '" .. s .. "'")
+  end
+  return n, x
+end
+
+
+local function parse_literal(str, i)
+  local x = next_char(str, i, delim_chars)
+  local word = str:sub(i, x - 1)
+  if not literals[word] then
+    decode_error(str, i, "invalid literal '" .. word .. "'")
+  end
+  return literal_map[word], x
+end
+
+
+local function parse_array(str, i)
+  local res = {}
+  local n = 1
+  i = i + 1
+  while 1 do
+    local x
+    i = next_char(str, i, space_chars, true)
+    -- Empty / end of array?
+    if str:sub(i, i) == "]" then
+      i = i + 1
+      break
+    end
+    -- Read token
+    x, i = parse(str, i)
+    res[n] = x
+    n = n + 1
+    -- Next token
+    i = next_char(str, i, space_chars, true)
+    local chr = str:sub(i, i)
+    i = i + 1
+    if chr == "]" then break end
+    if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
+  end
+  return res, i
+end
+
+
+local function parse_object(str, i)
+  local res = {}
+  i = i + 1
+  while 1 do
+    local key, val
+    i = next_char(str, i, space_chars, true)
+    -- Empty / end of object?
+    if str:sub(i, i) == "}" then
+      i = i + 1
+      break
+    end
+    -- Read key
+    if str:sub(i, i) ~= '"' then
+      decode_error(str, i, "expected string for key")
+    end
+    key, i = parse(str, i)
+    -- Read ':' delimiter
+    i = next_char(str, i, space_chars, true)
+    if str:sub(i, i) ~= ":" then
+      decode_error(str, i, "expected ':' after key")
+    end
+    i = next_char(str, i + 1, space_chars, true)
+    -- Read value
+    val, i = parse(str, i)
+    -- Set
+    res[key] = val
+    -- Next token
+    i = next_char(str, i, space_chars, true)
+    local chr = str:sub(i, i)
+    i = i + 1
+    if chr == "}" then break end
+    if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
+  end
+  return res, i
+end
+
+
+local char_func_map = {
+  [ '"' ] = parse_string,
+  [ "0" ] = parse_number,
+  [ "1" ] = parse_number,
+  [ "2" ] = parse_number,
+  [ "3" ] = parse_number,
+  [ "4" ] = parse_number,
+  [ "5" ] = parse_number,
+  [ "6" ] = parse_number,
+  [ "7" ] = parse_number,
+  [ "8" ] = parse_number,
+  [ "9" ] = parse_number,
+  [ "-" ] = parse_number,
+  [ "t" ] = parse_literal,
+  [ "f" ] = parse_literal,
+  [ "n" ] = parse_literal,
+  [ "[" ] = parse_array,
+  [ "{" ] = parse_object,
+}
+
+
+parse = function(str, idx)
+  local chr = str:sub(idx, idx)
+  local f = char_func_map[chr]
+  if f then
+    return f(str, idx)
+  end
+  decode_error(str, idx, "unexpected character '" .. chr .. "'")
+end
+
+
+function json.decode(str)
+  if type(str) ~= "string" then
+    error("expected argument of type string, got " .. type(str))
+  end
+  local res, idx = parse(str, next_char(str, 1, space_chars, true))
+  idx = next_char(str, idx, space_chars, true)
+  if idx &lt;= #str then
+    decode_error(str, idx, "trailing garbage")
+  end
+  return res
+end
+
+
+common.json = json</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
