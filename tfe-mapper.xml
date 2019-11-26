@@ -44,9 +44,29 @@ if (tfe.roomInfo and tfe.roomInfo.roomId) then
   tfe.previousRoomInfo = tfe.roomInfo 
 end
 
+
+-- if mapping we dont' want to have a new room info come in before a new id is added
+if (
+  tfe.mapping and 
+  tfe.roomInfo and 
+  not tfe.roomInfo.roomId and
+  (tfe.roomInfo.roomName ~= roomInfo.name or tfe.roomInfo.exits ~= roomInfo.exits)
+) then
+    
+  cecho('\n\n\n')
+  cecho('+--------------------------------------------------------------------------------+\n')
+  cecho('|                                                                                |\n')
+  cecho('|     &lt;red&gt;TFE MAP: &lt;white&gt;move happened that we weren\'t expecting - stopping mapper         |\n')
+  cecho('|     spamming moves while mapping is bad yo!                                    |\n')
+  cecho('|                                                                                |\n')
+  cecho('+--------------------------------------------------------------------------------+\n')
+  cecho('\n\n\n')
+  tfe.mapping_stop()
+        
+end
+
+
 tfe.roomInfo = roomInfo
-
-
 </script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>1</conditonLineDelta>
@@ -98,10 +118,29 @@ if (tfe.roomInfo and tfe.roomInfo.roomId) then
   tfe.previousRoomInfo = tfe.roomInfo
 end
 
-tfe.roomInfo = roomInfo
+
+-- if mapping we dont' want to have a new room info come in before a new id is added
+if (
+  tfe.mapping and 
+  tfe.roomInfo and 
+  not tfe.roomInfo.roomId and
+  (tfe.roomInfo.roomName ~= roomInfo.name or tfe.roomInfo.exits ~= roomInfo.exits)
+) then
+    
+  cecho('\n\n\n')
+  cecho('+--------------------------------------------------------------------------------+\n')
+  cecho('|                                                                                |\n')
+  cecho('|     &lt;red&gt;TFE MAP: &lt;white&gt;move happened that we weren\'t expecting - stopping mapper         |\n')
+  cecho('|     spamming moves while mapping is bad yo!                                    |\n')
+  cecho('|                                                                                |\n')
+  cecho('+--------------------------------------------------------------------------------+\n')
+  cecho('\n\n\n')
+  tfe.mapping_stop()
+        
+end
 
 
-</script>
+tfe.roomInfo = roomInfo</script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>5</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
@@ -143,7 +182,29 @@ if (tfe.previousRoomInfo and tfe.roomInfo.roomId ~= tfe.previousRoomInfo.roomId)
   
   raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
   
+  if (tfe.currentMoveStep == tfe.consts.moveSteps[1]) then
+    
+    tfe.currentMoveStep = tfe.consts.moveSteps[2]
+    
+    if (tfe.mapping) then
+      tfe.addCurrentRoom()
+      tfe.currentMoveStep = nil
+    end
+    
+  elseif tfe.mapping then
+    cecho('\n\n\n')
+    cecho('+--------------------------------------------------------------------------------+\n')
+    cecho('|                                                                                |\n')
+    cecho('|     &lt;red&gt;TFE MAP: &lt;white&gt;move happened that we weren\'t expecting - stopping mapper         |\n')
+    cecho('|                                                                                |\n')
+    cecho('+--------------------------------------------------------------------------------+\n')
+    cecho('\n\n\n')
+    tfe.mapping_stop()
+  end
+  
 end
+
+
 
 centerview(tfe.roomInfo.roomId)
 
@@ -501,7 +562,7 @@ local lookup = {
 
 local rnum = lookup[dest] or dest
 
-if (typeof(rnum) == 'string' and roomExists(rnum)) then
+if (type(rnum) == 'number' and roomExists(rnum)) then
 
 	cecho('&lt;green&gt;TFE MAP: &lt;white&gt; rnum #' .. tostring(rnum) .. '\n')
  
