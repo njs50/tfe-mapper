@@ -3306,7 +3306,7 @@ common.itemSanitize = function(string)
 	if (not string or string == '') then
 		return ''
 	end
-	return rex.gsub(string, [[(empty, |flaming, frost-covered |flaming |frost-covered |labeled |empty |\s\+\d)]], '')
+	return rex.gsub(string, [[(enchanted |empty, |flaming, frost-covered |flaming |frost-covered |labeled |empty |\s\+\d)]], '')
 end
 
 common.itemShorten = function(item)
