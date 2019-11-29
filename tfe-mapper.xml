@@ -401,8 +401,10 @@ if exits[exitDir] then
 
 	local thisExit = exits[exitDir]
 
-  if (thisExit[tfe.roomInfo.roomId]) then
-  	send(thisExit[tfe.roomInfo.roomId])
+  local roomId = tonumber(tfe.roomInfo.roomId)
+
+  if (thisExit[roomId]) then
+  	send(thisExit[roomId])
 	else
 
   	local exit = exitDir
@@ -460,6 +462,97 @@ send('dismount')
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>need to climb up</name>
+				<script>send('climb up')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You see no exit above you.</string>
+					<string>There's no way to reach the top of the cliff unless you have the ability to climb it.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>need to climb down</name>
+				<script>send('climb down')</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You see no exit below you.</string>
+					<string>You step toward the edge of the cliff and decide not to walk off the edge.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>The x to the y is closed.</name>
+				<script>disableTrigger('The x to the y is closed.')
+
+local vic = njs50.dotCase(njs50.toMurderString(matches[2]))
+
+-- convert north gate etc -&gt; gate
+vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '') 
+
+local dir = matches[3]
+
+send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
+send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
+send('open ' .. vic .. ' &amp; open ' .. dir)
+send('knock ' .. vic .. ' &amp; knock ' .. dir)
+send('pound ' .. vic .. ' &amp; pound ' .. dir)
+
+tempTimer(2, function () send('scan') end, 'scan after attempting to open')
+
+tempTimer(1, function ()
+	enableTrigger('The x to the y is closed.')
+end, 'reenable closed door trig')
+
+if (tfe.speedwalking) then
+	send(tfe.lastMoveDirection)
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^The (.+) to the (.+) (is|are) closed.</string>
+					<string>^Perhaps you should open the (double) (doors)</string>
+					<string>^The (.*) (below|above) you (is|are) closed.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
@@ -550,6 +643,8 @@ local lookup = {
 	temple = 21257,
 	narak = 36070,
 	halflings = 21076,
+  midnight = 76594,
+  corsair = 42511,
 }
 
 local rnum = lookup[dest] or dest
@@ -623,6 +718,151 @@ njs50.onNextEvent = function (evt, callback)
 	end
 
 end</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>formatters</name>
+			<packageName></packageName>
+			<script>
+
+njs50.getNumber = function (text)
+
+	local wordToNumberData = {
+  	a = 1,
+  	an = 1,
+  	the = 1,
+		one = 1,
+		two = 2,
+		three = 3,
+		four = 4,
+		five = 5,
+		six = 6,
+		seven = 7,
+		eight = 8,
+		nine = 9,
+		ten = 10,
+		eleven = 11,
+		twelve = 12,
+		thrirteen = 13,
+		fourteen = 14,
+	}
+
+	local numTxt = rex.match(text, [[^\S+]])
+
+	if (numTxt) then
+		return wordToNumberData[string.lower(numTxt)] or 1
+	else
+		-- either it's more than 14 or a proper noun. i.e Stinky (your mount
+		return 1
+	end
+
+end
+
+
+njs50.dotCase = function(string)
+
+	if (not string or string == '') then
+		return ''
+	end
+	return rex.gsub(string, [[\b(the|or|an|a|of|with|and|A|An|The) ]], ''):gsub(' ', '.')
+end
+
+
+njs50.itemSanitize = function(string)
+
+	if (not string or string == '') then
+		return ''
+	end
+	return rex.gsub(string, [[(enchanted |empty, |flaming, frost-covered |flaming |frost-covered |labeled |empty |\s\+\d)]], '')
+end
+
+njs50.itemShorten = function(item)
+
+  return rex.gsub(
+		rex.gsub(common.dotCase(common.itemSanitize(item)),"'(.*)'",'%1'), 
+		'([^.][^.][^.][^.]?)[^.]+', 
+		'%1'
+	)
+	
+end
+
+njs50.commaCase = function (str)
+    local extra = #str%3
+    if string.sub(str,1,1) == "-" then
+        if extra == 0 then
+            extra = 3
+        else
+            extra = extra + 1
+        end
+    end
+    local result = ""
+    if extra &gt; 0 then
+        result = string.sub(str,1,extra)
+        str = string.sub(str,extra+1)
+    end
+    for w in string.gmatch(str,"%d%d%d") do
+        result = result .. "," .. w
+    end
+    return result:gsub([[^,?]],'')
+end
+
+
+
+njs50.toMurderString = function (victim)
+
+	-- remove any articles etc
+	victim = rex.gsub(victim, [[\b(a|an|the|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+
+	-- turn elves back into elf, dwarves etc
+	victim = rex.gsub(victim, [[ves$]], 'f')
+
+	-- turn women back to womans
+	victim = rex.gsub(victim, [[women\b]], 'woman')
+
+	-- drop i from end (plurals like homonculi
+  local ignoreTerminalI = {
+    yeti = true
+  }
+  
+  if (not ignoreTerminalI[victim]) then
+	 victim = rex.gsub(victim, [[i\b]], '')
+  end
+
+
+
+	 -- turn mercenaries back into mercanary
+	victim = rex.gsub(victim, [[ies$]], 'y')
+
+	-- dump any s's or es's on the end of a plural  
+	-- west : two greater cyclopses, vs a greater cyclops
+	-- drudges should go to drudge tho...
+	if (rex.find(victim, [[ses\b]])) then
+		victim = rex.gsub(victim, [[ses\b]], 's')
+	elseif (rex.find(victim, [[es\b]])) then
+		victim = rex.gsub(victim, [[es\b]], 'e')
+	else
+		victim = rex.gsub(victim, [[('?s'?)\b]], '')
+	end
+
+	-- dump any random commas
+	victim = rex.gsub(victim, [[,]], '')
+
+	-- kill any parts less than 3 charaters
+	
+	victim = rex.gsub(victim, [[(^|\.|\s)\S\S?(\s|\.|$)]], '%1%2')
+
+	-- kill any extra whitepsace or multiple .'s
+	victim = rex.gsub(victim, [[(\s\s+|\.\.+)]], ' ')
+	victim = string.trim(victim)
+
+	-- kill any . at start or end.
+	victim = rex.gsub(victim, [[^\.]], '')
+	victim = rex.gsub(victim, [[\.$]], '')
+
+	return victim
+
+end
+</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
