@@ -3,11 +3,17 @@ a quick n dirty mudlet mapper for the forests edge mud
 
 ## getting started
 
-install instructions coming at some point (when i figure out how it works :p)
+paste the following into mudlet to auto install this package:
 
-you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/njs50-mapper.xml) and install it via package managemer
+```lua
+lua local a="https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"local function b(c,d)if not d:find("tfe-mapper",1,true)then return end installPackage(d)os.remove(d)cecho("<lime_green>Package installed!\n")end registerAnonymousEventHandler("sysDownloadDone",b)downloadFile(getMudletHomeDir()..(a:ends("xml")and"/tfe-mapper.xml"or"/tfe-mapper.zip"),a)
+```
 
-you can import my [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) through the mudlet mapping prefrences if you want to grab a map that has some of the basic stuff filled out.
+or you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/njs50-mapper.xml) and install it via package or module managemer
+
+## quick start map
+
+you can import my starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) through the mudlet prefrences. It has most of the cities and mage gatestones mapped out.
 
 ## map commands
 
@@ -30,6 +36,4 @@ you can import my [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master
 
 in mapping there a `no exit to the x` trigger you might need to add addittional things to, i.e where an exit requires a special command. i.e "enter hole" instead of "west".
 
-
-
-
+theres another one in there to open doors etc.
