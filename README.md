@@ -11,17 +11,21 @@ lua local a="https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mappe
 
 or you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/tfe-mapper.xml) and install it via package or module managemer
 
-## quick start map
+## quick start
 
-you can import my starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) through the mudlet prefrences. It has most of the cities and mage gatestones mapped out.
+make sure you have gmcp enabled in mudlet prefrences. entering  `lua display(gmcp)` should give you some info if it is working.
+mapping should be mostly automatic, however special exits need special love!
+
+protip: if it doesn't show up as an exit, it is a special exit, and you need to use the `map exit` command below to tell the mapper which direction the exit is in and what the command is to go there. If you don't do this then speedwalking won't work there. You can use special exits for door commands as well instead of having to write triggers...
 
 ## map commands
 
-`tfemap start` - start mapping, if you already have a map you should do it from a room you already know so that things join up nicely
+`map exit [n|e|s|w|u|d] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse.
 
-`tfemap stop` - stops mapping. might be a good idea if something went horribly wrong. i think atm it might also stop if you do a speedwalk.
+`map exit cancel` - will cancel any pending special exits. this is only going to be useful if the command failed to move rooms, otherwise you might need to delete the rooms in mudlet and try again.
 
-`tfemap area [area name]` - lets you name your current area on the map. nb: this is the "zone" in tfe you are in. some of them are super weird. like bits of chiiron and med and dungeons are all mixed togeather in one zone. most things that show up in "area" are a single zone tho.
+`map reset` - will completely reset the area you are currently in. you should only use this if you really messed things up.
+
 
 ## move commands
 
@@ -32,8 +36,8 @@ you can import my starter map [njs50-map.dat](https://github.com/njs50/tfe-mappe
 `stop|pause|resume` - pause or resume or stop speedwalk
 
 
-## triggers of note
+## starter map
 
-in mapping there a `no exit to the x` trigger you might need to add addittional things to, i.e where an exit requires a special command. i.e "enter hole" instead of "west".
+I've removed this pending me regenerating it... was previously available at:
 
-theres another one in there to open doors etc.
+starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences.
