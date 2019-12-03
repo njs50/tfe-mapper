@@ -20,7 +20,7 @@ protip: if it doesn't show up as an exit, it is a special exit, and you need to 
 
 ## starter map
 
-starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences. I mapped out most of the path from voaleth to pennan and the towns in between. note the exits into chiiron are locked, lighties might want to unlock those (right click room on map) and use the map exit command to add a special exit into the city.
+starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences. I mapped out most of the paths between cities and to gate stones. chiiron should have it's entrances locked so lighties might need to unlock those (right click the room in the map) and add the special exits to enter (i.e `map exit w knock gate & west`)
 
 ## map commands
 

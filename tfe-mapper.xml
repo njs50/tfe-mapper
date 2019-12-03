@@ -157,7 +157,7 @@ end
 		</Trigger>
 		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>You can't do that while mounted.</name>
-			<script>common.onNextEvent(njs50.events.ROOM_CHANGED, function ()
+			<script>njs50.onNextEvent(tfe.events.ROOM_CHANGED, function ()
 	send('mount')
 end)
 send('dismount')
@@ -1196,12 +1196,14 @@ end
 
 
 tfe.rerouteSpeedwalk = function ()
-  cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
-  if (tfe.speedwalking.roomChangeWatcher) then
-    tfe.speedwalking.roomChangeWatcher()
-    tfe.speedwalking.roomChangeWatcher = nil
+  if (tfe.speedwalking) then 
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
+    if (tfe.speedwalking.roomChangeWatcher) then
+      tfe.speedwalking.roomChangeWatcher()
+      tfe.speedwalking.roomChangeWatcher = nil
+    end
+    tfe.gotoRoom(tfe.speedwalking.destination, tfe.speedwalking.options)
   end
-  tfe.gotoRoom(tfe.speedwalking.destination, tfe.speedwalking.options)
 end
 
 
