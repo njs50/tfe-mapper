@@ -18,11 +18,22 @@ mapping should be mostly automatic, however special exits need special love!
 
 protip: if it doesn't show up as an exit, it is a special exit, and you need to use the `map exit` command below to tell the mapper which direction the exit is in and what the command is to go there. If you don't do this then speedwalking won't work there. You can use special exits for door commands as well instead of having to write triggers...
 
+## starter map
+
+starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences. I mapped out most of the path from voaleth to pennan and the towns in between. note the exits into chiiron are locked, lighties might want to unlock those (right click room on map) and use the map exit command to add a special exit into the city.
+
 ## map commands
 
-`map exit [n|e|s|w|u|d] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse.
+`map exit [n|e|s|w|u|d|in|out] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse.
 
 `map exit cancel` - will cancel any pending special exits. this is only going to be useful if the command failed to move rooms, otherwise you might need to delete the rooms in mudlet and try again.
+
+`map connect [n|e|s|w|u|d|in|out] <cmd>` - connects the previous room to this one using the direction specified and the command you enter. the direction should be the direction you just travelled. this is useful if you just entered a room in a strange way and it isn't added to the map yet.
+
+e.g. from the waterfall north of chiiron. if you entered the crevice you would do `map connect n enter crevice` from inside the cave to add the new room and connect it to the previous room using the enter crevice command. to add the reverse direction back you could also do `map exit s enter crevice`.
+
+<!--
+`map connect [n|e|s|w|u|d|in|out <room vnum> <room2 vnum>` - connects two rooms togeather using the specified direction -->
 
 `map reset` - will completely reset the area you are currently in. you should only use this if you really messed things up.
 
@@ -36,8 +47,3 @@ protip: if it doesn't show up as an exit, it is a special exit, and you need to 
 `stop|pause|resume` - pause or resume or stop speedwalk
 
 
-## starter map
-
-I've removed this pending me regenerating it... was previously available at:
-
-starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences.
