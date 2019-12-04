@@ -498,6 +498,8 @@ end</script>
     end
   end,
   
+  update = njs50.update_mapper,
+  
 }
 
 if (commands[matches[2]]) then
@@ -507,7 +509,7 @@ else
 end</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^map (reset)\s?(.*)$</regex>
+			<regex>^map (reset|update)\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>go</name>
@@ -742,7 +744,25 @@ njs50.config = {
 
   rewrite_scan = false, -- make scan results clickable (move or attack)
 
-}</script>
+}
+
+njs50.update_mapper = function ()
+
+  local URL = "https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"
+  
+  njs50.onNextEvent("sysDownloadDone", function (_, f)
+    if not f:find("tfe-mapper", 1, true) then 
+      return 
+    end
+    uninstallPackage("tfe-mapper")
+    installPackage(f)
+    os.remove(f)
+    cecho("&lt;lime_green&gt;Package installed!\n") 
+  end)
+  
+  downloadFile(getMudletHomeDir()..(URL:ends("xml") and "/tfe-mapper.xml" or "/tfe-mapper.zip"), URL)
+
+end</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
