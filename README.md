@@ -24,6 +24,8 @@ starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50
 
 ## map commands
 
+`map update` - updates this package to the latest version in github. beware: this would kill any changes you've made in the package. (best to install as a module if you want to make changes).
+
 `map exit [n|e|s|w|u|d|in|out] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse.
 
 `map exit cancel` - will cancel any pending special exits. this is only going to be useful if the command failed to move rooms, otherwise you might need to delete the rooms in mudlet and try again.
