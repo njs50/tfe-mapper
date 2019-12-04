@@ -556,9 +556,13 @@ local lookup = {
 
 local rnum = lookup[dest] or dest
 
+if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
+  rnum = tonumber(rnum)
+end
+
 if (type(rnum) == 'number' and roomExists(rnum)) then
 
-	cecho('&lt;green&gt;TFE MAP: &lt;white&gt; rnum #' .. tostring(rnum) .. '\n')
+	cecho('&lt;green&gt;TFE MAP:&lt;white&gt; going to ' .. getRoomName(rnum) .. '\n')
  
   local endCmd = matches[3]
 
