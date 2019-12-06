@@ -3,33 +3,6 @@
 <MudletPackage version="1.001">
 	<TriggerPackage>
 		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>repeat stuff jammed in prompt</name>
-			<script>if (matches[3]) then
-	local prompt = matches[2]
-	local stuff = matches[3]
-  -- echo('\n^^ PROMPT FAIL: [' .. stuff .. ']\n')
-  feedTriggers(prompt .. '\n')
-  feedTriggers(stuff .. '\n')
-end
-</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^(&lt;[^&gt;]*&gt;)\s*(\S.+)$</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>scanner</name>
 			<script>
 -- You see nothing in the vicinity.
@@ -79,27 +52,6 @@ else
 			</regexCodeList>
 			<regexCodePropertyList>
 				<integer>1</integer>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>prompt</name>
-			<script>raiseEvent(njs50.scanner.events.PROMPT)
-</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^&lt;.+&gt;\s*$</string>
-			</regexCodeList>
-			<regexCodePropertyList>
 				<integer>1</integer>
 			</regexCodePropertyList>
 		</Trigger>
@@ -179,267 +131,9 @@ send('dismount')
 				<integer>2</integer>
 			</regexCodePropertyList>
 		</Trigger>
-		<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>depricated</name>
-			<script></script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>no exit to the x</name>
-				<script>
-local exitDir = matches[2]
-
-cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exitDir .. '... ' .. tfe.roomInfo.vnum .. '\n' )
-
-local exits = {
-  east = {
-  	[1022]  = 'move bush &amp; east',
-		[28102] = 'move moss &amp; east',
-		[28095] = 'move bush &amp; east',
-		[48175] = 'move landslide &amp; east',
-		[66014] = 'dig ice',
-		[75000] = 'move rock',
-		[21135] = 'enter crack &amp; get chain &amp; queue loop chain &amp; queue drop chain',
-		[65503] = 'enter crev',
-		[91662] = 'open crack',
-		[37161] = 'move board &amp; enter hole',
-		[23502] = 'enter break',
-    [82021] = 'stand &amp; break ice',
-    [82012] = 'enter crev',
-    [82002] = 'dig drift &amp; scan',
-    [4008] = 'enter water',
-    [48152] = 'move pile',
-	},
-	west = {
-		[28134] = 'move moss &amp; west',
-		[28102] = 'move bush &amp; west',
-		[37045] = 'move landslide &amp; west',
-		[48180] = 'touch lotus',
-		[47761] = 'move bush',
-		[32023] = 'pull lever &amp; west',
-		[66058] = 'dig ice',
-		[35963] = 'move rock',
-		[26542] = 'enter crev',
-		[65502] = 'enter crack',
-		[37055] = 'move board &amp; enter hole',
-		[37160] = 'twist knob',
-		[48169] = 'lift beam &amp; pull lever',
-		[23506] = 'enter break',
-    [82024] = 'stand &amp; break ice',
-    [82013] = 'enter crev',
-    [82003] = 'dig drift &amp; queue scan',
-    [48153] = 'move pile',
-	},
-	north = {
-		[44908] = 'enter water',
-		[44885] = 'move bush &amp; north',
-		[44904] = 'jump north',
-		[27040] = 'jump north',
-		[27274] = 'move boulder &amp; scan',
-		[34500] = 'pull torch &amp; north',
-		[25004] = 'enter crev',
-		[2505]  = 'twist torch &amp; north',
-		[37037] = 'move branch &amp; enter veget',
-		[91679] = 'enter veget',
-		[74005] = 'move tree &amp; north',
-		[30000] = 'dig mound',
-		[66011] = 'spread ashes',
-		[66063] = 'move tapes',
-		[53000] = 'yell khiren',
-		[44765] = 'pull slab',
-		[30877] = 'enter crevice',
-		[51064] = 'move drift',
-		[39348] = 'move bush',
-		[75013] = 'jump north',
-		[23091] = 'cross stream',
-		[65504] = 'enter crack',
-		[47000] = 'move bush',
-    [82035] = 'stand &amp; break ice',
-    [34518] = 'dig drift &amp; scan',
-    [27255] = 'push circ &amp; push squar &amp; push diam &amp; push triang',
-    [2037] = 'enter hole',
-    [48152] = 'open beam',
-    [48165] = 'open slab',
-    [566] = 'pull lever',
-	},
-	south = {
-		[44909] = 'enter water',
-		[44886] = 'move bush &amp; south',
-		[44905] = 'jump south',
-		[34501] = 'push stone &amp; south',
-		[25012] = 'enter crev',
-		[2517]  = 'push wall &amp; south',
-		[91683] = 'enter veget',
-		[91682] = 'move branch &amp; enter veget',
-		[74004] = 'move tree &amp; south',
-		[74061] = 'cut veg',
-		[47777] = 'dig drift',
-		[47767] = 'climb down',
-		[47773] = 'climb down',
-		[47772] = 'climb down',
-		[47771] = 'climb down',
-		[47770] = 'climb down',
-		[47769] = 'climb down',
-		[47777] = 'dig drift',
-		[47761] = 'move plant',
-		[19132] = 'dig mound',
-		[34579] = 'ask dwa demon',
-		[73500] = 'push stone',
-		[37045] = 'move bush',
-		[75014] = 'climb south',
-		[37546] = 'move moss',
-		[51753] = 'cross stream',
-		[65505] = 'enter crack',
-		[40534] = 'move bush',
-    [82036] = 'stand &amp; break ice',
-    [82000] = 'dig drift &amp; scan',
-    [2039] = 'climb up',
-    [2040] = 'climb up',
-    [48150] = 'move beam',
-    [48149] = 'get pebble',
-    [48168] = 'open slab',
-    [481] = 'push rock',
-
-	},
-	below = {
-		[48205] = 'move slab',
-		[40251] = 'enter hole',
-		[73502] = 'move stone',
-		[68051] = 'pull lever',
-		[68043] = 'push statue',
-		[21326] = 'call essyn',
-		[49783] = 'search',
-		[39510] = 'pull chain',
-		[94274] = 'move log',
-		[94264] = 'move brush',
-		[20086] = 'move floor',
-		[91668] = 'climb bould',
-		[31000] = 'climb stone',
-    [95768] = 'search plant &amp; enter opening',
-    [95750] = 'enter log',
-    [30402] = 'move granite',
-   
-	},
-	above = {
-		[73606] = 'move stone',
-		[68029] = 'throw dart &amp; pull lever',
-		[68039] = 'pull lever',
-		[68027] = 'call dact &amp; place globe',
-		[21325] = 'ask essyn festival',
-		[49785] = 'search',
-		[94251] = 'move brush',
-		[94268] = 'move log',
-		[71625] = 'move rock',
-		[91667] = 'climb bould',
-    [95785] = 'enter fissure',
-    [95769] = 'search plant &amp; enter opening',
-	},
-	that = {
-		[33357] = 'move crates',
-	}
-}
-
-
-if exits[exitDir] then
-
-	local thisExit = exits[exitDir]
-
-  local roomId = tfe.roomInfo.vnum
-
-  if (thisExit[roomId]) then
-  	send(thisExit[roomId])
-	else
-
-  	local exit = exitDir
-  	if (exit == 'below') then exit = 'down' end
-  	if (exit == 'above') then exit = 'up' end
-
-  	send('open ' .. exit .. ' &amp; scan')
-
-  end
-
-end
-
-
-</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^You see no exit to the (.*)\.</string>
-					<string>^You see no exit (.*) you\.</string>
-					<string>^There is no exit in (that) direction\.</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>1</integer>
-					<integer>1</integer>
-					<integer>1</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>need to climb up</name>
-				<script>send('climb up')</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>You see no exit above you.</string>
-					<string>There's no way to reach the top of the cliff unless you have the ability to climb it.</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>2</integer>
-					<integer>2</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>need to climb down</name>
-				<script>send('climb down')</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>You see no exit below you.</string>
-					<string>You step toward the edge of the cliff and decide not to walk off the edge.</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>2</integer>
-					<integer>2</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>The x to the y is closed.</name>
-				<script>disableTrigger('The x to the y is closed.')
+		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>The x to the y is closed.</name>
+			<script>disableTrigger('The x to the y is closed.')
 
 local vic = njs50.dotCase(njs50.toMurderString(matches[2]))
 
@@ -463,28 +157,27 @@ end, 'reenable closed door trig')
 if (tfe.speedwalking) then
 	send(tfe.lastMoveDirection)
 end</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^The (.+) to the (.+) (is|are) closed.</string>
-					<string>^Perhaps you should open the (double) (doors)</string>
-					<string>^The (.*) (below|above) you (is|are) closed.</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>1</integer>
-					<integer>1</integer>
-					<integer>1</integer>
-				</regexCodePropertyList>
-			</Trigger>
-		</TriggerGroup>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList>
+				<string>^The (.+) to the (.+) (is|are) closed.</string>
+				<string>^Perhaps you should open the (double) (doors)</string>
+				<string>^The (.*) (below|above) you (is|are) closed.</string>
+			</regexCodeList>
+			<regexCodePropertyList>
+				<integer>1</integer>
+				<integer>1</integer>
+				<integer>1</integer>
+			</regexCodePropertyList>
+		</Trigger>
 	</TriggerPackage>
 	<TimerPackage />
 	<AliasPackage>
