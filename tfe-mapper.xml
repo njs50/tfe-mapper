@@ -57,7 +57,9 @@ else
 		</Trigger>
 		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>no exit - use special exit</name>
-			<script>local exit = matches[2]
+			<script>disableTrigger('no exit - use special exit')
+
+local exit = matches[2]
 
 if (exit == 'below') then exit = 'down' end
 if (exit == 'above') then exit = 'up' end
@@ -83,7 +85,9 @@ else
   cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exit .. '... you can use "map exit [n|e|s|w|u|d] &lt;cmd&gt;" to add a special exit \n' )
 end
 
-</script>
+tempTimer(1, function ()
+	enableTrigger('no exit - use special exit')
+end, 'reenable closed door trig')</script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
@@ -439,6 +443,11 @@ njs50.config = {
 
 }
 
+
+
+
+
+
 njs50.update_mapper = function ()
 
   local URL = "https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"
@@ -454,6 +463,12 @@ njs50.update_mapper = function ()
   end)
   
   downloadFile(getMudletHomeDir()..(URL:ends("xml") and "/tfe-mapper.xml" or "/tfe-mapper.zip"), URL)
+
+end
+
+njs50.install_color_theme = function ()
+
+
 
 end</script>
 			<eventHandlerList />
@@ -779,6 +794,150 @@ tfe.events = {
   ROOM_CHANGED = 'tfe mapper: room found',
   WALK_COMPLETE = 'tfe mapper: speedwalk complete',
 }
+
+-- bleh 1-16 and 257-272 are reserved
+tfe.environment = {
+  
+  Air = 41,
+  ["Magical Cloud"] = 59,
+  
+  
+  ["Dark Bamboo"] = 47, 
+  ["Bamboo Forest"] = 42,
+  Forest = 53,
+  Jungle = 56,
+  Rainforest = 25,
+  Tree = 34, 
+   
+  Trail = 33, 
+  ["Jungle Trail"] = 57,
+  ["Forest Path"] = 54,
+  
+  Dirt = 49,
+
+  ["Compost Zone"] = 46,
+  
+  Dump = 51,
+  Pudding = 24,
+  
+  Path = 23,
+  Road = 27,
+  ["Town Street"] = 32,
+    
+  Tundra = 35, 
+  Field = 52,
+  
+  Beach = 43,
+  Desert = 48,
+  ["White Sand"] = 39,
+   
+  Cave = 45,
+ 
+  Lava = 58,
+  
+  Hills = 55,
+
+  Bridge = 44,
+  Mountain = 20,
+  
+  Underwater = 36,
+  Water = 38,
+  River = 26,
+  ["Ocean Water"] = 22,
+
+  Swamp = 31,
+  
+  Shallows = 29,
+  ["Dry Riverbed"] = 50,
+  
+  Shipboard = 30,
+  WoodenBoards = 40,
+  
+  Room = 28,
+  
+  Nondescript = 21,
+  Void = 37,
+  
+}
+
+
+-- to see color optiosn
+-- lua showColors(3)
+
+tfe.environmentColor = {
+  
+  Air = 'deep_sky_blue',
+  ["Magical Cloud"] = 'light_sky_blue',
+  
+  
+  ["Dark Bamboo"] = 'dark_green', 
+  
+  ["Bamboo Forest"] = 'forest_green',
+  Forest = 'forest_green',
+  Jungle = 'forest_green',
+  Rainforest = 'forest_green',
+  Tree = 'lime_green',
+   
+  Path = 'khaki', 
+  Trail = 'khaki', 
+  ["Jungle Trail"] = 'khaki', 
+  ["Forest Path"] = 'khaki', 
+  
+  Dirt = 'saddle_brown', 
+
+  ["Compost Zone"] = 'saddle_brown',
+  
+  Dump ='saddle_brown',
+  Pudding = 'saddle_brown',
+  
+  
+  
+  Road = 'dark_khaki',
+  ["Town Street"] = 'dark_khaki',
+    
+  Tundra = 'wheat', 
+  Field = 'wheat', 
+  
+  Beach = 'navajo_white',
+  Desert = 'navajo_white',
+  ["White Sand"] = 'navajo_white',
+   
+  Cave = 'dark_slate_gray',
+ 
+  Lava = 'orange_red',
+  
+  Hills = 'dark_olive_green',
+
+  Bridge = 'dark_olive_green',
+  Mountain = 'dark_olive_green',
+  
+  Underwater = 'navy_blue',
+  
+  Water = 'dodger_blue',
+  River = 'dodger_blue',
+  ["Ocean Water"] = 'dodger_blue',
+
+  Swamp = 'light_sky_blue',
+  
+  Shallows = 'light_sky_blue',
+  
+  ["Dry Riverbed"] = 'light_steel_blue',
+  
+  Shipboard = 'dark_khaki',
+  WoodenBoards = 'dark_khaki',
+  
+  Room = 'beige',
+  
+  Nondescript = 'beige',
+  
+  Void = 'dark_slate_grey',
+  
+}
+
+for terrain, color in pairs(tfe.environmentColor) do
+  local r, g, b = unpack(color_table[color])
+  setCustomEnvColor(tfe.environment[terrain], r, g, b, 255)
+end
 
 
 local shortSpeedWalkTimerId
@@ -1123,6 +1282,12 @@ tfe.room_info_update = function()
       setRoomWeight(tfe.roomInfo.vnum, 1)
     end
     
+    -- check terrain in this room
+    local terrain = tfe.environment[tfe.roomInfo.terrain]
+    if (terrain and getRoomEnv(tfe.roomInfo.vnum) ~= terrain) then
+      setRoomEnv(tfe.roomInfo.vnum, terrain)
+    end
+    
 
 		-- update room exit stubs (may change w/secret doors etc)
     local existingExits = getRoomExits(tfe.roomInfo.vnum)
@@ -1139,11 +1304,11 @@ tfe.room_info_update = function()
           setRoomWeight(vnum, 100)
           
           local x,y,z = tfe.getRoomCoordinatesByExit(tfe.roomInfo.vnum, exit)
-          echo('\nnew location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
+          -- echo('\nnew location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
           setRoomCoordinates(vnum, x, y, z)
         end
       
-        cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.vnum) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
+        -- cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.vnum) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
         setExit(tfe.roomInfo.vnum, vnum, tfe.consts.stubmap[exit])
         setExit(vnum, tfe.roomInfo.vnum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
         
