@@ -2,9 +2,31 @@
 <!DOCTYPE MudletPackage>
 <MudletPackage version="1.001">
 	<TriggerPackage>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>scanner</name>
-			<script>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="yes" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>filter broken prompts</name>
+			<script>if (rex.find(matches[1], [[^&lt;]])) then
+  -- echo(' &lt;- prompt\n')
+  raiseEvent(njs50.scanner.events.PROMPT)
+ end</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList>
+				<string>^(?:&lt;[^&gt;]+&gt;\s*)?([^&lt;].*)$</string>
+			</regexCodeList>
+			<regexCodePropertyList>
+				<integer>1</integer>
+			</regexCodePropertyList>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>scanner</name>
+				<script>
 -- You see nothing in the vicinity.
 if (matches[1] == 'You see nothing in the vicinity.') then
 	
@@ -36,28 +58,99 @@ else
 		
  end -- end (if you see nothing)
 </script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
-				<string>^(\s*)(.*)$</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>1</integer>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>no exit - use special exit</name>
-			<script>disableTrigger('no exit - use special exit')
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
+					<string>^(\s*)(.*)$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You can't do that while mounted.</name>
+				<script>njs50.onNextEvent(tfe.events.ROOM_CHANGED, function ()
+	send('mount')
+end)
+send('dismount')
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You can't do that while mounted.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>The x to the y is closed.</name>
+				<script>disableTrigger('The x to the y is closed.')
+
+local vic = njs50.dotCase(njs50.toMurderString(matches[2]))
+
+-- convert north gate etc -&gt; gate
+vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '') 
+
+local dir = matches[3]
+
+send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
+send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
+send('open ' .. vic .. ' &amp; open ' .. dir)
+send('knock ' .. vic .. ' &amp; knock ' .. dir)
+send('pound ' .. vic .. ' &amp; pound ' .. dir)
+
+tempTimer(2, function () send('scan') end, 'scan after attempting to open')
+
+tempTimer(1, function ()
+	enableTrigger('The x to the y is closed.')
+end, 'reenable closed door trig')
+
+if (tfe.speedwalking) then
+	send(tfe.lastMoveDirection)
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^The (.+) to the (.+) (is|are) closed.</string>
+					<string>^Perhaps you should open the (double) (doors)</string>
+					<string>^The (.*) (below|above) you (is|are) closed.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>no exit - use special exit</name>
+				<script>disableTrigger('no exit - use special exit')
 
 local exit = matches[2]
 
@@ -88,100 +181,30 @@ end
 tempTimer(1, function ()
 	enableTrigger('no exit - use special exit')
 end, 'reenable closed door trig')</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^You see no exit to the (.*)\.</string>
-				<string>^You see no exit (.*) you\.</string>
-				<string>^The .+ to the (.+) (is|are) closed.</string>
-				<string>^The .* (below|above) you (is|are) closed.</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>1</integer>
-				<integer>1</integer>
-				<integer>1</integer>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>You can't do that while mounted.</name>
-			<script>njs50.onNextEvent(tfe.events.ROOM_CHANGED, function ()
-	send('mount')
-end)
-send('dismount')
-</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>You can't do that while mounted.</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>2</integer>
-			</regexCodePropertyList>
-		</Trigger>
-		<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>The x to the y is closed.</name>
-			<script>disableTrigger('The x to the y is closed.')
-
-local vic = njs50.dotCase(njs50.toMurderString(matches[2]))
-
--- convert north gate etc -&gt; gate
-vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '') 
-
-local dir = matches[3]
-
-send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
-send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
-send('open ' .. vic .. ' &amp; open ' .. dir)
-send('knock ' .. vic .. ' &amp; knock ' .. dir)
-send('pound ' .. vic .. ' &amp; pound ' .. dir)
-
-tempTimer(2, function () send('scan') end, 'scan after attempting to open')
-
-tempTimer(1, function ()
-	enableTrigger('The x to the y is closed.')
-end, 'reenable closed door trig')
-
-if (tfe.speedwalking) then
-	send(tfe.lastMoveDirection)
-end</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList>
-				<string>^The (.+) to the (.+) (is|are) closed.</string>
-				<string>^Perhaps you should open the (double) (doors)</string>
-				<string>^The (.*) (below|above) you (is|are) closed.</string>
-			</regexCodeList>
-			<regexCodePropertyList>
-				<integer>1</integer>
-				<integer>1</integer>
-				<integer>1</integer>
-			</regexCodePropertyList>
-		</Trigger>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You see no exit to the (.*)\.</string>
+					<string>^You see no exit (.*) you\.</string>
+					<string>^The .+ to the (.+) (is|are) closed.</string>
+					<string>^The .* (below|above) you (is|are) closed.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
 	<AliasPackage>
