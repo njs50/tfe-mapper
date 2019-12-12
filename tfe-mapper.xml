@@ -976,6 +976,7 @@ tfe.startShortSpeedWalkTimer = function ()
 		shortSpeedWalkTimerId = nil
 		cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;5 seconds without room change!!! - updating path...\n')
 		tfe.rerouteSpeedwalk()
+    tfe.speedWalkStep()
 	end)
 
 
@@ -1037,53 +1038,50 @@ tfe.speedWalkStep = function ()
 
   if (tfe.speedwalking) then
     
-    if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-      
-      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
-      tempTimer(5, function()
-        tfe.rerouteSpeedwalk()
-      end)
-      
-    else
     
+    -- check we are not off course...
+    local nextStep = tfe.getNextStep()
+
+    if (nextStep == nil) then
       
-      if (tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
-        
-        -- we made it to the end. call the callback if it exists
-        cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;at destination\n')
-        if (tfe.speedwalking.options.callback) then
-          tfe.speedwalking.options.callback()
-        end
-        
-        tfe.speedwalking = nil
-        raiseEvent(tfe.events.WALK_COMPLETE)
-      
-      else
-      
-        -- we are where we should be. send a move etc
-        
-        if (not tfe.speedwalking.paused) then
-          -- setup a single event watcher for a room change
-          tfe.speedwalking.roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, tfe.speedWalkStep)
-          
-          tfe.startShortSpeedWalkTimer()
-          
-          -- if it's a fancy command it wont be in the exit map
-          tfe.lastMoveDirection = tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ] or tfe.speedwalking.directions[tfe.speedwalking.pathPosition]
-          
-          -- send command
-          send( tfe.lastMoveDirection )    
-          tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
-          
-        else
-          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking paused\n')
-        end
-      
-      
+      -- we made it to the end. call the callback if it exists
+      cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;at destination\n')
+      if (tfe.speedwalking.options.callback) then
+        tfe.speedwalking.options.callback()
       end
       
+      tfe.speedwalking = nil
+      raiseEvent(tfe.events.WALK_COMPLETE)
+    
+    else
+    
+      -- we are where we should be. send a move etc
       
+      if (not tfe.speedwalking.paused) then
+      
+        -- setup a single event watcher for a room change
+        tfe.speedwalking.roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, function() 
+          -- step completed. do next step    
+          tfe.speedWalkStep()
+        end)
+        
+        tfe.startShortSpeedWalkTimer()
+
+        -- send command
+        if(nextStep and nextStep ~= '') then
+          send( nextStep )    
+          tfe.advanceStepPosition()
+        else
+          cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure  how to progress (missing special exit?)\n')
+        end
+        
+      else
+        cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking paused\n')
+      end
+    
     end
+      
+      
     
     
   else
@@ -1092,6 +1090,107 @@ tfe.speedWalkStep = function ()
 
 end
 
+tfe.getNextStep = function (reverse)
+
+  -- not currently walking anywhere
+  if (not tfe.speedwalking) then
+    return nil
+  end
+  
+  -- at destination
+  if (tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+    return nil
+  end
+  
+  -- check if we are lost and need to reroute...  
+  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    tfe.rerouteSpeedwalk()
+  end
+  
+  if (not reverse) then
+
+    return tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ] or tfe.speedwalking.directions[tfe.speedwalking.pathPosition]      
+  
+  else
+  
+    local specialExits = getSpecialExits(tfe.roomInfo.vnum)
+    local targetRoom = tonumber(tfe.speedwalking.path[tfe.speedwalking.pathPosition - 1])
+    
+    local cmd = ''
+    
+    if (specialExits and specialExits[targetRoom]) then
+      for command, idx in pairs(specialExits[targetRoom]) do 
+        cmd = cmd .. command .. ' &amp; '
+      end
+      cmd = cmd:gsub([[ &amp; $]], '')
+      
+    else
+      cmd = tfe.consts.reverse_dirs[ tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition - 1] ] ]
+    end
+    
+    return cmd  
+  
+  end
+  
+end
+
+tfe.getNextDirection = function (reverse)
+
+  -- not currently walking anywhere
+  if (not tfe.speedwalking) then
+    return nil
+  end
+  
+  -- at destination
+  if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+    return nil
+  end
+  
+  -- at start and reversed
+  if (reverse and tfe.speedwalking.pathPosition == 1) then
+    return nil
+  end
+  
+    -- check if we are lost and need to reroute...  
+  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    tfe.rerouteSpeedwalk()
+  end
+  
+  local nextpos = tfe.speedwalking.pathPosition
+    
+  if (reverse) then
+    nextpos = nextpos - 1
+  else
+    nextpos = nextpos + 1
+  end
+  
+  local target = tonumber(tfe.speedwalking.path[nextpos])
+  local exits = getRoomExits(tfe.roomInfo.vnum)
+      
+  for dir, vnum in pairs(exits) do
+    if (vnum == target) then 
+      direction = dir
+      break;
+    end
+  end
+  
+  return direction
+  
+end
+
+
+tfe.advanceStepPosition = function (reverse)
+  if(tfe.speedwalking) then
+  
+    if (not reverse) then
+      tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
+    else
+      tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition - 1
+    end
+  end
+end
 
 
 tfe.rerouteSpeedwalk = function ()
@@ -1101,13 +1200,15 @@ tfe.rerouteSpeedwalk = function ()
       tfe.speedwalking.roomChangeWatcher()
       tfe.speedwalking.roomChangeWatcher = nil
     end
-    tfe.gotoRoom(tfe.speedwalking.destination, tfe.speedwalking.options)
+    tfe.configureWalkPath(tfe.speedwalking.destination, tfe.speedwalking.options)
   end
 end
 
 
-tfe.gotoRoom = function (vnum, options)
+tfe.configureWalkPath = function (vnum, options)
 
+  tfe.speedwalking = nil
+  
   vnum = tostring(vnum)
 
   cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(tfe.roomInfo.vnum) .. ' to ' .. tostring(vnum))
@@ -1125,8 +1226,6 @@ tfe.gotoRoom = function (vnum, options)
       }
     
       table.insert(tfe.speedwalking.path, 1, tostring(tfe.roomInfo.vnum))
-
-      tfe.speedWalkStep()
       
      else
      
@@ -1136,6 +1235,18 @@ tfe.gotoRoom = function (vnum, options)
 	else
 		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., current room not in map\n')
 	end
+
+end
+
+
+
+tfe.gotoRoom = function (vnum, options)
+
+  tfe.configureWalkPath(vnum, options)
+  
+  if (tfe.speedwalking) then
+    tfe.speedWalkStep()
+  end
 
 end
 
@@ -1217,7 +1328,7 @@ tfe.room_info_update = function()
       
       tfe.lastMoveDirection = ''
       
-      for exit, vnum in pairs(tfe.previousRoomInfo.exits) do
+      for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
         if (vnum == gmcp.Room.Info.vnum) then
           tfe.lastMoveDirection = exit
           break
@@ -1233,7 +1344,7 @@ tfe.room_info_update = function()
         end
       end
      
-     -- display('last move dir: ' .. tfe.lastMoveDirection)
+     -- cecho('\n&lt;green&gt;SPEEDWALK: &lt;white&gt;last move dir: ' .. tfe.lastMoveDirection ..'\n')
      
     else
       
@@ -1393,6 +1504,12 @@ end</script>
 			<eventHandlerList>
 				<string>gmcp.Room.Info</string>
 			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>last script (to trigger dependencies!)</name>
+			<packageName></packageName>
+			<script>raiseEvent('tfeMapperLoaded')</script>
+			<eventHandlerList />
 		</Script>
 	</ScriptPackage>
 	<KeyPackage />
