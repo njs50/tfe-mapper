@@ -6,7 +6,7 @@ a quick n dirty mudlet mapper for the forests edge mud
 paste the following into mudlet to auto install this package:
 
 ```lua
-lua local a="https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"local function b(c,d)if not d:find("tfe-mapper",1,true)then return end installPackage(d)os.remove(d)cecho("<lime_green>Package installed!\n")end registerAnonymousEventHandler("sysDownloadDone",b)downloadFile(getMudletHomeDir()..(a:ends("xml")and"/tfe-mapper.xml"or"/tfe-mapper.zip"),a)
+lua local a="https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"local function b(c,d)if not d:find("tfe-mapper",1,true)then return end installPackage(d)os.remove(d)cecho("<lime_green>Package installed!\n")end registerAnonymousEventHandler("sysDownloadDone",b,true)downloadFile(getMudletHomeDir()..(a:ends("xml")and"/tfe-mapper.xml"or"/tfe-mapper.zip"),a)
 ```
 
 or you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/tfe-mapper.xml) and install it via package or module managemer

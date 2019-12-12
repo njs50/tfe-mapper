@@ -7,6 +7,6 @@ local function d(_, f)
   cecho("<lime_green>Package installed!\n")
 end
 
-registerAnonymousEventHandler("sysDownloadDone", d)
+registerAnonymousEventHandler("sysDownloadDone", d, true)
 
 downloadFile(getMudletHomeDir()..(URL:ends("xml") and "/tfe-mapper.xml" or "/tfe-mapper.zip"), URL)
