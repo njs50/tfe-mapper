@@ -1046,7 +1046,7 @@ tfe.speedWalkStep = function ()
       
       -- we made it to the end. call the callback if it exists
       cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;at destination\n')
-      if (tfe.speedwalking.options.callback) then
+      if (tfe.speedwalking.options and tfe.speedwalking.options.callback) then
         tfe.speedwalking.options.callback()
       end
       
@@ -1241,7 +1241,20 @@ end
 
 
 tfe.gotoRoom = function (vnum, options)
-
+  
+  if (type(options) == 'function') then
+    local optCB = options
+    options = {callback = optCB}
+  elseif (type(options) == 'string') then
+    local optString = options 
+    options = {callback = function() send(optString) end}
+  else
+    if (options ~= nil) then
+      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unknown options provided to tfe.gotoRoom\n')
+    end
+    options = {}
+  end
+  
   tfe.configureWalkPath(vnum, options)
   
   if (tfe.speedwalking) then
