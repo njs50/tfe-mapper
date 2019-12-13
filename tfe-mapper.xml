@@ -70,11 +70,13 @@ else
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
-					<string>^(\s*)(.*)$</string>
+					<string>^(     \s*)(.*)$</string>
+					<string>You see nothing in the vicinity.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>1</integer>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -684,9 +686,6 @@ njs50.scanner.events = {
 	SCAN_PROCESSED = 'SCANNER:rooms_scanned',
   PROMPT = 'SCANNER:prompt seen',
 }
-
-
-
 
 njs50.scanner.resetExits = function ()
 	njs50.scanner.exits = {}
@@ -1422,12 +1421,16 @@ tfe.room_info_update = function()
     -- updating exiting room if we haven't been into it before
     -- we can tell because it won't have a name yet...
     if (tfe.roomInfo.name ~= getRoomName(tfe.roomInfo.vnum)) then
-    	setRoomArea(tfe.roomInfo.vnum, areaId);
   	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
       -- clear the temp room env color (grey)
-      setRoomEnv(tfe.roomInfo.vnum, -1)
       setRoomWeight(tfe.roomInfo.vnum, 1)
     end
+    
+    -- fix any area id's that have been mutilated by previous mappers
+    if (getRoomArea(tfe.roomInfo.vnum) ~= areaId) then
+      setRoomArea(tfe.roomInfo.vnum, areaId);
+    end
+    
     
     -- check terrain in this room
     local terrain = tfe.environment[tfe.roomInfo.terrain]
@@ -1500,7 +1503,7 @@ tfe.getAreaID = function(roomInfo)
     return areas[area]
   else
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;created new area: ' .. area .. '\n')
-    display(roomInfo)
+    -- display(roomInfo)
     return addAreaName(area)
   end
 
