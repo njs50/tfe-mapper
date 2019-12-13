@@ -237,48 +237,9 @@ end</script>
 			<name>go</name>
 			<script>local dest = matches[2]
 
-local lookup = {
-	hillies = 28018,
-	pixies = 44904,
-  denab = 28132,
-  denabBank = 30389,
-	kha = 27004,
-	khaBank = 27042,
-	med = 107,
-	medBank = 144,
-	pen = 37013,
-	penBank = 37249,
-	sos = 30752,
-	voal = 20088,
-	voalBank = 20027,
-	cairn = 26568,
-	knight = 21096,
-	hollow = 91675,
-	blade = 19370,
-	wayward = 40585,
-  whisper = 28134,
-	chi = 25000,
-	zaranders = 27500,
-	barbs = 66071,
-	denab = 28132,
-	brith = 63534,
-	tg = 17331,
-	cycs = 44765,
-	stonies = 19164,
-	toys = 39008,
-	vyans = 28146,
-	root = 19376,
-	yetis = 94611,
-	ettercaps = 70104,
-	cairnValley = 57258,
-	temple = 21257,
-	narak = 36070,
-	halflings = 21076,
-  midnight = 76594,
-  corsair = 42511,
-}
+tfe.locations = tfe.locations or {}
 
-local rnum = lookup[dest] or dest
+local rnum = tfe.locations[dest] or dest
 
 if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
   rnum = tonumber(rnum)
@@ -1525,6 +1486,59 @@ end</script>
 			<name>last script (to trigger dependencies!)</name>
 			<packageName></packageName>
 			<script>raiseEvent('tfeMapperLoaded')</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>speedwalk locations</name>
+			<packageName></packageName>
+			<script>tfe.locations = tfe.locations or {}
+
+local lookup = {
+	hillies = 28018,
+	pixies = 44904,
+  denab = 28132,
+  denabBank = 30389,
+	kha = 27004,
+	khaBank = 27042,
+	med = 107,
+	medBank = 144,
+	pen = 37013,
+	penBank = 37249,
+	sos = 30752,
+	voal = 20088,
+	voalBank = 20027,
+	cairn = 26568,
+	knight = 21096,
+	hollow = 91675,
+	blade = 19370,
+	wayward = 40585,
+  whisper = 28134,
+	chi = 25000,
+	zaranders = 27500,
+	barbs = 66071,
+	denab = 28132,
+	brith = 63534,
+	tg = 17331,
+	cycs = 44765,
+	stonies = 19164,
+	toys = 39008,
+	vyans = 28146,
+	root = 19376,
+	yetis = 94611,
+	ettercaps = 70104,
+	cairnValley = 57258,
+	temple = 21257,
+	narak = 36070,
+	halflings = 21076,
+  midnight = 76594,
+  corsair = 42511,
+}
+
+for name, vnum in pairs(lookup) do
+  if (not tfe.locations[name]) then
+    tfe.locations[name] = vnum
+  end
+end</script>
 			<eventHandlerList />
 		</Script>
 	</ScriptPackage>
