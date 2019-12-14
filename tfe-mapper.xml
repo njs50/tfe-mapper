@@ -45,7 +45,9 @@ else
       cecho('\n&lt;orange&gt;SCANNER: &lt;white&gt;should create better light before continuing\n')    
     else			
   		
-      if (matches[3] ~= '') then
+      -- sometimes scan is jammed in with other content. scan lines are always indented with spaces
+      -- so matches[2] should either be a bunch of space or a direction
+      if (matches[3] ~= '' and matches[2] ~= '') then
   		  njs50.scanner.scannedLine(direction, matches[3])
       else
         -- scanning done, no need to wait for prompt (in case there is other junk before it)
@@ -70,7 +72,7 @@ else
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
-					<string>^(     \s*)(.*)$</string>
+					<string>^(\s*)(.*)$</string>
 					<string>You see nothing in the vicinity.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
