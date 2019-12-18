@@ -32,7 +32,7 @@ if (matches[1] == 'You see nothing in the vicinity.') then
 	
 		-- echo(' &lt;-- reset exits')
   	njs50.scanner.resetExits();
-		cecho('\n&lt;green&gt;SCANNER: &lt;white&gt;clear\n')
+		cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;clear\n')
 		raiseEvent(njs50.scanner.events.SCAN_PROCESSED)
 		
 else 
@@ -79,6 +79,30 @@ else
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>rescan if something died</name>
+				<script>send('scan')
+
+--       A fair gnomish lass is DEAD!!</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^\s+(An?|The) (.*) is DEAD!!</string>
+					<string>^(An?|The) (.*) blindly flees </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -491,6 +515,12 @@ njs50.onNextEvent = function (evt, callback)
 		killAnonymousEventHandler(handlerId)
 	end
 
+end
+
+njs50.tablelength = function(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -533,6 +563,21 @@ njs50.getNumber = function (text)
 
 end
 
+njs50.tableToString = function (table)
+  
+  local list = ''
+  
+  for idx, val in ipairs(table) do
+    
+    list = list .. val .. ', '
+  
+  end
+  
+  list = list:gsub(', $', '')
+  
+  return list
+  
+end
 
 njs50.dotCase = function(string)
 
@@ -672,7 +717,7 @@ njs50.scanner.endScan = function()
   end
   njs50.scanner.currentDirection = nil
   njs50.scanner.scan_in_progress = false
-  -- cecho('\n&lt;green&gt;SCANNER: &lt;white&gt;scan ended\n')
+  cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;scan ended\n')
 
   -- display(njs50.scanner.exits)
 	raiseEvent(njs50.scanner.events.SCAN_PROCESSED)
@@ -1060,7 +1105,12 @@ tfe.getNextStep = function (reverse)
   end
   
   -- at destination
-  if (tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+  if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+    return nil
+  end
+  
+  -- at start and reversed
+  if (reverse and tfe.speedwalking.pathPosition == 1) then
     return nil
   end
   
@@ -1144,8 +1194,20 @@ end
 
 
 tfe.advanceStepPosition = function (reverse)
-  if(tfe.speedwalking) then
+
+  -- at destination
+  if (not reverse and tfe.speedwalking.pathPosition &gt; #tfe.speedwalking.directions ) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to step beyond end of path\n')
+    return nil
+  end
   
+  -- at start and reversed
+  if (reverse and tfe.speedwalking.pathPosition == 1) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to reverse step below start of path\n')
+    return nil
+  end
+
+  if(tfe.speedwalking) then
     if (not reverse) then
       tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
     else
