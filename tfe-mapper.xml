@@ -83,7 +83,7 @@ else
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
-				<script>send('scan')
+				<script>send('queue level &amp; queue scan')
 
 --       A fair gnomish lass is DEAD!!</script>
 				<triggerType>0</triggerType>
@@ -140,7 +140,7 @@ vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '')
 
 local dir = matches[3]
 
-send('move beam &amp; pull lever &amp; turn crank &amp; pull cord')
+send('move beam &amp; pull lever &amp; turn crank &amp; pull cord &amp; trace rune')
 send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
 send('open ' .. vic .. ' &amp; open ' .. dir)
 send('knock ' .. vic .. ' &amp; knock ' .. dir)
@@ -151,10 +151,10 @@ tempTimer(2, function () send('scan') end, 'scan after attempting to open')
 tempTimer(1, function ()
 	enableTrigger('The x to the y is closed.')
 end, 'reenable closed door trig')
-
-if (tfe.speedwalking) then
-	send(tfe.lastMoveDirection)
-end</script>
+-- 
+-- if (tfe.speedwalking) then
+	-- send(tfe.lastMoveDirection)
+-- end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -640,8 +640,8 @@ njs50.toMurderString = function (victim)
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
 
-	-- turn women back to womans
-	victim = rex.gsub(victim, [[women\b]], 'woman')
+	-- turn women back to womans / footmen
+	victim = rex.gsub(victim, [[men\b]], 'man')
 
 	-- drop i from end (plurals like homonculi
   local ignoreTerminalI = {
@@ -1038,7 +1038,7 @@ tfe.speedWalkStep = function ()
   
   tfe.clearShortSpeedWalkTimer()
   -- clear any room change watcher if it exists
-  if (tfe.speedwalking.roomChangeWatcher) then
+  if (tfe.speedwalking and tfe.speedwalking.roomChangeWatcher) then
     tfe.speedwalking.roomChangeWatcher()
     tfe.speedwalking.roomChangeWatcher = nil
   end
@@ -1050,15 +1050,23 @@ tfe.speedWalkStep = function ()
     local nextStep = tfe.getNextStep()
 
     if (nextStep == nil) then
+            
+      -- clearing current walk before callback in case cb creates new path      
+  
       
       -- we made it to the end. call the callback if it exists
       cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;at destination\n')
       if (tfe.speedwalking.options and tfe.speedwalking.options.callback) then
-        tfe.speedwalking.options.callback()
+        local cb = tfe.speedwalking.options.callback
+        tfe.speedwalking = nil
+        raiseEvent(tfe.events.WALK_COMPLETE)
+        cb()
+      else  
+        tfe.speedwalking = nil
+        raiseEvent(tfe.events.WALK_COMPLETE)
       end
       
-      tfe.speedwalking = nil
-      raiseEvent(tfe.events.WALK_COMPLETE)
+      
     
     else
     
@@ -1104,6 +1112,14 @@ tfe.getNextStep = function (reverse)
     return nil
   end
   
+
+  -- check if we are lost and need to reroute...  
+  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    tfe.rerouteSpeedwalk()
+    return ''
+  end  
+  
   -- at destination
   if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
     return nil
@@ -1113,13 +1129,7 @@ tfe.getNextStep = function (reverse)
   if (reverse and tfe.speedwalking.pathPosition == 1) then
     return nil
   end
-  
-  -- check if we are lost and need to reroute...  
-  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
-    tfe.rerouteSpeedwalk()
-  end
-  
+   
   if (not reverse) then
 
     return tfe.consts.exitmap[ tfe.speedwalking.directions[tfe.speedwalking.pathPosition] ] or tfe.speedwalking.directions[tfe.speedwalking.pathPosition]      
@@ -1149,11 +1159,18 @@ end
 
 tfe.getNextDirection = function (reverse)
 
+
   -- not currently walking anywhere
   if (not tfe.speedwalking) then
     return nil
   end
-  
+   
+    -- check if we are lost and need to reroute...  
+  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    tfe.rerouteSpeedwalk()
+  end
+   
   -- at destination
   if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
     return nil
@@ -1163,12 +1180,7 @@ tfe.getNextDirection = function (reverse)
   if (reverse and tfe.speedwalking.pathPosition == 1) then
     return nil
   end
-  
-    -- check if we are lost and need to reroute...  
-  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
-    tfe.rerouteSpeedwalk()
-  end
+
   
   local nextpos = tfe.speedwalking.pathPosition
     
@@ -1494,7 +1506,7 @@ tfe.room_info_update = function()
 	 centerview(tfe.roomInfo.vnum)
      
 
- 
+   tfe.roomInfo.scanned = false
    raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
  
   else
