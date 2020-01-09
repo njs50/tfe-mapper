@@ -649,7 +649,7 @@ njs50.toMurderString = function (victim)
   }
   
   if (not ignoreTerminalI[victim]) then
-	 victim = rex.gsub(victim, [[i\b]], '')
+	 victim = rex.gsub(victim, [[i(\n| )]], '')
   end
 
 
@@ -1608,6 +1608,7 @@ local lookup = {
 	halflings = 21076,
   midnight = 76594,
   corsair = 42511,
+  titans = 36759,
 }
 
 for name, vnum in pairs(lookup) do
