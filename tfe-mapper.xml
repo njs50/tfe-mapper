@@ -1371,27 +1371,31 @@ tfe.room_info_update = function()
   if (gmcp.Room.Info.area_id and gmcp.Room.Info.vnum) then
     
     if (tfe.roomInfo) then
-    
-      tfe.previousRoomInfo = tfe.roomInfo
-      tfe.roomInfo = gmcp.Room.Info
-      
-      tfe.lastMoveDirection = ''
-      
-      for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
-        if (vnum == gmcp.Room.Info.vnum) then
-          tfe.lastMoveDirection = exit
-          break
-        end
-      end
-      
-      if (tfe.lastMoveDirection == '') then
-        for exit, vnum in pairs(tfe.roomInfo.exits) do
-          if (vnum == tfe.roomInfo.vnum) then
-            tfe.lastMoveDirection = tfe.consts.reverse_dirs[exit]
+    	
+			-- if we changed rooms update lat move direction and previous room
+			if (tfe.roomInfo.vnum ~= gmcp.Room.Info.vnum) then
+			
+        tfe.previousRoomInfo = tfe.roomInfo
+        tfe.lastMoveDirection = ''
+        
+        for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
+          if (vnum == gmcp.Room.Info.vnum) then
+            tfe.lastMoveDirection = exit
             break
           end
         end
-      end
+        
+        if (tfe.lastMoveDirection == '') then
+          for exit, vnum in pairs(tfe.roomInfo.exits) do
+            if (vnum == tfe.roomInfo.vnum) then
+              tfe.lastMoveDirection = tfe.consts.reverse_dirs[exit]
+              break
+            end
+          end
+        end
+			end
+			
+      tfe.roomInfo = gmcp.Room.Info
      
      -- cecho('\n&lt;green&gt;SPEEDWALK: &lt;white&gt;last move dir: ' .. tfe.lastMoveDirection ..'\n')
      
