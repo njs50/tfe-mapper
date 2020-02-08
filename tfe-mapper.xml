@@ -1367,6 +1367,8 @@ tfe.consts.reverse_dirs = {
 
 tfe.room_info_update = function()
   
+  local roomChanged = false
+  
   -- only proceed if there is actually room info
   if (gmcp.Room.Info.area_id and gmcp.Room.Info.vnum) then
     
@@ -1375,6 +1377,8 @@ tfe.room_info_update = function()
 			-- if we changed rooms update lat move direction and previous room
 			if (tfe.roomInfo.vnum ~= gmcp.Room.Info.vnum) then
 			
+        roomChanged = true
+      
         tfe.previousRoomInfo = tfe.roomInfo
         tfe.lastMoveDirection = ''
         
@@ -1393,21 +1397,18 @@ tfe.room_info_update = function()
             end
           end
         end
-			end
-			
-      tfe.roomInfo = gmcp.Room.Info
-     
-     -- cecho('\n&lt;green&gt;SPEEDWALK: &lt;white&gt;last move dir: ' .. tfe.lastMoveDirection ..'\n')
-     
+        
+			end -- end if this room is diff from the prev room info room
+
     else
-      
-      -- this is the first room for this session!
-      tfe.roomInfo = gmcp.Room.Info 
+    
+      -- first room in this session, set some sane defaults for prev room / direction
+      tfe.previousRoomInfo = gmcp.Room.Info
+      tfe.lastMoveDirection = ''
 
     end -- end if has room info
     
-    
-    -- display(tfe.roomInfo)
+    tfe.roomInfo = gmcp.Room.Info 
     
     local areaId = tfe.getAreaID(tfe.roomInfo)
     
@@ -1506,12 +1507,13 @@ tfe.room_info_update = function()
         
 			end
     end -- end looping over exits
+  
+  	centerview(tfe.roomInfo.vnum)
 
-	 centerview(tfe.roomInfo.vnum)
-     
-
-   tfe.roomInfo.scanned = false
-   raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+    if (roomChanged == true) then
+      tfe.roomInfo.scanned = false
+      raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+    end
  
   else
   
