@@ -738,6 +738,13 @@ njs50.scanner.scannedLine = function (direction, mobs)
   if (direction ~= "") then
     njs50.scanner.processingExit = direction
     
+    -- sometimes two scans come in back to back with no gap. gotta reset direction whenever it is present
+    -- i.e :
+    -- south: yeti
+    -- south: yeti
+    -- should not = 2 yetis south
+    njs50.scanner.exits[direction] = {}
+    
     if (direction ~= '[Here]') then
       if njs50.config.rewrite_scan then
         selectString(direction,1)
