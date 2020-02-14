@@ -19,14 +19,16 @@
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList>
-				<string>^(?:&lt;[^&gt;]+&gt;\s*)?([^&lt;].*)$</string>
+				<string>^(?:&lt;[^&gt;]+&gt;)?([^&lt;].*)$</string>
 			</regexCodeList>
 			<regexCodePropertyList>
 				<integer>1</integer>
 			</regexCodePropertyList>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>scanner</name>
-				<script>
+				<script>-- failing on: &lt;799hp 1304e 190mv 190wm 97384212xp NE&gt;      [Here] : Mohoonay, a tall, well-built horse, Grehild
+
+
 -- You see nothing in the vicinity.
 if (matches[1] == 'You see nothing in the vicinity.') then
 	
@@ -449,10 +451,9 @@ end
 			<name>configuration</name>
 			<packageName></packageName>
 			<script>njs50 = njs50 or {}
+
 njs50.config = {
-
   rewrite_scan = false, -- make scan results clickable (move or attack)
-
 }
 
 
