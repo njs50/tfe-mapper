@@ -650,7 +650,7 @@ njs50.toMurderString = function (victim)
   }
   
   if (not ignoreTerminalI[victim]) then
-	 victim = rex.gsub(victim, [[i(\n| )]], '')
+	 victim = rex.gsub(victim, [[i($| )]], '%1')
   end
 
 
@@ -1370,7 +1370,11 @@ tfe.consts.reverse_dirs = {
     ["in"] = "out", out = "in",
 }
 
-
+tfe.resetRoom = function ()
+  tfe.roomInfo = gmcp.Room.Info
+  tfe.previousRoomInfo = tfe.roomInfo
+  tfe.lastMoveDirection = ''
+end
 
 
 tfe.room_info_update = function()
@@ -1390,10 +1394,12 @@ tfe.room_info_update = function()
         tfe.previousRoomInfo = tfe.roomInfo
         tfe.lastMoveDirection = ''
         
-        for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
-          if (vnum == gmcp.Room.Info.vnum) then
-            tfe.lastMoveDirection = exit
-            break
+        if (tfe.previousRoomInfo.vnum and getRoomExits(tfe.previousRoomInfo.vnum)) then
+          for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
+            if (vnum == gmcp.Room.Info.vnum) then
+              tfe.lastMoveDirection = exit
+              break
+            end
           end
         end
         
@@ -1404,6 +1410,12 @@ tfe.room_info_update = function()
               break
             end
           end
+        end
+        
+        -- if we are badly out of sync set the last room to this room
+        if (tfe.lastMoveDirection == '') then
+          tfe.previousRoomInfo = gmcp.Room.Info
+          tfe.lastMoveDirection = ''
         end
         
 			end -- end if this room is diff from the prev room info room
