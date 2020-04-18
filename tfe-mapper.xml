@@ -990,8 +990,11 @@ tfe.startShortSpeedWalkTimer = function ()
 	shortSpeedWalkTimerId = tempTimer(5, function ()
 		shortSpeedWalkTimerId = nil
 		cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;5 seconds without room change!!! - updating path...\n')
-		tfe.rerouteSpeedwalk()
-    tfe.speedWalkStep()
+    send('queue scan')
+    tempTimer(2, function()
+  		tfe.rerouteSpeedwalk()
+      tfe.speedWalkStep()
+    end)
 	end)
 
 
@@ -1124,6 +1127,7 @@ tfe.getNextStep = function (reverse)
   -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    send('queue scan')
     tfe.rerouteSpeedwalk()
     return ''
   end  
@@ -1176,7 +1180,9 @@ tfe.getNextDirection = function (reverse)
     -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    send('queue scan')
     tfe.rerouteSpeedwalk()
+    return nil
   end
    
   -- at destination
@@ -1238,6 +1244,7 @@ end
 
 
 tfe.rerouteSpeedwalk = function ()
+  
   if (tfe.speedwalking) then 
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
     if (tfe.speedwalking.roomChangeWatcher) then
