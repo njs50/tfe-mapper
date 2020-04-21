@@ -528,9 +528,58 @@ end</script>
 		<Script isActive="yes" isFolder="no">
 			<name>formatters</name>
 			<packageName></packageName>
-			<script>
+			<script>common = common or {}
 
-njs50.getNumber = function (text)
+
+common.consoleMessage = function(console, message, statusColor)
+
+  local color = 'green'
+
+  if (statusColor) then
+    color = statusColor
+  end
+
+  console:cecho('&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n")
+end
+
+
+
+
+common.formatElapsedTime = function (time)
+
+	local ts = '';
+
+	if (not time) then
+		return '0 seconds'
+	end
+
+	local hrs = 0
+	local mins = 0
+	local secs = 0
+
+	if (time &gt;= 3600) then
+		hrs = math.floor(time / 3600)
+		time = time - (hrs * 3600)
+		ts = ts .. tostring(hrs) .. ' hrs, '
+	end
+
+
+	if (time &gt;= 60 or hrs &gt; 0) then
+		mins = math.floor(time / 60)
+		time = time - (mins * 60)
+		ts = ts .. tostring(mins) .. ' mins, '
+	end
+
+	secs = math.floor(time)
+	time = time - secs
+	ts = ts .. tostring(secs) .. ' seconds'
+
+
+	return ts
+
+end
+
+common.getNumber = function (text)
 
 	local wordToNumberData = {
   	a = 1,
@@ -550,7 +599,6 @@ njs50.getNumber = function (text)
 		twelve = 12,
 		thrirteen = 13,
 		fourteen = 14,
-    fifteen = 15,
 	}
 
 	local numTxt = rex.match(text, [[^\S+]])
@@ -564,50 +612,49 @@ njs50.getNumber = function (text)
 
 end
 
-njs50.tableToString = function (table)
-  
-  local list = ''
-  
-  for idx, val in ipairs(table) do
-    
-    list = list .. val .. ', '
-  
+common.cleanGmcpTarget = function(string)
+  return common.dotCase(common.toMurderString(rex.gsub(rex.gsub(string, [[^\d+\.]], ''), [[\.]], ' ')))
+end
+
+common.dotCase = function(string)
+
+	if (not string or string == '') then
+		return ''
+	end
+	return rex.gsub(string, [[(?i)\b(the|or|an|a|of|with|and|A|An|The) ]], ''):gsub(' ', '.')
+end
+
+
+common.itemSanitize = function(string)
+
+	if (not string or string == '') then
+		return ''
+	end
+
+
+
+	string = rex.gsub(string, [[(enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
+
+  if (string ~= 'frost-covered ring') then
+    string = rex.gsub(string, [[frost-covered ]], '')
   end
-  
-  list = list:gsub(', $', '')
-  
-  return list
-  
-end
 
-njs50.dotCase = function(string)
+  return string
 
-	if (not string or string == '') then
-		return ''
-	end
-	return rex.gsub(string, [[\b(the|or|an|a|of|with|and|A|An|The) ]], ''):gsub(' ', '.')
 end
 
 
-njs50.itemSanitize = function(string)
-
-	if (not string or string == '') then
-		return ''
-	end
-	return rex.gsub(string, [[(enchanted |empty, |flaming, frost-covered |flaming |frost-covered |labeled |empty |\s\+\d)]], '')
-end
-
-njs50.itemShorten = function(item)
+common.itemShorten = function(item)
 
   return rex.gsub(
-		rex.gsub(common.dotCase(common.itemSanitize(item)),"'(.*)'",'%1'), 
-		'([^.][^.][^.][^.]?)[^.]+', 
+		rex.gsub(common.dotCase(common.itemSanitize(item)),"'(.*)'",'%1'),
+		'([^.][^.][^.][^.]?)[^.]+',
 		'%1'
 	)
-	
+
 end
 
-njs50.commaCase = function (str)
+common.commaCase = function (str)
     local extra = #str%3
     if string.sub(str,1,1) == "-" then
         if extra == 0 then
@@ -628,42 +675,48 @@ njs50.commaCase = function (str)
 end
 
 
-
-njs50.toMurderString = function (victim)
+common.toMurderString = function (victim)
 
 	-- remove any articles etc
-	victim = rex.gsub(victim, [[\b(a|an|the|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+	victim = rex.gsub(victim, [[(?i)\b(a|an|the|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
 
-
-	-- dump any random commas
-	victim = rex.gsub(victim, [[,]], '')
-  
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
 
-	-- turn women back to womans / footmen
-	victim = rex.gsub(victim, [[men\b]], 'man')
-
+	-- turn women back to womans
+	victim = rex.gsub(victim, [[women\b]], 'woman')
 	-- drop i from end (plurals like homonculi
-  local ignoreTerminalI = {
-    yeti = true
-  }
   
+  local ignoreTerminalI = {
+    yeti = true,
+    ['mammoth yeti'] = true,
+  }
+
   if (not ignoreTerminalI[victim]) then
-	 victim = rex.gsub(victim, [[i($| )]], '%1')
+	 victim = rex.gsub(victim, [[i\b]], '')
   end
 
 
 
-  -- remove as many suffixes as we can, don't bother trying to replace them
-  
-  victim = rex.gsub(victim, [[([bcdfghjklmpqrstvwxz])ies\b]], '%1')
+	 -- turn mercenaries back into mercanary
+	victim = rex.gsub(victim, [[ies$]], 'y')
 
-	victim = rex.gsub(victim, [[(s|sh|ch|x|z)es\b]], '%1')
-  
-  victim = rex.gsub(victim, [[('?s'?)\b]], '')
+	-- dump any s's or es's on the end of a plural
+	-- west : two greater cyclopses, vs a greater cyclops
+	-- drudges should go to drudge tho...
+	if (rex.find(victim, [[ses\b]])) then
+		victim = rex.gsub(victim, [[ses\b]], 's')
+	elseif (rex.find(victim, [[es\b]])) then
+		victim = rex.gsub(victim, [[es\b]], 'e')
+	else
+		victim = rex.gsub(victim, [[('?s'?)\b]], '')
+	end
+
+	-- dump any random commas
+	victim = rex.gsub(victim, [[,]], '')
 
 	-- kill any parts less than 3 charaters
+
 	victim = rex.gsub(victim, [[(^|\.|\s)\S\S?(\s|\.|$)]], '%1%2')
 
 	-- kill any extra whitepsace or multiple .'s
@@ -677,6 +730,18 @@ njs50.toMurderString = function (victim)
 	return victim
 
 end
+
+
+-- copy these to njs50 scope for weird historical reasons
+njs50.formatElapsedTime = common.formatElapsedTime
+njs50.getNumber = common.getNumber
+njs50.cleanGmcpTarget = common.cleanGmcpTarget
+njs50.dotCase = common.dotCase
+njs50.itemSanitize = common.itemSanitize
+njs50.commaCase = common.commaCase
+njs50.toMurderString = common.toMurderString
+njs50.itemShorten = common.itemShorten
+
 </script>
 			<eventHandlerList />
 		</Script>
