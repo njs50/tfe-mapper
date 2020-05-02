@@ -539,7 +539,7 @@ common.consoleMessage = function(console, message, statusColor)
     color = statusColor
   end
 
-  console:cecho('&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n")
+  common.chatConsole:cecho(console, '&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n")
 end
 
 
