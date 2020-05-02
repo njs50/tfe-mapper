@@ -731,6 +731,22 @@ common.toMurderString = function (victim)
 
 end
 
+common.tableToString = function (table)
+  
+  local list = ''
+  
+  for idx, val in ipairs(table) do
+    
+    list = list .. val .. ', '
+  
+  end
+  
+  list = list:gsub(', $', '')
+  
+  return list
+  
+end
+
 
 -- copy these to njs50 scope for weird historical reasons
 njs50.formatElapsedTime = common.formatElapsedTime
@@ -741,7 +757,7 @@ njs50.itemSanitize = common.itemSanitize
 njs50.commaCase = common.commaCase
 njs50.toMurderString = common.toMurderString
 njs50.itemShorten = common.itemShorten
-
+njs50.tableToString = common.tableToString
 </script>
 			<eventHandlerList />
 		</Script>
