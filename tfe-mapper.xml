@@ -44,6 +44,7 @@ else
   if (direction ~= '' or njs50.scanner.scan_in_progress) then
   
     if (matches[3] == 'darkness') then
+      njs50.scanner.scannedLine(direction, 'darkness')
       cecho('\n&lt;orange&gt;SCANNER: &lt;white&gt;should create better light before continuing\n')    
     else			
   		
@@ -178,7 +179,7 @@ end, 'reenable closed door trig')
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>no exit - use special exit</name>
 				<script>disableTrigger('no exit - use special exit')
 
@@ -328,12 +329,14 @@ if (dir ~= 'cancel') then
   
   tfe.pendingSpecialExit = njs50.onNextEvent(tfe.events.ROOM_CHANGED, function () 
   
-    addSpecialExit(tfe.previousRoomInfo.vnum, tfe.roomInfo.vnum, cmd)
-    setExit(tfe.previousRoomInfo.vnum, tfe.roomInfo.vnum, dir)
-    setExitWeight(tfe.previousRoomInfo.vnum, dir, 3)
+    addSpecialExit(tfe.pendingExit.vnum, tfe.roomInfo.vnum, cmd)
+    setExit(tfe.pendingExit.vnum, tfe.roomInfo.vnum, dir)
+    setExitWeight(tfe.pendingExit.vnum, dir, 3)
       
     tfe.pendingSpecialExit = nil
     tfe.pendingExit = nil
+    
+    -- display(tfe.previousRoomInfo.vnum, 'to', tfe.roomInfo.vnum, cmd)
   
   end)
   
@@ -355,37 +358,61 @@ end</script>
 			<packageName></packageName>
 			<regex>^map exit (n|e|s|w|u|d|in|out|cancel) ?(.*)$</regex>
 		</Alias>
-		<Alias isActive="no" isFolder="no">
-			<name>map - manual connect existing rooms by id</name>
+		<Alias isActive="yes" isFolder="no">
+			<name>map - manual connect numbered to current</name>
 			<script>-- not sure we need this anymore, only really useful for retroactively connecting things
 
 local dir = matches[2]
-local room1 = tonumber(matches[3])
-local room2 = tonumber(matches[4])
-local cmd = matches[5] or ''
+local room2 = tonumber(matches[3])
+local room1 = tfe.roomInfo.vnum
+local cmd = matches[4] or ''
+
+display(matches)
+-- we may need to create the current room if it is orphaned in the zone from the prev room
+if not roomExists(room1) then
+
+  local areaId = tfe.getAreaID(tfe.roomInfo)
+   
+  local x,y,z = tfe.getRoomCoordinatesByExit(room2, tfe.consts.exitmap[dir])
+  
+  -- echo('\new location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
+      
+    addRoom(room1)
+	  setRoomArea(tfe.roomInfo.vnum, areaId);
+	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
+	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)  
+    centerview(tfe.roomInfo.vnum)
+    
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; added new room - ' .. dir .. ' from ' .. tfe.previousRoomInfo.name .. '\n')
+
+end
+
+
 
 
 if (roomExists(room1) and roomExists(room2)) then
   
-  addSpecialExit(room1, room2, cmd)
-  setExit(room1, room2, dir)
-  setExitWeight(room1, dir, 3) -- prioritize special exit
+  setExit(room2, room1, dir)
   
-  cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; connecting existing rooms with special exit!\n')
+  if (cmd) then        
+    addSpecialExit(room2, room1, cmd) 
+    setExitWeight(room2, dir, 3) -- prioritize special exit
+  end
+  
+  setExit(room2, room1, dir)
+  centerview(room1)
+    
+  cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; connecting existing rooms!\n')
   
 else
-  
-  if not roomExists(room1) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt; room doesn\'t exist in map!: ' .. tostring(room1) .. '\n')
-  else
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt; room doesn\'t exist in map!: ' .. tostring(room2) .. '\n')
-  end
+
+  cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt; room doesn\'t exist in map!: ' .. tostring(room2) .. '\n')
 
 end
 </script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^map connect (n|e|s|w|u|d|in|out) (\d+) (\d+) ?(.*)?$</regex>
+			<regex>^map add (n|e|s|w|u|d|in|out) (\d+) ?(.*)?$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map - connect current room with previous</name>
@@ -530,6 +557,10 @@ end</script>
 			<packageName></packageName>
 			<script>common = common or {}
 
+-- can add items to override from shortening if they mess up gear swapping
+common.itemShortenOverride = common.itemShortenOverride or {}
+common.itemShortenOverride['darkgem'] = 'darkgem'
+
 
 common.consoleMessage = function(console, message, statusColor)
 
@@ -646,11 +677,17 @@ end
 
 common.itemShorten = function(item)
 
-  return rex.gsub(
-		rex.gsub(common.dotCase(common.itemSanitize(item)),"'(.*)'",'%1'),
-		'([^.][^.][^.][^.]?)[^.]+',
-		'%1'
-	)
+  item = common.dotCase(common.itemSanitize(item))
+  
+  if (common.itemShortenOverride[item]) then
+    return common.itemShortenOverride[item]
+  else
+  
+    return rex.gsub(	rex.gsub(item,"'(.*)'",'%1'),
+      	'([^.][^.][^.][^.]?)[^.]+',
+      	'%1'
+    )
+  end
 
 end
 
@@ -693,7 +730,7 @@ common.toMurderString = function (victim)
   }
 
   if (not ignoreTerminalI[victim]) then
-	 victim = rex.gsub(victim, [[i\b]], '')
+	 victim = rex.gsub(victim, [[i( |$)]], '%1')
   end
 
 
@@ -1530,9 +1567,9 @@ tfe.room_info_update = function()
       local foundAdjacent = false
 
       if (tfe.pendingExit ~= nil and not tfe.roomInfo.exits[tfe.pendingExit.direction]) then 
-        display(tfe.roomInfo)
+        -- display(tfe.roomInfo)
+        cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; added special exit from the room ' .. tfe.pendingExit.direction .. '!\n')
         tfe.roomInfo.exits[tfe.pendingExit.direction] = tfe.pendingExit.vnum
-        tfe.pendingExit = nil
       end
 
 
@@ -1563,8 +1600,8 @@ tfe.room_info_update = function()
 
       addRoom(tfe.roomInfo.vnum)
 		  setRoomArea(tfe.roomInfo.vnum, areaId);
-  	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
-  	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)
+    	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
+    	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)
 
     end
     
@@ -1591,27 +1628,31 @@ tfe.room_info_update = function()
 
 		-- update room exit stubs (may change w/secret doors etc)
     local existingExits = getRoomExits(tfe.roomInfo.vnum)
-		for exit, vnum in pairs(tfe.roomInfo.exits) do
+		
+    for exit, exitInfo in pairs(tfe.roomInfo.exit_info) do
 			if(not existingExits[exit] and tfe.consts.short[exit]) then
       	setExitStub(tfe.roomInfo.vnum, tfe.consts.short[exit], true)
         
         -- add in a temp room for any rooms we haven't visited yet
-        if (not roomExists(vnum)) then
-          addRoom(vnum)
-          setRoomArea(vnum, areaId);
-          setRoomEnv(vnum, 272)
+        if (not roomExists(exitInfo.vnum)) then
+          addRoom(exitInfo.vnum)
+          setRoomArea(exitInfo.vnum, tfe.getAreaID(exitInfo));
+          setRoomEnv(exitInfo.vnum, 272)
           -- set high room weight so we won't auto walk through it unless absolutely necessary
-          setRoomWeight(vnum, 100)
+          setRoomWeight(exitInfo.vnum, 100)
           
           local x,y,z = tfe.getRoomCoordinatesByExit(tfe.roomInfo.vnum, exit)
           -- echo('\nnew location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
-          setRoomCoordinates(vnum, x, y, z)
+          setRoomCoordinates(exitInfo.vnum, x, y, z)
         end
       
         -- cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.vnum) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
-        setExit(tfe.roomInfo.vnum, vnum, tfe.consts.stubmap[exit])
-        setExit(vnum, tfe.roomInfo.vnum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
-        
+        setExit(tfe.roomInfo.vnum, exitInfo.vnum, tfe.consts.stubmap[exit])
+        if (tfe.roomInfo.area == 'The Ways' and exitInfo.area ~= 'The Ways') then
+          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to the ways\n')
+        else
+          setExit(exitInfo.vnum, tfe.roomInfo.vnum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
+        end
         
 			end
     end -- end looping over exits
@@ -1645,6 +1686,11 @@ tfe.getRoomCoordinatesByExit = function (vnum, dir)
 end
 
 tfe.getAreaID = function(roomInfo)
+  
+  if (not roomInfo.area or roomInfo.area == '') then
+    display('fucked up room info', gmcp.Room.Info)
+    roomInfo.area = '???'
+  end
 
   local area =  roomInfo.area .. ' : ' .. tostring(roomInfo.area_id)
 
@@ -1654,18 +1700,38 @@ tfe.getAreaID = function(roomInfo)
     return areas[area]
   else
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;created new area: ' .. area .. '\n')
-    -- display(roomInfo)
     return addAreaName(area)
   end
 
 end
 
-  tfe.deleteCurrentMapArea = function ()
+tfe.deleteCurrentMapArea = function ()
   
   local areaId = tfe.getAreaID(tfe.roomInfo)
   deleteArea(areaId)
   echo('\nRESET CURRENT AREA\n')
   updateMap()
+
+end
+
+
+tfe.deleteMapAreaByName = function (area)
+    
+  local areas = getAreaTable()  
+  
+  if (areas[area]) then  
+    deleteArea(areas[area])
+    echo('\nRESET AREA - ' .. area .. '\n')
+    updateMap()
+  end
+
+end
+
+tfe.deleteOrphanedRooms = function()
+  
+  for idx, val in ipairs(getAreaRooms(-1)) do
+    deleteRoom(val)
+  end
 
 end</script>
 			<eventHandlerList>
