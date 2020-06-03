@@ -271,7 +271,9 @@ tfe.locations = tfe.locations or {}
 local rnum = tfe.locations[dest] or dest
 
 if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
+  
   rnum = tonumber(rnum)
+  
 end
 
 if (type(rnum) == 'number' and roomExists(rnum)) then
@@ -313,6 +315,8 @@ commands[matches[2]]()</script>
 			<name>map - special exit</name>
 			<script>local dir = matches[2]
 local cmd = matches[3]
+
+display(dir, cmd)
 
 -- cancel an existing special exit if the move failed (maybe we were in the wrong room)
 if (dir ~= 'cancel') then
@@ -470,6 +474,47 @@ end
 			<command></command>
 			<packageName></packageName>
 			<regex>^map connect (n|e|s|w|u|d|in|out) ?(.*)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>lw</name>
+			<script>
+local areas = getAreaTable()  
+  
+local area1 = areas['The Ways : 51']
+local area2 = areas['The Ways : 52']
+  
+-- display(area1, area2)
+
+
+local exits = table.union(getAreaExits(area1, true), getAreaExits(area2, true))
+
+-- display(exits)
+
+cecho('\n')
+
+for idx, exit in pairs(exits) do
+
+  
+  if (not exit.up) then
+    
+    cecho('room #' .. tostring(idx))
+    
+    for exitDir, rnum in pairs(exit) do
+      cecho(' ' .. exitDir .. ': ' .. rex.gsub(getRoomAreaName(getRoomArea(rnum)), [[: \d+$]], ''))
+    end 
+    
+    cecho('\n')
+    
+  end
+  
+end
+
+
+
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^lw$</regex>
 		</Alias>
 	</AliasPackage>
 	<ActionPackage />
@@ -1538,10 +1583,10 @@ tfe.room_info_update = function()
         end
         
         -- if we are badly out of sync set the last room to this room
-        if (tfe.lastMoveDirection == '') then
-          tfe.previousRoomInfo = gmcp.Room.Info
-          tfe.lastMoveDirection = ''
-        end
+        -- if (tfe.lastMoveDirection == '') then
+          -- tfe.previousRoomInfo = gmcp.Room.Info
+          -- tfe.lastMoveDirection = ''
+        -- end
         
 			end -- end if this room is diff from the prev room info room
 
@@ -1592,7 +1637,8 @@ tfe.room_info_update = function()
       
       if (#getAreaRooms(areaId) &gt; 0 and not foundAdjacent) then
         cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt; no adjacent room known or other rooms exist in this map!\n')
-        cecho('You can use the "map connect &lt;direction you just went : [n|e|s|w|up|down|in|out]&gt; &lt;command you used to get here&gt;" to connect this room\n\n')
+        cecho('You can use the "map connect &lt;direction you just went : [n|e|s|w|u|d|in|out]&gt; &lt;command you used to get here&gt;" to connect this room\n\n')
+        display(tfe.previousRoomInfo)
         return
       end
 
@@ -1600,8 +1646,8 @@ tfe.room_info_update = function()
 
       addRoom(tfe.roomInfo.vnum)
 		  setRoomArea(tfe.roomInfo.vnum, areaId);
-    	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
-    	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)
+  	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
+  	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)
 
     end
     
@@ -1732,6 +1778,15 @@ tfe.deleteOrphanedRooms = function()
   for idx, val in ipairs(getAreaRooms(-1)) do
     deleteRoom(val)
   end
+
+end
+
+tfe.displayCurrentAreaExits = function ()
+  
+  local areaId = tfe.getAreaID(tfe.roomInfo)
+
+  display( getAreaExits(areaId, true) )
+  
 
 end</script>
 			<eventHandlerList>
