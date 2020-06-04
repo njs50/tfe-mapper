@@ -28,6 +28,9 @@
 				<name>scanner</name>
 				<script>-- failing on: &lt;799hp 1304e 190mv 190wm 97384212xp NE&gt;      [Here] : Mohoonay, a tall, well-built horse, Grehild
 
+      -- [Here] : Grehild, Darius, Affenaut, Uduvrin, Alavela, a Medienne Knight,
+               -- a knight's heavy charger
+        -- east : a Medienne guard
 
 -- You see nothing in the vicinity.
 if (matches[1] == 'You see nothing in the vicinity.') then
@@ -75,13 +78,15 @@ else
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
-					<string>^(\s*)(.*)$</string>
+					<string>^\s+((?:far|north|east|south|west|up|down) (?:north|east|south|west|up|down))\s+:\s+(.+)$</string>
 					<string>You see nothing in the vicinity.</string>
+					<string>^(\s*)(.*)$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>2</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -371,7 +376,6 @@ local room2 = tonumber(matches[3])
 local room1 = tfe.roomInfo.vnum
 local cmd = matches[4] or ''
 
-display(matches)
 -- we may need to create the current room if it is orphaned in the zone from the prev room
 if not roomExists(room1) then
 
@@ -826,6 +830,14 @@ common.tableToString = function (table)
   list = list:gsub(', $', '')
   
   return list
+  
+end
+
+common.getAreaName = function(roomId)
+  local areaId = getRoomArea(roomId)
+  local areaName = getRoomAreaName(areaId)
+  
+  return rex.gsub(areaName, [[\s+:\s+\d+$]], '')
   
 end
 
