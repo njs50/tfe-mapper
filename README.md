@@ -20,7 +20,22 @@ protip: if it doesn't show up as an exit, it is a special exit, and you need to 
 
 ## starter map
 
-starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) - import through the mudlet prefrences. I mapped out most of the paths between cities and to gate stones. chiiron should have it's entrances locked so lighties might need to unlock those (right click the room in the map) and add the special exits to enter (i.e `map exit w knock gate & west`)
+starter map [njs50-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat) I mapped out most of the paths between cities and to gate stones. chiiron should have it's entrances locked so lighties might need to unlock those (right click the room in the map) and add the special exits to enter (i.e `map exit w knock gate & west`)
+
+install in mudlet with:
+```
+map load https://github.com/njs50/tfe-mapper/raw/master/njs50-map.dat
+```
+
+## more comprehensive map
+cheater map [njs50-comprehensive-map.dat](https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.dat) includes most stuff mapped including the druid ways.
+
+install in mudlet with:
+```
+map load https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.dat
+```
+
+
 
 ## map commands
 

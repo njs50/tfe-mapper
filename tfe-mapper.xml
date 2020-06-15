@@ -522,23 +522,36 @@ end
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map - load</name>
-			<script>
--- "https://raw.githubusercontent.com/njs50/njs50-plev/master/njs50-map.dat"
+			<script>-- "https://raw.githubusercontent.com/njs50/njs50-plev/master/njs50-map.dat"
 
-local URL = matches[3]
+local URL = matches[2]
 
-common.onNextEvent("sysDownloadDone", function (_, f)
+uninstallPackage("generic_mapper")
+
+if not URL:ends("dat") then
+
+  cecho("&lt;red&gt;INSTALL: &lt;white&gt;map url doesn't appear to be valid, should be something like:\n") 
+  cecho("&lt;white&gt;https://raw.githubusercontent.com/njs50/njs50-plev/master/njs50-map.dat\n")
+
+else
   
-  local loadOK = loadMap(f)
+  njs50.onNextEvent("sysDownloadDone", function (_, f)
+    
+    local loadOK = loadMap(f)
+    
+    if not loadOK then
+     cecho("&lt;red&gt;INSTALL: &lt;white&gt;Couldn't load - was the mapper open? :(\n")
+    else
+      cecho("&lt;green&gt;INSTALL: &lt;white&gt;Loaded fine!\n")
+    end
+    os.remove(f)
   
-  if not loadOK then
-   cecho("&lt;red&gt;INSTALL: &lt;white&gt;Couldn't load - was the mapper open? :(\n")
-  else
-    cecho("&lt;green&gt;INSTALL: &lt;white&gt;Loaded fine!\n")
-  end
-  os.remove(f)
+  end)
+  
+  cecho("&lt;green&gt;MAP INSTALL: &lt;white&gt;downloading - " .. URL .. "\n")
 
-end)</script>
+  downloadFile(getMudletHomeDir().. "/njs50-map.dat", URL)
+end</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^map load (.*)$</regex>
