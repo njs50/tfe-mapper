@@ -241,7 +241,7 @@ end, 'reenable closed door trig')</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>how do i get from x to y</name>
+				<name>tell me path x to y</name>
 				<script>local vic = matches[2]
 local src = matches[3]
 
@@ -249,8 +249,6 @@ local dest = matches[4]
 
 
 local path = tfe.getPath(src, dest)
-
-display(path)
 
 if (path.error) then
   
@@ -274,7 +272,47 @@ end</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^([A-Za-z]+) tells you:\s*"how do i get from (.+) to (.+?)\??"$</string>
+					<string>^([A-Za-z]+) tells you:\s*"path (.+) to (.+?)\??"$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>tell me locations</name>
+				<script>local vic = matches[2]
+
+
+local locStr = ''
+for idx, loc in ipairs(table.keys(tfe.locations)) do
+  
+  if (idx % 25 == 1 and locStr ~= '') then
+    send('tell ' .. vic .. ' I know about: ' .. locStr)
+    locStr = ''
+  end
+  
+  if (idx % 25 ~= 1) then locStr = locStr .. ', ' end
+  
+  locStr = locStr .. loc
+
+end
+
+if (locStr ~= '') then
+  send('tell ' .. vic .. ' I know about: ' .. locStr)
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^([A-Za-z]+) tells you:\s*"locations"$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
@@ -349,8 +387,6 @@ local dest = matches[3]
 
 
 local path = tfe.getPath(src, dest)
-
-display(path)
 
 if (path.error) then
   
