@@ -240,6 +240,46 @@ end, 'reenable closed door trig')</script>
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>how do i get from x to y</name>
+				<script>local vic = matches[2]
+local src = matches[3]
+
+local dest = matches[4]
+
+
+local path = tfe.getPath(src, dest)
+
+display(path)
+
+if (path.error) then
+  
+  cecho('\n\n&lt;red&gt;TFE MAP:&lt;white&gt; ' .. path.error .. '\n\n')
+  send('tell ' .. vic .. ' ' .. path.error)
+
+else
+
+  send('tell ' .. vic .. ' to go from ' .. path.from .. ' to ' .. path.to .. ' do:')
+  send('tell ' .. vic .. ' speed ' .. path.path)
+  
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^([A-Za-z]+) tells you:\s*"how do i get from (.+) to (.+?)\??"$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
@@ -301,6 +341,29 @@ end</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>path</name>
+			<script>local src = matches[2]
+local dest = matches[3]
+
+
+local path = tfe.getPath(src, dest)
+
+display(path)
+
+if (path.error) then
+  
+  cecho('\n\n&lt;red&gt;TFE MAP:&lt;white&gt; ' .. path.error .. '\n\n')
+
+else
+
+  cecho('&lt;green&gt;TFE MAP:&lt;white&gt; to go from ' .. path.from .. ' to ' .. path.to .. ' is: speed ' .. path.path .. '\n')
+  
+end</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^path (\S+)\s(\S+)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>^(stop|pause|resume)$</name>
@@ -1532,7 +1595,87 @@ function doSpeedWalk()
 end
 
 
- </script>
+tfe.getPath = function(src, dest) 
+  
+  tfe.locations = tfe.locations or {}
+  
+  local srcRnum = tfe.locations[src] or src
+  local destRnum = tfe.locations[dest] or dest
+  
+  if (type(srcRnum) == 'string' and srcRnum:match([[^%d+$]])) then
+    srcRnum = tonumber(srcRnum)
+  end
+  if (type(destRnum) == 'string' and destRnum:match([[^%d+$]])) then
+    destRnum = tonumber(destRnum)
+  end
+  
+  
+  if not (type(srcRnum) == 'number' and roomExists(srcRnum)) then
+    return { error = 'Invalid start location ' .. src .. '\n' }
+  end
+  
+  if not (type(destRnum) == 'number' and roomExists(destRnum)) then
+    return { error = 'Invalid end location ' .. dest .. '\n' }
+  end
+  
+  
+  
+  if getPath(srcRnum, destRnum) then
+  
+    cecho('&lt;green&gt;TFE MAP:&lt;white&gt; pathing from ' .. getRoomName(srcRnum) .. ' to ' .. getRoomName(destRnum) .. '\n')
+    
+    local pathDirs = speedWalkDir
+    
+    local pathDirssToString = function(dirs)
+    
+      local currentDir = ''
+      local currentCount = 0
+    
+      local speedString = ''
+      
+      local addCurrent = function()
+        if (currentDir ~= '') then
+          if (currentCount &gt; 1) then
+            speedString = speedString .. tostring(currentCount)
+          end
+          speedString = speedString .. currentDir
+        end    
+      end
+      
+      for i = 1, #dirs do
+        
+        local dir = dirs[i]
+        if (dir == 'up') then dir = 'u' end
+        if (dir == 'down') then dir = 'd' end
+        
+        if dir ~= currentDir then
+          addCurrent()
+          currentDir = dir
+          currentCount = 1   
+        else
+          currentCount = currentCount + 1   
+        end
+        
+      end
+      
+      addCurrent()
+      
+      return speedString
+      
+    
+    end
+    
+    return {
+      from = getRoomName(srcRnum),
+        to = getRoomName(destRnum),
+      path = pathDirssToString(pathDirs),
+    }
+     
+  else
+    return { error = 'No known path from ' .. getRoomName(srcRnum) .. ' to ' .. getRoomName(destRnum) }
+  end
+  
+end</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
