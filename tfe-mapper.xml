@@ -2071,6 +2071,11 @@ local lookup = {
   midnight = 76594,
   corsair = 42511,
   titans = 36759,
+  fire = 25559,
+  midnight = 76594,
+  amber = 95016,
+  outpack = 54593,
+  khiren = 34579,
 }
 
 for name, vnum in pairs(lookup) do
