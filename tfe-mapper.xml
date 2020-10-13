@@ -2144,6 +2144,301 @@ for name, vnum in pairs(lookup) do
 end</script>
 			<eventHandlerList />
 		</Script>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>example-murder-bot</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>generic bot things</name>
+				<packageName></packageName>
+				<script>njs50bot =  njs50bot or {}
+
+njs50bot.verbose = true
+
+njs50bot.log = function(msg)
+  if (njs50bot.verbose) then
+    cecho(msg)
+  end
+end
+
+njs50bot.isFull = function()
+  
+  if (gmcp.Char.Vitals.maxmv == gmcp.Char.Vitals.mv and 
+      gmcp.Char.Vitals.en == gmcp.Char.Vitals.maxen and 
+      gmcp.Char.Vitals.hp == gmcp.Char.Vitals.maxhp) then
+    return true; 
+  end
+  
+  return false;
+  
+end
+
+
+njs50bot.sleepUntilFull = function (cb)
+  
+  -- if char is full then invoke callback
+  if (njs50bot.isFull()) then
+   
+    njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; character has full moves/en/hp, invoking callback\n')
+    
+    send('stand')
+    
+    cb()
+    
+  else
+  
+    if (gmcp.Char.Status.position == 'standing') then
+      send('sleep')
+    end
+  
+    njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; not full, waiting on gmcp update\n')
+ 
+    -- not full, check again on next gmcp update
+    njs50.onNextEvent('gmcp.Char.Vitals', function()
+      njs50bot.log(' &lt;yellow&gt;&lt;- gmcp update\n')
+      njs50bot.sleepUntilFull(cb)
+    end)
+    
+  end
+
+end
+
+
+njs50bot.getFullAndGo = function(roomNumber, cb)
+  njs50bot.sleepUntilFull(function() 
+    tfe.gotoRoom(roomNumber, function()
+      if (cb) then cb() end
+    end)
+  end)
+end
+
+
+-- kills everything in the room! - this will probably get you dead
+-- probably you should filter the list of things to kill and only kill specific mobs
+
+njs50bot.killAll = function(cb)
+  
+  local scanFailedTrigger, killNextScanHandler
+  
+  -- when we recieve new scan results, this is what we want to do:
+  killNextScanHandler = njs50.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
+    
+    njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; scan success\n')
+    
+    -- scan succeded so kill the scan fail trigger
+    killTrigger(scanFailedTrigger);
+    
+    -- if nothing is left in the room invoke the callback
+    if (not njs50.scanner.exits['[Here]'] or #njs50.scanner.exits['[Here]'] == 0) then
+      njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill all succeded\n')
+      if (cb) then cb() end
+    else
+      
+      -- pick the first thing on scan
+      -- this list might need to be filtered for friendlies. i.e pets, group members
+      local victim = njs50.scanner.exits['[Here]'][1].killString
+      
+      -- define these variables here so they are available inside all the functions we are about to make
+      local victimMissingTrigger, noActionTimer, somethingDiedTrigger
+      
+      local cleanupTempThings = function()
+        if (victimMissingTrigger) then killTrigger(victimMissingTrigger) end
+        if (somethingDiedTrigger) then killTrigger(somethingDiedTrigger) end
+        if (noActionTimer) then killTimer(noActionTimer) end
+      end
+      
+      victimMissingTrigger = tempRegexTrigger([[(The room doesn't contain any beings|Nothing found) matching "]] .. victim .. [["\.$]], function()
+        njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill victim missing - scanning again in 5\n')
+        -- failed to find/kill victim
+        cleanupTempThings()
+        tempTimer(5, function() njs50.killAll(cb) end)
+      end, 1)
+      
+      somethingDiedTrigger = tempRegexTrigger([[You receive \d+ experience points\.$]], function()
+        njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill victim dead\n')
+        -- failed to find/kill victim
+        cleanupTempThings()
+        njs50.killAll(cb)
+      end, 1)
+      
+      noActionTimer = tempTimer(20, function()
+        -- 20 seconds passed without anything dying or being not found. try scanning again
+        njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill all timed out, trying again\n')
+        cleanupTempThings()
+        njs50.killAll(cb)
+      end)
+      
+      send('kill ' .. victim)
+    end
+    
+  end)
+  
+  
+  scanFailedTrigger = tempRegexTrigger([[YThe current battle has you occupied\.$]], function()
+    
+    njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill all scan failed due to combat, trying again in 5\n')
+    
+    -- failed to scan due to combat, kill the handler for processing scan results
+    killNextScanHandler()
+    
+    -- try again in 5 seconds
+    tempTimer(5, function()
+      njs50.killAll(cb)
+    end)
+    
+  end, 1)
+  
+
+  send('scan')
+
+end
+
+njs50bot.checkRepop = function (roomId, regex, callback) 
+
+  local startRoomId = tfe.roomInfo.vnum
+  
+  local repopped = true
+ 
+  local noRepopTrigger = tempRegexTrigger(regex, function () 
+    repopped = false
+  end, 1)
+
+  -- go to the check room and back to the start 
+  -- makesure timeout is long enough to do this.
+  tfe.gotoRoom(roomId, function()
+    tfe.gotoRoom(startRoomId, function()
+    
+      -- if trigger hasn't run then repop happened
+      if (repopped) then
+        killTrigger(noRepopTrigger)
+        njs50bot.log('\n\n&lt;green&gt;-=[ repopped ]=-\n')
+        callback()
+      else
+        -- no repop
+        local delay = 12 + math.random (1,8)
+        
+        njs50bot.log('\n\n&lt;orange&gt;-=[ no repop, waiting ' .. tostring(delay) .. 's ]=-\n')
+        
+        tempTimer(delay, function () 
+          njs50bot.checkRepop(roomId, regex, callback)
+        end, 'repop check') 
+             
+      end
+    
+    end)
+  end) 
+  
+
+  
+end
+
+-- runs a function at each step of a path, then the callback when complete
+-- stepFn needs to call a callback when complete to invoke the next step
+
+-- njs50bot.executePath({41750, 41751, 41756, 41758, 41753, 41752}, njs50.killAll, function() send('cheer') end)
+
+njs50bot.executePath = function (path, stepFn, cb)
+ -- 41750, 41751, 41756, 41758, 41753, 41752
+  local currentStep = 0
+  
+  local stepper
+  
+  stepper = function()
+    
+    if (currentStep == #path) then
+      
+      cecho('\n&lt;green&gt;njs50bot:&lt;white&gt; reached end of path\n')
+      if (cb) then cb() end
+      
+    else
+    
+      currentStep = currentStep + 1
+      local destination = path[currentStep]
+      cecho('\n&lt;green&gt;njs50bot:&lt;white&gt; going to ' .. tostring(destination) .. '\n')
+      tfe.gotoRoom(destination, function()
+        stepFn(stepper)
+      end)
+      
+    end
+    
+  end
+ 
+  stepper()
+ 
+end</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>mansion.bot</name>
+				<packageName></packageName>
+				<script>
+njs50bot.mansion = function ()
+  
+  
+  -- gets full then goes to repop then invokes the callback
+  local gotoRepop = function(cb) 
+    njs50bot.getFullAndGo(40582, cb) 
+  end
+  
+  
+  --  gets full, goes to room 41758, murders whatever is in the room, then invokes the callback
+  local firstRoom = function(cb)
+    njs50bot.getFullAndGo(41758, function()
+      njs50bot.killAll(function()
+        njs50bot.log('\n\n&lt;green&gt;SAMPLEBOT:&lt;white&gt; the first room is now clear!\n\n')
+        -- we might want more custom code in here!
+        cb()
+      end)
+    end) 
+  end
+ 
+  -- murders all the things in a room, then sleeps until full hp/mv/en before invoking callback.
+  local genericRoomMurderAll = function(cb)
+     njs50bot.killAll(function()
+      njs50bot.sleepUntilFull(cb)
+    end)  
+  end
+
+  
+  local runComplete = function()
+    njs50bot.log('\n\n&lt;green&gt;SAMPLEBOT:&lt;white&gt; mansion bot completed!\n\n')
+    -- we might start the run again here if this was a real bot, mabye after some delay / loot sorting etc.
+  end
+  
+  
+  njs50bot.log('\n\n&lt;green&gt;SAMPLEBOT:&lt;white&gt; commencing mansion bot!\n\n')
+  
+  gotoRepop(function()
+    
+    njs50bot.checkRepop('41750', [[^\S+ \w+ coins? lies?]], function()
+      
+      -- manual first room
+      firstRoom(function()
+        
+        -- generic path then goes through a list of rooms murdering everything then getting full hp etc before continuing
+        njs50bot.executePath({41750, 41751, 41756, 41758, 41753, 41752}, genericRoomMurderAll, function() 
+        
+          -- leave a copper coin on the floor for the repop check
+           tfe.gotoRoom(41750, function()
+            send('drop copper.coin')
+            
+            -- go back to repop and run the run complete function
+            gotoRepop(runComplete)
+          end) 
+                
+        end) -- end execute path
+        
+      end) -- end first room
+      
+    end) -- end repop check
+    
+  end) -- end goto repop
+  
+end</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
 	</ScriptPackage>
 	<KeyPackage />
 	<HelpPackage>
