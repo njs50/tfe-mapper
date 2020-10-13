@@ -733,6 +733,58 @@ njs50.tablelength = function(T)
   local count = 0
   for _ in pairs(T) do count = count + 1 end
   return count
+end
+
+njs50.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, failcallback)
+
+	local ofcb = failcallback
+	local ocb = callback
+  
+  local fcb
+  local cb
+  local tempTimerId
+  local triggerId
+  maxTriggerCount = maxTriggerCount or 1
+  
+  local count = 0
+
+	cb = function ()
+		fcb = nil;
+    ofcb = nil;
+    count = count + 1
+    if (count &gt;= maxTriggerCount) then
+      killTrigger(triggerId)
+    end
+    -- echo('\n -- killing temp timed trigger timer\n')
+    killTimer(tempTimerId)
+		if (ocb) then
+			ocb()
+		end
+	end
+  
+  fcb = function()
+    cb = nil;
+    ocb = nil;
+    killTrigger(triggerId)
+    if (ofcb) then
+      ofcb()
+    end
+  end
+
+	triggerId = tempRegexTrigger(pattern, cb, maxTriggerCount)
+
+	tempTimerId = tempTimer(timeout, function ()
+		-- echo('\n -- killing temp timed trigger\n')
+	   fcb()
+	end, 'timed temp trigger')
+
+	return {triggerId = triggerId, timerId = tempTimerId}
+
+end
+
+njs50.killTimedTempTrigger = function (oTT)
+  killTimer(oTT.timerId)
+  killTrigger(oTT.triggerId)
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -904,20 +956,26 @@ common.toMurderString = function (victim)
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
 
-	-- turn women back to womans
-	victim = rex.gsub(victim, [[women\b]], 'woman')
+	-- turn women back to womans, guardsmen to guardsman
+	victim = rex.gsub(victim, [[(\w+)men\b]], '%1man')
 	-- drop i from end (plurals like homonculi
   
   local ignoreTerminalI = {
     yeti = true,
     ['mammoth yeti'] = true,
   }
+  
+  local specialCases = {
+    mice = 'mouse'
+  }
+
+  if (specialCases[victim]) then
+    victim = specialCases[victim]
+  end
 
   if (not ignoreTerminalI[victim]) then
 	 victim = rex.gsub(victim, [[i( |$)]], '%1')
   end
-
-
 
 	 -- turn mercenaries back into mercanary
 	victim = rex.gsub(victim, [[ies$]], 'y')
@@ -928,7 +986,8 @@ common.toMurderString = function (victim)
 	if (rex.find(victim, [[ses\b]])) then
 		victim = rex.gsub(victim, [[ses\b]], 's')
 	elseif (rex.find(victim, [[es\b]])) then
-		victim = rex.gsub(victim, [[es\b]], 'e')
+    -- cockroaches -&gt; cockroach
+		victim = rex.gsub(victim, [[es\b]], '')
 	else
 		victim = rex.gsub(victim, [[('?s'?)\b]], '')
 	end
@@ -1031,7 +1090,7 @@ njs50.scanner.endScan = function()
   cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;scan ended\n')
 
   -- display(njs50.scanner.exits)
-	raiseEvent(njs50.scanner.events.SCAN_PROCESSED)
+	raiseEvent(njs50.scanner.events.SCAN_PROCESSED, njs50.scanner.exits)
 end
 
 njs50.scanner.scannedLine = function (direction, mobs)  		
