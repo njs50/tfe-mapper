@@ -2219,6 +2219,8 @@ end
 
 njs50bot.killAll = function(cb)
   
+  njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; going to kill everything in this room...\n')
+  
   local scanFailedTrigger, killNextScanHandler
   
   -- when we recieve new scan results, this is what we want to do:
@@ -2275,7 +2277,7 @@ njs50bot.killAll = function(cb)
   end)
   
   
-  scanFailedTrigger = tempRegexTrigger([[YThe current battle has you occupied\.$]], function()
+  scanFailedTrigger = tempRegexTrigger([[The current battle has you occupied\.$]], function()
     
     njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill all scan failed due to combat, trying again in 5\n')
     
