@@ -2261,14 +2261,14 @@ njs50bot.killAll = function(cb)
         njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill victim dead\n')
         -- failed to find/kill victim
         cleanupTempThings()
-        njs50.killAll(cb)
+        njs50bot.killAll(cb)
       end, 1)
       
       noActionTimer = tempTimer(20, function()
         -- 20 seconds passed without anything dying or being not found. try scanning again
         njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; kill all timed out, trying again\n')
         cleanupTempThings()
-        njs50.killAll(cb)
+        njs50bot.killAll(cb)
       end)
       
       send('kill ' .. victim)
