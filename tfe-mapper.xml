@@ -91,7 +91,11 @@ else
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
-				<script>send('queue level &amp; queue scan')
+				<script>if (group.leader == player.name) then
+  send('queue level &amp; queue scan')
+else
+  cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
+end
 
 --       A fair gnomish lass is DEAD!!</script>
 				<triggerType>0</triggerType>
@@ -184,7 +188,7 @@ end, 'reenable closed door trig')
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>no exit - use special exit</name>
 				<script>disableTrigger('no exit - use special exit')
 
@@ -796,7 +800,8 @@ end</script>
 -- can add items to override from shortening if they mess up gear swapping
 common.itemShortenOverride = common.itemShortenOverride or {}
 common.itemShortenOverride['darkgem'] = 'darkgem'
-
+common.itemShortenOverride['darklight'] = 'darklight'
+common.itemShortenOverride['shadowbox'] = 'shadowbox'
 
 common.consoleMessage = function(console, message, statusColor)
 
@@ -1201,6 +1206,9 @@ tfe.events = {
   ROOM_CHANGED = 'tfe mapper: room found',
   WALK_COMPLETE = 'tfe mapper: speedwalk complete',
 }
+
+
+
 
 -- bleh 1-16 and 257-272 are reserved
 tfe.environment = {
@@ -1993,7 +2001,11 @@ tfe.room_info_update = function()
 
     if (roomChanged == true) then
       tfe.roomInfo.scanned = false
-      raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+      if (tfe.supressNextRoomChange) then
+        tfe.supressNextRoomChange = nil
+      else
+        raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+      end
     end
  
   else
@@ -2133,8 +2145,19 @@ local lookup = {
   fire = 25559,
   midnight = 76594,
   amber = 95016,
-  outpack = 54593,
+  outback = 54593,
   khiren = 34579,
+  crabtown = 48158,
+  fgs = 92559,
+  monestry = 28067,
+  slens = 76542,
+  tgOut = 35817,
+  wrath = 33084,
+  landslide = 37045,
+  brigade = 76504,
+  swami = 24048,
+  durkang = 92504,
+  sighere = 11513,
 }
 
 for name, vnum in pairs(lookup) do
