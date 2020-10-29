@@ -803,7 +803,7 @@ common.itemShortenOverride['darkgem'] = 'darkgem'
 common.itemShortenOverride['darklight'] = 'darklight'
 common.itemShortenOverride['shadowbox'] = 'shadowbox'
 
-common.consoleMessage = function(console, message, statusColor)
+common.consoleMessage = function(console, message, statusColor, excludeAll)
 
   local color = 'green'
 
@@ -811,10 +811,14 @@ common.consoleMessage = function(console, message, statusColor)
     color = statusColor
   end
 
-  common.chatConsole:cecho(console, '&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n")
+  common.chatConsole:cecho(console, '&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n", excludeAll)
 end
 
 
+common.escape = function (str)
+  str = rex.gsub(str, [[\\]], '\\\\')
+  return str
+end
 
 
 common.formatElapsedTime = function (time)
