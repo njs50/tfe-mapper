@@ -1025,6 +1025,8 @@ common.tableToString = function (table)
   local list = ''
   
   for idx, val in ipairs(table) do
+  
+    if type(val) == 'number' then val = tostring(val) end
     
     list = list .. val .. ', '
   
@@ -1188,7 +1190,20 @@ njs50.scanner.scannedLine = function (direction, mobs)
 	
 end
 
-</script>
+
+njs50.findPlayer = function(name, cb)
+  common.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
+    for exit, contents in pairs(njs50.scanner.exits) do
+      for idx, unit in pairs(contents) do
+        if unit.raw == name then
+          return cb(exit)
+        end
+      end
+    end
+    cb()
+  end)
+  send('scan')
+end</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
@@ -1498,9 +1513,10 @@ tfe.speedWalkStep = function ()
 end
 
 tfe.getNextStep = function (reverse)
-
+-- display('ns', tfe.speedwalking)
   -- not currently walking anywhere
   if (not tfe.speedwalking) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, not speedwalking\n')
     return nil
   end
   
@@ -1515,11 +1531,13 @@ tfe.getNextStep = function (reverse)
   
   -- at destination
   if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, at destination\n')
     return nil
   end
   
   -- at start and reversed
   if (reverse and tfe.speedwalking.pathPosition == 1) then
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, at start and walking backwards\n')
     return nil
   end
    
@@ -1643,30 +1661,37 @@ tfe.configureWalkPath = function (vnum, options)
   
   vnum = tostring(vnum)
 
-  cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(tfe.roomInfo.vnum) .. ' to ' .. tostring(vnum))
-	if (roomExists(tfe.roomInfo.vnum)) then
-  	if (roomExists(tfe.roomInfo.vnum)) then
-    
-      getPath(tfe.roomInfo.vnum, vnum)
-    
-      tfe.speedwalking = {
-        destination = vnum,
-        path = speedWalkPath,
-        directions = speedWalkDir,
-        pathPosition = 1,
-        options = options or {}
-      }
-    
-      table.insert(tfe.speedwalking.path, 1, tostring(tfe.roomInfo.vnum))
+  cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(tfe.roomInfo.vnum) .. ' to ' .. tostring(vnum) .. '\n') 
+	
+  if (roomExists(tfe.roomInfo.vnum)) then
+    	if (roomExists(tfe.roomInfo.vnum)) then
       
-     else
-     
-  		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
-  	end
+        if getPath(tfe.roomInfo.vnum, vnum) then
+        
+          tfe.speedwalking = {
+            destination = vnum,
+            path = speedWalkPath,
+            directions = speedWalkDir,
+            pathPosition = 1,
+            options = options or {}
+          }
+        
+          table.insert(tfe.speedwalking.path, 1, tostring(tfe.roomInfo.vnum))
+          return true
+          
+        else 
+          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unareachable destination ' .. tostring(vnum) .. '\n')
+        end
+        
+      else
+    		  cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
+    	  end
   	
 	else
 		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., current room not in map\n')
 	end
+
+  return false
 
 end
 
@@ -2118,6 +2143,7 @@ local lookup = {
 	pen = 37013,
 	penBank = 37249,
 	sos = 30752,
+  sosBank = 30874,
 	voal = 20088,
 	voalBank = 20027,
 	cairn = 26568,
