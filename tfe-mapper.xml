@@ -283,6 +283,46 @@ end</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>modify exits line</name>
+				<script>local offset
+if (matches[1] == "[Exits:") then
+  offset = -1
+else
+  offset = -3
+end
+
+moveCursor(0, getLineNumber() + offset)
+
+-- remove some whitespace to keep things centered
+if (offset == -3) then
+  selectString("    ", 1)
+  replace("")
+end
+
+moveCursor(rex.find(getCurrentLine(), [[\S]]) - 1, getLineNumber())
+fg("red")
+insertText('#' .. tostring(gmcp.Room.Info.vnum) .. ' ')
+moveCursorEnd()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>[Exits:</string>
+					<string>|      Exits:</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>tell me locations</name>
 				<script>local vic = matches[2]
 
