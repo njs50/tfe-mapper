@@ -1292,6 +1292,11 @@ tfe.environment = {
   Nondescript = 21,
   Void = 37,
   
+  
+  
+  -- added by njs50 while wandering...
+  ["Sandy Cavern"] = 100,
+  
 }
 
 
@@ -1365,6 +1370,9 @@ tfe.environmentColor = {
   Nondescript = 'beige',
   
   Void = 'dark_slate_grey',
+
+  -- added by njs50 (missing from terrain data)
+  ["Sandy Cavern"] = 'navajo_white',
   
 }
 
@@ -1990,6 +1998,11 @@ tfe.room_info_update = function()
     
     -- check terrain in this room
     local terrain = tfe.environment[tfe.roomInfo.terrain]
+    
+    if (not terrain) then
+      cecho('\n&lt;red&gt;MAPPER:&lt;white&gt; missing terrain type! - ' .. tfe.roomInfo.terrain .. '\n')
+    end
+    
     if (terrain and getRoomEnv(tfe.roomInfo.vnum) ~= terrain) then
       setRoomEnv(tfe.roomInfo.vnum, terrain)
     end
