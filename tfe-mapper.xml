@@ -302,7 +302,34 @@ end
 moveCursor(rex.find(getCurrentLine(), [[\S]]) - 1, getLineNumber())
 fg("red")
 insertText('#' .. tostring(gmcp.Room.Info.vnum) .. ' ')
-moveCursorEnd()</script>
+moveCursorEnd()
+resetFormat()
+
+-- add zone changes
+
+if (matches[1] == "[Exits:") then
+  local text = getCurrentLine()
+  for exit, data in pairs(gmcp.Room.Info.exit_info) do
+    if (data.area_id ~= gmcp.Room.Info.area_id) then
+      text = text:gsub(exit, '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; (' .. data.area .. ')')
+    end
+  end
+  selectCurrentLine()
+  creplace(text)  
+  deselect()
+else
+  local text = ''
+  for exit, data in pairs(gmcp.Room.Info.exit_info) do
+    if (data.area_id ~= gmcp.Room.Info.area_id) then
+      text = text .. '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; is ' .. data.area .. '. '
+    end
+  end
+  
+  if (text ~= '') then
+    cecho('\n| ' .. text .. '\n')
+  end
+
+end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -315,11 +342,11 @@ moveCursorEnd()</script>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>[Exits:</string>
-					<string>|      Exits:</string>
+					<string>^\|      Exits:.*$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
-					<integer>2</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -644,13 +671,22 @@ for idx, exit in pairs(exits) do
   
   if (not exit.up) then
     
-    cecho('room #' .. tostring(idx))
+    local txt = ''
     
     for exitDir, rnum in pairs(exit) do
-      cecho(' ' .. exitDir .. ': ' .. rex.gsub(getRoomAreaName(getRoomArea(rnum)), [[: \d+$]], ''))
+      txt = txt .. ' ' .. exitDir .. ': ' .. rex.gsub(getRoomAreaName(getRoomArea(rnum)), [[: \d+$]], '')
     end 
     
-    cecho('\n')
+    txt = txt  ..'\n'
+    
+    if (matches[2] == '' or rex.find(txt, '(?i)' ..  matches[2])) then
+      cecho('room #')
+      cechoLink('&lt;green&gt;' .. tostring(idx) .. '&lt;reset&gt;', 'expandAlias("go ' .. tostring(idx) .. '")', '', true)
+      if (matches[2] ~= '') then
+        txt = rex.gsub(txt, '(?i)(' .. matches[2] .. ')', '&lt;yellow&gt;%1&lt;reset&gt;')
+      end
+      cecho(txt)
+    end
     
   end
   
@@ -661,7 +697,7 @@ end
 </script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^lw$</regex>
+			<regex>^lw ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map - load</name>
