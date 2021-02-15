@@ -77,10 +77,10 @@ else
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+)$</string>
-					<string>^\s+((?:far|north|east|south|west|up|down) (?:north|east|south|west|up|down))\s+:\s+(.+)$</string>
+					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+?),?$</string>
+					<string>^\s+((?:far|north|east|south|west|up|down) (?:north|east|south|west|up|down))\s+:\s+(.+?),?$</string>
 					<string>You see nothing in the vicinity.</string>
-					<string>^(\s*)(.*)$</string>
+					<string>^(\s*)(.*?),?$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
@@ -92,7 +92,7 @@ else
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
 				<script>if (group.leader == player.name) then
-  send('queue level &amp; queue scan')
+  murder.scan('rescan because something died')
 else
   cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
 end
@@ -1145,6 +1145,9 @@ njs50.tableToString = common.tableToString
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 
+-- `echo      [Here] : a mountain bear, two mountain bear cubs, Bede, Ghosty, Brazden,
+-- `echo              Ghosty
+
 njs50.scanner = njs50.scanner or {}
 
 njs50.scanner.events = {		
@@ -1227,6 +1230,8 @@ njs50.scanner.scannedLine = function (direction, mobs)
     table.insert(nubs, s)
   end
   
+  -- display(nubs)
+  
   -- convert mobs to attack strings with counts
   for idx, mobString in pairs(nubs) do
     
@@ -1278,7 +1283,41 @@ njs50.findPlayer = function(name, cb)
     end
     cb()
   end)
-  send('scan')
+  murder.scan('looking for lost player')
+end
+
+murder = murder or {}
+murder.scan = function(reason)
+
+  if (reason) then
+    cecho('\n&lt;green&gt;SCANNER:&lt;white&gt; scan because: ' .. reason .. '\n')
+  end
+
+  if (not  murder.scanPending) then
+    
+    murder.scanPending = true
+    
+    local scanTimer = tempTimer(10, function()
+      murder.scanPending = nil
+      cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
+      murder.scan()
+    end, 'pending scan')
+    
+    common.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
+      murder.scanPending = nil
+      killTimer(scanTimer)
+    end)
+    
+    send('queue scan')
+    
+    
+  else
+  
+    cecho('\n&lt;yellow&gt;"SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
+    
+  end
+  
+
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -2434,7 +2473,7 @@ njs50bot.killAll = function(cb)
   end, 1)
   
 
-  send('scan')
+  murder.scan('kill all scan')
 
 end
 
