@@ -425,9 +425,7 @@ tfe.locations = tfe.locations or {}
 local rnum = tfe.locations[dest] or dest
 
 if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
-  
   rnum = tonumber(rnum)
-  
 end
 
 if (type(rnum) == 'number' and roomExists(rnum)) then
@@ -445,7 +443,7 @@ if (type(rnum) == 'number' and roomExists(rnum)) then
   })
 	
 else
-	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location\n')
+	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location: ' .. tostring(rnum) .. '\n')
 end</script>
 			<command></command>
 			<packageName></packageName>
@@ -865,7 +863,11 @@ end
 njs50.killTimedTempTrigger = function (oTT)
   killTimer(oTT.timerId)
   killTrigger(oTT.triggerId)
-end</script>
+end
+
+
+timedTempTrigger = njs50.timedTempTrigger
+killTimedTempTrigger = njs50.killTimedTempTrigger</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
@@ -1051,7 +1053,8 @@ common.toMurderString = function (victim)
   }
   
   local specialCases = {
-    mice = 'mouse'
+    mice = 'mouse',
+    ["ash-spirits"] = 'ash spirits',
   }
 
   if (specialCases[victim]) then
@@ -1068,13 +1071,13 @@ common.toMurderString = function (victim)
 	-- dump any s's or es's on the end of a plural
 	-- west : two greater cyclopses, vs a greater cyclops
 	-- drudges should go to drudge tho...
-	if (rex.find(victim, [[ses\b]])) then
-		victim = rex.gsub(victim, [[ses\b]], 's')
-	elseif (rex.find(victim, [[es\b]])) then
+	if (rex.find(victim, [[ses( |$)]])) then
+		victim = rex.gsub(victim, [[ses( |$)]], 's%1')
+	elseif (rex.find(victim, [[es( |$)]])) then
     -- cockroaches -&gt; cockroach
-		victim = rex.gsub(victim, [[es\b]], '')
+		victim = rex.gsub(victim, [[es( |$)]], '%1')
 	else
-		victim = rex.gsub(victim, [[('?s'?)\b]], '')
+		victim = rex.gsub(victim, [[('?s'?)( |$)]], '%2')
 	end
 
 	-- dump any random commas
@@ -1342,6 +1345,11 @@ tfe.events = {
 }
 
 
+tfe.druidWayAreas = {
+  ['The Ways : 51'] = true,
+  ['The Ways : 52'] = true,
+}
+  
 
 
 -- bleh 1-16 and 257-272 are reserved
@@ -1780,16 +1788,18 @@ end
 
 tfe.configureWalkPath = function (vnum, options)
 
+  local currentRoom = gmcp.Room.Info.vnum
+
   tfe.speedwalking = nil
   
   vnum = tostring(vnum)
 
   cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(tfe.roomInfo.vnum) .. ' to ' .. tostring(vnum) .. '\n') 
 	
-  if (roomExists(tfe.roomInfo.vnum)) then
-    	if (roomExists(tfe.roomInfo.vnum)) then
+  if (roomExists(currentRoom)) then
+    	if (roomExists(vnum)) then
       
-        if getPath(tfe.roomInfo.vnum, vnum) then
+        if getPath(currentRoom, vnum) then
         
           tfe.speedwalking = {
             destination = vnum,
@@ -1799,11 +1809,13 @@ tfe.configureWalkPath = function (vnum, options)
             options = options or {}
           }
         
-          table.insert(tfe.speedwalking.path, 1, tostring(tfe.roomInfo.vnum))
+          table.insert(tfe.speedwalking.path, 1, tostring(currentRoom))
           return true
           
         else 
-          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unareachable destination ' .. tostring(vnum) .. '\n')
+          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unreachable destination ' .. tostring(vnum) .. '\n')
+          display(gmcp.Room.Info)
+        
         end
         
       else
@@ -1834,6 +1846,33 @@ tfe.gotoRoom = function (vnum, options)
     end
     options = {}
   end
+  
+  -- make sure vnum is a number
+  vnum = tfe.locations[vnum] or vnum
+  if (type(vnum) == 'string' and vnum:match([[^%d+$]])) then
+    vnum = tonumber(vnum)
+  end
+  
+  -- landwalk if available and required
+  local destArea = getRoomAreaName(getRoomArea(vnum))
+  
+  -- if they are attempting to walk to the ways they will require intervention
+  if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
+    
+    -- if they have the njs50-druid package attempt to landwalk
+    if (druid and druid.landwalk) then
+    
+      druid.landwalk(function()
+        tfe.gotoRoom(vnum, options)
+      end)
+    
+    else
+      cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;attempting to walk to the druid ways\n')
+    end
+  
+    return
+  end
+  
   
   tfe.configureWalkPath(vnum, options)
   
