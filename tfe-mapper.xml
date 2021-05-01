@@ -1117,6 +1117,19 @@ common.tableToString = function (table)
   
 end
 
+common.tableIndexesToString = function(t)
+
+  local list = ''
+  for idx, val in pairs(table.keys(t)) do
+    if (idx ~= 1) then
+      list = list .. ', '
+    end
+    if type(val) == 'number' then val = tostring(val) end
+    list = list .. val
+  end
+  return list
+end
+
 common.getAreaName = function(roomId)
   local areaId = getRoomArea(roomId)
   local areaName = getRoomAreaName(areaId)
