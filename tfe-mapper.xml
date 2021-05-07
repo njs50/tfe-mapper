@@ -2369,7 +2369,9 @@ local lookup = {
   durkang = 92504,
   sighere = 11513,
   wastes = 58020,
-
+  fgs = 92559,
+  direwolves = 33027,
+  darkhaven = 30026,
 }
 
 for name, vnum in pairs(lookup) do
