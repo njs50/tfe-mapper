@@ -1794,12 +1794,12 @@ tfe.rerouteSpeedwalk = function ()
       tfe.speedwalking.roomChangeWatcher()
       tfe.speedwalking.roomChangeWatcher = nil
     end
-    tfe.configureWalkPath(tfe.speedwalking.destination, tfe.speedwalking.options)
+    tfe.configureWalkPath(tfe.speedwalking.destination, tfe.speedwalking.options, false)
   end
 end
 
 
-tfe.configureWalkPath = function (vnum, options)
+tfe.configureWalkPath = function (vnum, options, takeStep)
 
   local currentRoom = gmcp.Room.Info.vnum
 
@@ -1823,17 +1823,43 @@ tfe.configureWalkPath = function (vnum, options)
           }
         
           table.insert(tfe.speedwalking.path, 1, tostring(currentRoom))
+          
+          if (takeStep and tfe.speedwalking) then
+            tfe.speedWalkStep()
+          end
+          
           return true
           
         else 
           cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unreachable destination ' .. tostring(vnum) .. '\n')
-          display(gmcp.Room.Info)
+          
+          -- landwalk if available and required
+          local destArea = getRoomAreaName(getRoomArea(vnum))
+          
+          -- if they are attempting to walk to the ways they will require intervention
+          if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
+            
+            -- if they have the njs50-druid package attempt to landwalk
+            if (druid and druid.landwalk) then
+            
+              cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempting to use the druid ways\n')
+              druid.landwalk(function()
+                tfe.configureWalkPath(vnum, options, takeStep)
+              end)
+              return
+            
+            else
+              cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to walk to the druid ways\n')
+            end
+          
+            return
+          end          
         
         end
         
       else
-    		  cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
-    	  end
+  		  cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
+  	  end
   	
 	else
 		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., current room not in map\n')
@@ -1853,9 +1879,10 @@ tfe.gotoRoom = function (vnum, options)
   elseif (type(options) == 'string') then
     local optString = options 
     options = {callback = function() send(optString) end}
-  else
+  elseif (type(options) ~= 'table') then
     if (options ~= nil) then
       cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unknown options provided to tfe.gotoRoom\n')
+      display(type(options), options)
     end
     options = {}
   end
@@ -1864,34 +1891,9 @@ tfe.gotoRoom = function (vnum, options)
   vnum = tfe.locations[vnum] or vnum
   if (type(vnum) == 'string' and vnum:match([[^%d+$]])) then
     vnum = tonumber(vnum)
-  end
+  end 
   
-  -- landwalk if available and required
-  local destArea = getRoomAreaName(getRoomArea(vnum))
-  
-  -- if they are attempting to walk to the ways they will require intervention
-  if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
-    
-    -- if they have the njs50-druid package attempt to landwalk
-    if (druid and druid.landwalk) then
-    
-      druid.landwalk(function()
-        tfe.gotoRoom(vnum, options)
-      end)
-    
-    else
-      cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;attempting to walk to the druid ways\n')
-    end
-  
-    return
-  end
-  
-  
-  tfe.configureWalkPath(vnum, options)
-  
-  if (tfe.speedwalking) then
-    tfe.speedWalkStep()
-  end
+  tfe.configureWalkPath(vnum, options, true)
 
 end
 
@@ -2320,6 +2322,8 @@ local lookup = {
 	khaBank = 27042,
 	med = 107,
 	medBank = 144,
+  khaWeap = 27031,
+  khaArmor = 27036,
 	pen = 37013,
 	penBank = 37249,
 	sos = 30752,
