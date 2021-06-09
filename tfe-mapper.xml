@@ -262,7 +262,7 @@ if (path.error) then
 else
 
   send('tell ' .. vic .. ' to go from ' .. path.from .. ' to ' .. path.to .. ' do:')
-  send('tell ' .. vic .. ' speed ' .. path.path)
+  send('tell ' .. vic .. ' ' .. rex.gsub(table.concat(path.path, ' &amp; '), ' &amp; ', ' \\&amp; '))
   
 end</script>
 				<triggerType>0</triggerType>
@@ -276,7 +276,7 @@ end</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^([A-Za-z]+) tells you:\s*"path (.+) to (.+?)\??"$</string>
+					<string>^([A-Za-z]+) .*tells you:\s*"path (.+) to (.+?)\??"$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
@@ -284,51 +284,54 @@ end</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>modify exits line</name>
-				<script>local offset
-if (matches[1] == "[Exits:") then
-  offset = -1
-else
-  offset = -3
-end
-
-moveCursor(0, getLineNumber() + offset)
-
--- remove some whitespace to keep things centered
-if (offset == -3) then
-  selectString("    ", 1)
-  replace("")
-end
-
-moveCursor(rex.find(getCurrentLine(), [[\S]]) - 1, getLineNumber())
-fg("red")
-insertText('#' .. tostring(gmcp.Room.Info.vnum) .. ' ')
-moveCursorEnd()
-resetFormat()
-
--- add zone changes
-
-if (matches[1] == "[Exits:") then
-  local text = getCurrentLine()
-  for exit, data in pairs(gmcp.Room.Info.exit_info) do
-    if (data.area_id ~= gmcp.Room.Info.area_id) then
-      text = text:gsub(exit, '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; (' .. data.area .. ')')
-    end
-  end
-  selectCurrentLine()
-  creplace(text)  
-  deselect()
-else
-  local text = ''
-  for exit, data in pairs(gmcp.Room.Info.exit_info) do
-    if (data.area_id ~= gmcp.Room.Info.area_id) then
-      text = text .. '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; is ' .. data.area .. '. '
-    end
+				<script>if (gmcp and gmcp.Room and gmcp.Room.Info) then
+  
+  local offset
+  if (matches[1] == "[Exits:") then
+    offset = -1
+  else
+    offset = -3
   end
   
-  if (text ~= '') then
-    cecho('\n| ' .. text .. '\n')
+  moveCursor(0, getLineNumber() + offset)
+  
+  -- remove some whitespace to keep things centered
+  if (offset == -3) then
+    selectString("    ", 1)
+    replace("")
   end
-
+  
+  moveCursor(rex.find(getCurrentLine(), [[\S]]) - 1, getLineNumber())
+  fg("red")
+  insertText('#' .. tostring(gmcp.Room.Info.vnum) .. ' ')
+  moveCursorEnd()
+  resetFormat()
+  
+  -- add zone changes
+  
+  if (matches[1] == "[Exits:") then
+    local text = getCurrentLine()
+    for exit, data in pairs(gmcp.Room.Info.exit_info) do
+      if (data.area_id ~= gmcp.Room.Info.area_id) then
+        text = text:gsub(exit, '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; (' .. data.area .. ')')
+      end
+    end
+    selectCurrentLine()
+    creplace(text)  
+    deselect()
+  else
+    local text = ''
+    for exit, data in pairs(gmcp.Room.Info.exit_info) do
+      if (data.area_id ~= gmcp.Room.Info.area_id) then
+        text = text .. '&lt;yellow&gt;' .. exit .. '&lt;reset&gt; is ' .. data.area .. '. '
+      end
+    end
+    
+    if (text ~= '') then
+      cecho('\n| ' .. text .. '\n')
+    end
+  
+  end
 end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -383,7 +386,7 @@ end
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^([A-Za-z]+) tells you:\s*"locations"$</string>
+					<string>^([A-Za-z]+) .*tells you:\s*"locations"$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
@@ -463,7 +466,7 @@ if (path.error) then
 
 else
 
-  cecho('&lt;green&gt;TFE MAP:&lt;white&gt; to go from ' .. path.from .. ' to ' .. path.to .. ' is: speed ' .. path.path .. '\n')
+  cecho('&lt;green&gt;TFE MAP:&lt;white&gt; to go from ' .. path.from .. ' to ' .. path.to .. ' is: ' .. table.concat(path.path, ' &amp; ') .. '\n')
   
 end</script>
 			<command></command>
@@ -999,6 +1002,10 @@ end
 
 
 common.itemShorten = function(item)
+
+  -- replace "a large chopper 'big daddy'" with "a large chopper big"
+  -- mud can't match big.dad. bah
+  item = rex.gsub(item, [['([^']+)\s[^']+']], '%1')
 
   item = common.dotCase(common.itemSanitize(item))
   
@@ -1942,6 +1949,8 @@ tfe.getPath = function(src, dest)
     
       local speedString = ''
       
+      local instructions = {}
+      
       local addCurrent = function()
         if (currentDir ~= '') then
           if (currentCount &gt; 1) then
@@ -1951,13 +1960,28 @@ tfe.getPath = function(src, dest)
         end    
       end
       
+      local finishCurrent = function()
+        if (currentDir ~= '') then
+          addCurrent()
+          currentDir = ''
+          currentCount = 0
+        end
+        if (speedString ~= '') then
+          table.insert(instructions, '|speed ' .. speedString)
+          speedString = ''
+        end
+      end
+      
       for i = 1, #dirs do
         
         local dir = dirs[i]
         if (dir == 'up') then dir = 'u' end
         if (dir == 'down') then dir = 'd' end
         
-        if dir ~= currentDir then
+        if not dir:match("^[neswud]$") then
+          finishCurrent()
+          table.insert(instructions, '|' .. rex.gsub(dir, ' &amp; ([^|])', ' &amp; |%1'))
+        elseif dir ~= currentDir then
           addCurrent()
           currentDir = dir
           currentCount = 1   
@@ -1968,9 +1992,9 @@ tfe.getPath = function(src, dest)
       end
       
       addCurrent()
+      finishCurrent()
       
-      return speedString
-      
+      return instructions
     
     end
     
@@ -2060,6 +2084,7 @@ tfe.room_info_update = function()
 			if (tfe.roomInfo.vnum ~= gmcp.Room.Info.vnum) then
 			
         roomChanged = true
+        -- cecho('&lt;yellow&gt; &lt;--- #' .. tostring(gmcp.Room.Info.vnum) .. '\n')
       
         tfe.previousRoomInfo = tfe.roomInfo
         tfe.lastMoveDirection = ''
@@ -2243,7 +2268,7 @@ end
 tfe.getAreaID = function(roomInfo)
   
   if (not roomInfo.area or roomInfo.area == '') then
-    display('fucked up room info', gmcp.Room.Info)
+    -- display('weird room info: area = ' .. roomInfo.area .. ', id= ' .. tostring(roomInfo.area_id) )
     roomInfo.area = '???'
   end
 
@@ -2376,6 +2401,19 @@ local lookup = {
   fgs = 92559,
   direwolves = 33027,
   darkhaven = 30026,
+  jungle = 5821,
+  beach = 5874,
+  cave = 5860,
+  forest = 5850,
+  bamboo = 5837,
+  tundra = 5817,
+  desert = 5855,
+  hills = 5801,
+  field = 5802,
+  swamp = 5803,
+  mountain = 5800,
+  highMonk = 12500,
+  mindFlayer = 2551,
 }
 
 for name, vnum in pairs(lookup) do
