@@ -1872,9 +1872,11 @@ tfe.configureWalkPath = function (vnum, options, takeStep)
   
   local dstring = tostring(vnum)
   
-  if (type(vnum) == 'table') then
-    dstring = table.concat(vnum, ', ')
+  if (type(vnum) ~= 'table') then
+    vnum = {vnum}
   end
+  
+  dstring = table.concat(vnum, ', ')
 
   cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(currentRoom) .. ' to ' .. dstring .. '\n') 
 
@@ -1900,31 +1902,29 @@ tfe.configureWalkPath = function (vnum, options, takeStep)
   else 
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unreachable destination ' .. dstring .. '\n')
     
-    if (type(vnum) ~= 'table') then
+
+    -- landwalk if available and required
+    local destArea = getRoomAreaName(getRoomArea(vnum[1]))
+    
+    -- if they are attempting to walk to the ways they will require intervention
+    if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
       
-      -- landwalk if available and required
-      local destArea = getRoomAreaName(getRoomArea(vnum))
+      -- if they have the njs50-druid package attempt to landwalk
+      if (druid and druid.landwalk) then
       
-      -- if they are attempting to walk to the ways they will require intervention
-      if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
-        
-        -- if they have the njs50-druid package attempt to landwalk
-        if (druid and druid.landwalk) then
-        
-          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempting to use the druid ways\n')
-          druid.landwalk(function()
-            tfe.configureWalkPath(vnum, options, takeStep)
-          end)
-          return
-        
-        else
-          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to walk to the druid ways\n')
-        end
-      
+        cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempting to use the druid ways\n')
+        druid.landwalk(function()
+          tfe.configureWalkPath(vnum, options, takeStep)
+        end)
         return
-      end  
       
-    end        
+      else
+        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to walk to the druid ways\n')
+      end
+    
+      return
+    end  
+      
   
   end
         
