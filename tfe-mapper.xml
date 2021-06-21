@@ -1664,10 +1664,10 @@ tfe.speedWalkStep = function ()
 end
 
 tfe.getNextStep = function (reverse)
--- display('ns', tfe.speedwalking)
-  -- not currently walking anywhere
+  
+  -- not currently going anywhere
   if (not tfe.speedwalking) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, not speedwalking\n')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, no path configured\n')
     return nil
   end
   
@@ -1675,8 +1675,8 @@ tfe.getNextStep = function (reverse)
   -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
-    send('queue scan')
     tfe.rerouteSpeedwalk()
+    send('queue scan')
     return ''
   end  
   
@@ -1730,8 +1730,8 @@ tfe.getNextDirection = function (reverse)
     -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
-    send('queue scan')
     tfe.rerouteSpeedwalk()
+    send('queue scan')
     return nil
   end
    
@@ -1796,13 +1796,71 @@ end
 tfe.rerouteSpeedwalk = function ()
   
   if (tfe.speedwalking) then 
+  
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
+
+      -- remove any destinations we have already passed
+    
+      local currentWptIdx = 1 
+      for pv = 1, tfe.speedwalking.pathPosition do
+        if (tfe.speedwalking.path[pv] == tfe.speedwalking.destination[currentWptIdx]) then
+          currentWptIdx = currentWptIdx + 1
+        end
+      end
+      
+      local newDestinations = {}
+      
+      for ndIdx = currentWptIdx, #tfe.speedwalking.destination do
+        table.insert(newDestinations, tfe.speedwalking.destination[ndIdx])
+      end
+
     if (tfe.speedwalking.roomChangeWatcher) then
       tfe.speedwalking.roomChangeWatcher()
       tfe.speedwalking.roomChangeWatcher = nil
     end
-    tfe.configureWalkPath(tfe.speedwalking.destination, tfe.speedwalking.options, false)
+    
+    return tfe.configureWalkPath(newDestinations, tfe.speedwalking.options, false)
+  
   end
+  
+  
+end
+
+tfe.getExpandedPath = function(currentWpt, waypoints) 
+  
+  if (roomExists(currentWpt)) then
+  
+    local path = {}
+    local pathDirs = {}
+    
+    if (type(waypoints) ~= 'table') then
+      waypoints = {waypoints}
+    end
+    
+    for idx, waypoint in ipairs(waypoints) do 
+    
+      if getPath(currentWpt, waypoint) then
+         table.insert(path, speedWalkPath)
+         table.insert(pathDirs, speedWalkDir)
+      else
+        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;No known path from ' .. 
+          getRoomName(currentWpt) .. ' to ' .. (getRoomName(waypoint) or 'unknown room') .. '\n')
+        return nil
+      end
+    
+      currentWpt = waypoint
+    end -- end waypoint loop
+    
+    speedWalkPath = table.n_flatten(path)
+    speedWalkDir = table.n_flatten(pathDirs)
+    
+    return true
+	
+	else
+		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., starting room not in map\n')
+    return nil
+	end
+
 end
 
 
@@ -1812,65 +1870,65 @@ tfe.configureWalkPath = function (vnum, options, takeStep)
 
   tfe.speedwalking = nil
   
-  vnum = tostring(vnum)
+  local dstring = tostring(vnum)
+  
+  if (type(vnum) == 'table') then
+    dstring = table.concat(vnum, ', ')
+  end
 
-  cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(tfe.roomInfo.vnum) .. ' to ' .. tostring(vnum) .. '\n') 
-	
-  if (roomExists(currentRoom)) then
-    	if (roomExists(vnum)) then
+  cecho('&lt;green&gt;pathing: &lt;white&gt;' .. tostring(currentRoom) .. ' to ' .. dstring .. '\n') 
+
+
+  if tfe.getExpandedPath(currentRoom, vnum) then
+  
+    tfe.speedwalking = {
+      destination = vnum,
+      path = speedWalkPath,
+      directions = speedWalkDir,
+      pathPosition = 1,
+      options = options or {}
+    }
+  
+    table.insert(tfe.speedwalking.path, 1, tostring(currentRoom))
+    
+    if (takeStep and tfe.speedwalking) then
+      tfe.speedWalkStep()
+    end
+    
+    return true
+    
+  else 
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unreachable destination ' .. dstring .. '\n')
+    
+    if (type(vnum) ~= 'table') then
       
-        if getPath(currentRoom, vnum) then
+      -- landwalk if available and required
+      local destArea = getRoomAreaName(getRoomArea(vnum))
+      
+      -- if they are attempting to walk to the ways they will require intervention
+      if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
         
-          tfe.speedwalking = {
-            destination = vnum,
-            path = speedWalkPath,
-            directions = speedWalkDir,
-            pathPosition = 1,
-            options = options or {}
-          }
+        -- if they have the njs50-druid package attempt to landwalk
+        if (druid and druid.landwalk) then
         
-          table.insert(tfe.speedwalking.path, 1, tostring(currentRoom))
-          
-          if (takeStep and tfe.speedwalking) then
-            tfe.speedWalkStep()
-          end
-          
-          return true
-          
-        else 
-          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unreachable destination ' .. tostring(vnum) .. '\n')
-          
-          -- landwalk if available and required
-          local destArea = getRoomAreaName(getRoomArea(vnum))
-          
-          -- if they are attempting to walk to the ways they will require intervention
-          if (tfe.druidWayAreas[destArea] and gmcp.Room.Info.area ~= "The Ways") then
-            
-            -- if they have the njs50-druid package attempt to landwalk
-            if (druid and druid.landwalk) then
-            
-              cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempting to use the druid ways\n')
-              druid.landwalk(function()
-                tfe.configureWalkPath(vnum, options, takeStep)
-              end)
-              return
-            
-            else
-              cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to walk to the druid ways\n')
-            end
-          
-            return
-          end          
+          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempting to use the druid ways\n')
+          druid.landwalk(function()
+            tfe.configureWalkPath(vnum, options, takeStep)
+          end)
+          return
         
+        else
+          cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;attempted to walk to the druid ways\n')
         end
+      
+        return
+      end  
+      
+    end        
+  
+  end
         
-      else
-  		  cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
-  	  end
-  	
-	else
-		cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., current room not in map\n')
-	end
+
 
   return false
 
@@ -2388,7 +2446,7 @@ local lookup = {
   khiren = 34579,
   crabtown = 48158,
   fgs = 92559,
-  monestry = 28067,
+  monastery = 28067,
   slens = 76542,
   tgOut = 35817,
   wrath = 33084,
@@ -2413,7 +2471,8 @@ local lookup = {
   swamp = 5803,
   mountain = 5800,
   highMonk = 12500,
-  mindFlayer = 2551,
+  mindflayer = 2551,
+  minos = 92588,
 }
 
 for name, vnum in pairs(lookup) do
