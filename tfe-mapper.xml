@@ -888,6 +888,9 @@ common.itemShortenOverride['darkgem'] = 'darkgem'
 common.itemShortenOverride['darklight'] = 'darklight'
 common.itemShortenOverride['shadowbox'] = 'shadowbox'
 
+-- bung keywords on item
+common.itemShortenOverride['orange headband'] = 'orange.strip'
+
 common.consoleMessage = function(console, message, statusColor, excludeAll)
 
   local color = 'green'
