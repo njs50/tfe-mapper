@@ -136,8 +136,12 @@ send('dismount')
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>You can't do that while mounted.</string>
+					<string>You can't do that while mounted!</string>
+					<string>You cannot go there while mounted.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
@@ -188,7 +192,7 @@ end, 'reenable closed door trig')
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>no exit - use special exit</name>
 				<script>disableTrigger('no exit - use special exit')
 
@@ -990,7 +994,7 @@ common.itemSanitize = function(string)
 
 
 
-	string = rex.gsub(string, [[(enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
+	string = rex.gsub(string, [[(\+evil\+ |\+good\+ |enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
     string = rex.gsub(string, [[frost-covered ]], '')
@@ -1045,7 +1049,7 @@ end
 common.toMurderString = function (victim)
 
 	-- remove any articles etc
-	victim = rex.gsub(victim, [[(?i)\b(a|an|the|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+	victim = rex.gsub(victim, [[(?i)\b(a|an|the|\+evil\+|\+good\+|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
 
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
@@ -1658,13 +1662,12 @@ tfe.speedWalkStep = function ()
     
     
   else
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to update path., destination not in map\n')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to take step, not currently speedwalking\n')
   end
 
 end
 
 tfe.getNextStep = function (reverse)
-  
   -- not currently going anywhere
   if (not tfe.speedwalking) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, no path configured\n')
@@ -1720,7 +1723,6 @@ tfe.getNextStep = function (reverse)
 end
 
 tfe.getNextDirection = function (reverse)
-
 
   -- not currently walking anywhere
   if (not tfe.speedwalking) then
@@ -2401,7 +2403,7 @@ local lookup = {
 	pixies = 44904,
   denab = 28132,
   denabBank = 30389,
-	kha = 27004,
+	kha = 27008,
 	khaBank = 27042,
 	med = 107,
 	medBank = 144,
@@ -2473,6 +2475,7 @@ local lookup = {
   highMonk = 12500,
   mindflayer = 2551,
   minos = 92588,
+  starwater = 19377,
 }
 
 for name, vnum in pairs(lookup) do
@@ -2712,10 +2715,8 @@ end</script>
 			<Script isActive="yes" isFolder="no">
 				<name>mansion.bot</name>
 				<packageName></packageName>
-				<script>
-njs50bot.mansion = function ()
-  
-  
+				<script>njs50bot.mansion = function ()
+    
   -- gets full then goes to repop then invokes the callback
   local gotoRepop = function(cb) 
     njs50bot.getFullAndGo(40582, cb) 
