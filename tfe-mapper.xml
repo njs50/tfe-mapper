@@ -203,8 +203,8 @@ if (exit == 'above') then exit = 'up' end
 
 
 
-local exits = getRoomExits(tfe.roomInfo.vnum)
-local specialExits = getSpecialExits(tfe.roomInfo.vnum)
+local exits = getRoomExits(tfe.roomInfo.num)
+local specialExits = getSpecialExits(tfe.roomInfo.num)
 
 if (exits and specialExits) then
 
@@ -307,7 +307,7 @@ end</script>
   
   moveCursor(rex.find(getCurrentLine(), [[\S]]) - 1, getLineNumber())
   fg("red")
-  insertText('#' .. tostring(gmcp.Room.Info.vnum) .. ' ')
+  insertText('#' .. tostring(gmcp.Room.Info.num) .. ' ')
   moveCursorEnd()
   resetFormat()
   
@@ -507,20 +507,20 @@ if (dir ~= 'cancel') then
   
   tfe.pendingExit = {
     direction = tfe.consts.reverse_dirs[tfe.consts.exitmap[dir]],
-    vnum = tfe.roomInfo.vnum
+    vnum = tfe.roomInfo.num
   }
    
   
   tfe.pendingSpecialExit = njs50.onNextEvent(tfe.events.ROOM_CHANGED, function () 
   
-    addSpecialExit(tfe.pendingExit.vnum, tfe.roomInfo.vnum, cmd)
-    setExit(tfe.pendingExit.vnum, tfe.roomInfo.vnum, dir)
+    addSpecialExit(tfe.pendingExit.vnum, tfe.roomInfo.num, cmd)
+    setExit(tfe.pendingExit.vnum, tfe.roomInfo.num, dir)
     setExitWeight(tfe.pendingExit.vnum, dir, 3)
       
     tfe.pendingSpecialExit = nil
     tfe.pendingExit = nil
     
-    -- display(tfe.previousRoomInfo.vnum, 'to', tfe.roomInfo.vnum, cmd)
+    -- display(tfe.previousRoomInfo.num, 'to', tfe.roomInfo.num, cmd)
   
   end)
   
@@ -548,7 +548,7 @@ end</script>
 
 local dir = matches[2]
 local room2 = tonumber(matches[3])
-local room1 = tfe.roomInfo.vnum
+local room1 = tfe.roomInfo.num
 local cmd = matches[4] or ''
 
 -- we may need to create the current room if it is orphaned in the zone from the prev room
@@ -561,10 +561,10 @@ if not roomExists(room1) then
   -- echo('\new location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
       
     addRoom(room1)
-	  setRoomArea(tfe.roomInfo.vnum, areaId);
-	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
-	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)  
-    centerview(tfe.roomInfo.vnum)
+	  setRoomArea(tfe.roomInfo.num, areaId);
+	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
+	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)  
+    centerview(tfe.roomInfo.num)
     
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; added new room - ' .. dir .. ' from ' .. tfe.previousRoomInfo.name .. '\n')
 
@@ -604,8 +604,8 @@ end
 local dir = matches[2]
 local cmd = matches[3]
 
-local room1 = tfe.roomInfo.vnum
-local room2 = tfe.previousRoomInfo.vnum
+local room1 = tfe.roomInfo.num
+local room2 = tfe.previousRoomInfo.num
 
 
   -- we may need to create the current room if it is orphaned in the zone from the prev room
@@ -617,11 +617,11 @@ local room2 = tfe.previousRoomInfo.vnum
     
     -- echo('\new location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
         
-      addRoom(tfe.roomInfo.vnum)
-		  setRoomArea(tfe.roomInfo.vnum, areaId);
-  	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
-  	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)  
-      centerview(tfe.roomInfo.vnum)
+      addRoom(tfe.roomInfo.num)
+		  setRoomArea(tfe.roomInfo.num, areaId);
+  	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
+  	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)  
+      centerview(tfe.roomInfo.num)
       
       cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; added new room - ' .. dir .. ' from ' .. tfe.previousRoomInfo.name .. '\n')
   
@@ -1679,7 +1679,7 @@ tfe.getNextStep = function (reverse)
   
 
   -- check if we are lost and need to reroute...  
-  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+  if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
     tfe.rerouteSpeedwalk()
     send('queue scan')
@@ -1687,7 +1687,7 @@ tfe.getNextStep = function (reverse)
   end  
   
   -- at destination
-  if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+  if (not reverse and tostring(tfe.roomInfo.num) == tfe.speedwalking.destination) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;no next step available, at destination\n')
     return nil
   end
@@ -1704,7 +1704,7 @@ tfe.getNextStep = function (reverse)
   
   else
   
-    local specialExits = getSpecialExits(tfe.roomInfo.vnum)
+    local specialExits = getSpecialExits(tfe.roomInfo.num)
     local targetRoom = tonumber(tfe.speedwalking.path[tfe.speedwalking.pathPosition - 1])
     
     local cmd = ''
@@ -1733,7 +1733,7 @@ tfe.getNextDirection = function (reverse)
   end
    
     -- check if we are lost and need to reroute...  
-  if (tostring(tfe.roomInfo.vnum) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+  if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
     cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
     tfe.rerouteSpeedwalk()
     send('queue scan')
@@ -1741,7 +1741,7 @@ tfe.getNextDirection = function (reverse)
   end
    
   -- at destination
-  if (not reverse and tostring(tfe.roomInfo.vnum) == tfe.speedwalking.destination) then
+  if (not reverse and tostring(tfe.roomInfo.num) == tfe.speedwalking.destination) then
     return nil
   end
   
@@ -1760,7 +1760,7 @@ tfe.getNextDirection = function (reverse)
   end
   
   local target = tonumber(tfe.speedwalking.path[nextpos])
-  local exits = getRoomExits(tfe.roomInfo.vnum)
+  local exits = getRoomExits(tfe.roomInfo.num)
       
   for dir, vnum in pairs(exits) do
     if (vnum == target) then 
@@ -1871,7 +1871,7 @@ end
 
 tfe.configureWalkPath = function (vnum, options, takeStep)
 
-  local currentRoom = gmcp.Room.Info.vnum
+  local currentRoom = gmcp.Room.Info.num
 
   tfe.speedwalking = nil
   
@@ -2139,22 +2139,22 @@ tfe.room_info_update = function()
   local roomChanged = false
   
   -- only proceed if there is actually room info
-  if (gmcp.Room.Info.area_id and gmcp.Room.Info.vnum) then
+  if (gmcp.Room.Info.area_id and gmcp.Room.Info.num) then
     
     if (tfe.roomInfo) then
     	
 			-- if we changed rooms update lat move direction and previous room
-			if (tfe.roomInfo.vnum ~= gmcp.Room.Info.vnum) then
+			if (tfe.roomInfo.num ~= gmcp.Room.Info.num) then
 			
         roomChanged = true
-        -- cecho('&lt;yellow&gt; &lt;--- #' .. tostring(gmcp.Room.Info.vnum) .. '\n')
+        -- cecho('&lt;yellow&gt; &lt;--- #' .. tostring(gmcp.Room.Info.num) .. '\n')
       
         tfe.previousRoomInfo = tfe.roomInfo
         tfe.lastMoveDirection = ''
         
-        if (tfe.previousRoomInfo.vnum and getRoomExits(tfe.previousRoomInfo.vnum)) then
-          for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.vnum)) do
-            if (vnum == gmcp.Room.Info.vnum) then
+        if (tfe.previousRoomInfo.num and getRoomExits(tfe.previousRoomInfo.num)) then
+          for exit, vnum in pairs(getRoomExits(tfe.previousRoomInfo.num)) do
+            if (vnum == gmcp.Room.Info.num) then
               tfe.lastMoveDirection = exit
               break
             end
@@ -2163,7 +2163,7 @@ tfe.room_info_update = function()
         
         if (tfe.lastMoveDirection == '') then
           for exit, vnum in pairs(tfe.roomInfo.exits) do
-            if (vnum == tfe.roomInfo.vnum) then
+            if (vnum == tfe.roomInfo.num) then
               tfe.lastMoveDirection = tfe.consts.reverse_dirs[exit]
               break
             end
@@ -2191,7 +2191,7 @@ tfe.room_info_update = function()
     local areaId = tfe.getAreaID(tfe.roomInfo)
     
     -- if existing room center map on it
-    if (not roomExists(tfe.roomInfo.vnum)) then
+    if (not roomExists(tfe.roomInfo.num)) then
 
       -- adding new room
       
@@ -2232,24 +2232,24 @@ tfe.room_info_update = function()
 
       -- echo('\nlocation is: (' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
 
-      addRoom(tfe.roomInfo.vnum)
-		  setRoomArea(tfe.roomInfo.vnum, areaId);
-  	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
-  	  setRoomCoordinates(tfe.roomInfo.vnum, x, y, z)
+      addRoom(tfe.roomInfo.num)
+		  setRoomArea(tfe.roomInfo.num, areaId);
+  	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
+  	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)
 
     end
     
     -- updating exiting room if we haven't been into it before
     -- we can tell because it won't have a name yet...
-    if (tfe.roomInfo.name ~= getRoomName(tfe.roomInfo.vnum)) then
-  	  setRoomName(tfe.roomInfo.vnum, tfe.roomInfo.name)
+    if (tfe.roomInfo.name ~= getRoomName(tfe.roomInfo.num)) then
+  	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
       -- clear the temp room env color (grey)
-      setRoomWeight(tfe.roomInfo.vnum, 1)
+      setRoomWeight(tfe.roomInfo.num, 1)
     end
     
     -- fix any area id's that have been mutilated by previous mappers
-    if (getRoomArea(tfe.roomInfo.vnum) ~= areaId) then
-      setRoomArea(tfe.roomInfo.vnum, areaId);
+    if (getRoomArea(tfe.roomInfo.num) ~= areaId) then
+      setRoomArea(tfe.roomInfo.num, areaId);
     end
     
     
@@ -2260,43 +2260,43 @@ tfe.room_info_update = function()
       cecho('\n&lt;red&gt;MAPPER:&lt;white&gt; missing terrain type! - ' .. tfe.roomInfo.terrain .. '\n')
     end
     
-    if (terrain and getRoomEnv(tfe.roomInfo.vnum) ~= terrain) then
-      setRoomEnv(tfe.roomInfo.vnum, terrain)
+    if (terrain and getRoomEnv(tfe.roomInfo.num) ~= terrain) then
+      setRoomEnv(tfe.roomInfo.num, terrain)
     end
     
 
 		-- update room exit stubs (may change w/secret doors etc)
-    local existingExits = getRoomExits(tfe.roomInfo.vnum)
+    local existingExits = getRoomExits(tfe.roomInfo.num)
 		
     for exit, exitInfo in pairs(tfe.roomInfo.exit_info) do
 			if(not existingExits[exit] and tfe.consts.short[exit]) then
-      	setExitStub(tfe.roomInfo.vnum, tfe.consts.short[exit], true)
+      	setExitStub(tfe.roomInfo.num, tfe.consts.short[exit], true)
         
         -- add in a temp room for any rooms we haven't visited yet
-        if (not roomExists(exitInfo.vnum)) then
-          addRoom(exitInfo.vnum)
-          setRoomArea(exitInfo.vnum, tfe.getAreaID(exitInfo));
-          setRoomEnv(exitInfo.vnum, 272)
+        if (not roomExists(exitInfo.num)) then
+          addRoom(exitInfo.num)
+          setRoomArea(exitInfo.num, tfe.getAreaID(exitInfo));
+          setRoomEnv(exitInfo.num, 272)
           -- set high room weight so we won't auto walk through it unless absolutely necessary
-          setRoomWeight(exitInfo.vnum, 100)
+          setRoomWeight(exitInfo.num, 100)
           
-          local x,y,z = tfe.getRoomCoordinatesByExit(tfe.roomInfo.vnum, exit)
+          local x,y,z = tfe.getRoomCoordinatesByExit(tfe.roomInfo.num, exit)
           -- echo('\nnew location is: ' .. tostring(x) .. ', ' .. tostring(y) .. ', ' .. tostring(z) .. ')\n')
-          setRoomCoordinates(exitInfo.vnum, x, y, z)
+          setRoomCoordinates(exitInfo.num, x, y, z)
         end
       
-        -- cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.vnum) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
-        setExit(tfe.roomInfo.vnum, exitInfo.vnum, tfe.consts.stubmap[exit])
+        -- cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.num) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
+        setExit(tfe.roomInfo.num, exitInfo.num, tfe.consts.stubmap[exit])
         if (tfe.roomInfo.area == 'The Ways' and exitInfo.area ~= 'The Ways') then
           cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to the ways\n')
         else
-          setExit(exitInfo.vnum, tfe.roomInfo.vnum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
+          setExit(exitInfo.num, tfe.roomInfo.num, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
         end
         
 			end
     end -- end looping over exits
   
-  	centerview(tfe.roomInfo.vnum)
+  	centerview(tfe.roomInfo.num)
 
     if (roomChanged == true) then
       tfe.roomInfo.scanned = false
@@ -2479,6 +2479,7 @@ local lookup = {
   mindflayer = 2551,
   minos = 92588,
   starwater = 19377,
+  cathedral = 21009,  
 }
 
 for name, vnum in pairs(lookup) do
@@ -2642,7 +2643,7 @@ end
 
 njs50bot.checkRepop = function (roomId, regex, callback) 
 
-  local startRoomId = tfe.roomInfo.vnum
+  local startRoomId = tfe.roomInfo.num
   
   local repopped = true
  
