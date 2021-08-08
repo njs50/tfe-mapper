@@ -37,8 +37,8 @@ if (matches[1] == 'You see nothing in the vicinity.') then
 	
 		-- echo(' &lt;-- reset exits')
   	njs50.scanner.resetExits();
-		cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;clear\n')
-		raiseEvent(njs50.scanner.events.SCAN_PROCESSED)
+	-- cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;clear\n')
+	raiseEvent(njs50.scanner.events.SCAN_PROCESSED)
 		
 else 
 
@@ -1207,10 +1207,10 @@ njs50.scanner.endScan = function()
   end
   njs50.scanner.currentDirection = nil
   njs50.scanner.scan_in_progress = false
-  cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;scan ended\n')
 
-  -- display(njs50.scanner.exits)
-	raiseEvent(njs50.scanner.events.SCAN_PROCESSED, njs50.scanner.exits)
+  -- cecho(' &lt;- &lt;green&gt;SCANNER: &lt;white&gt;scan ended\n')	
+  raiseEvent(njs50.scanner.events.SCAN_PROCESSED, njs50.scanner.exits)
+
 end
 
 njs50.scanner.scannedLine = function (direction, mobs)  		
@@ -1343,7 +1343,7 @@ murder.scan = function(reason)
     
   else
   
-    cecho('\n&lt;yellow&gt;"SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
+    cecho('\n&lt;yellow&gt;SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
     
   end
   
@@ -1680,7 +1680,7 @@ tfe.getNextStep = function (reverse)
 
   -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
     tfe.rerouteSpeedwalk()
     send('queue scan')
     return ''
@@ -1734,7 +1734,7 @@ tfe.getNextDirection = function (reverse)
    
     -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;we are off the designated path, recalculating in 5 seconds\n')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
     tfe.rerouteSpeedwalk()
     send('queue scan')
     return nil
