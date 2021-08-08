@@ -2254,10 +2254,10 @@ tfe.room_info_update = function()
     
     
     -- check terrain in this room
-    local terrain = tfe.environment[tfe.roomInfo.terrain]
+    local terrain = tfe.environment[tfe.roomInfo.environment]
     
     if (not terrain) then
-      cecho('\n&lt;red&gt;MAPPER:&lt;white&gt; missing terrain type! - ' .. tfe.roomInfo.terrain .. '\n')
+      cecho('\n&lt;red&gt;MAPPER:&lt;white&gt; missing terrain type! - ' .. tfe.roomInfo.environment .. '\n')
     end
     
     if (terrain and getRoomEnv(tfe.roomInfo.num) ~= terrain) then
