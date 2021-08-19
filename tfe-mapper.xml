@@ -32,8 +32,10 @@
                -- a knight's heavy charger
         -- east : a Medienne guard
 
+       -- scan : nothing in the vicinity
+
 -- You see nothing in the vicinity.
-if (matches[1] == 'You see nothing in the vicinity.') then
+if (matches[1] == 'You see nothing in the vicinity.' or matches[2] == 'scan') then
 	
 		-- echo(' &lt;-- reset exits')
   	njs50.scanner.resetExits();
@@ -77,7 +79,7 @@ else
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^\s+(north|east|south|west|up|down|\[Here\])\s+:\s+(.+?),?$</string>
+					<string>^\s+(north|east|south|west|up|down|scan|\[Here\])\s+:\s+(.+?),?$</string>
 					<string>^\s+((?:far|north|east|south|west|up|down) (?:north|east|south|west|up|down))\s+:\s+(.+?),?$</string>
 					<string>You see nothing in the vicinity.</string>
 					<string>^(\s*)(.*?),?$</string>
@@ -2479,7 +2481,10 @@ local lookup = {
   mindflayer = 2551,
   minos = 92588,
   starwater = 19377,
-  cathedral = 21009,  
+  cathedral = 21009, 
+  darkCitadel = 23074, 
+  luerna = 31051,
+  plantation = 16776,
 }
 
 for name, vnum in pairs(lookup) do
