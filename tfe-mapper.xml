@@ -742,6 +742,28 @@ end</script>
 			<packageName></packageName>
 			<regex>^map load (.*)$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>map - set drink target</name>
+			<script>if (matches[2] and matches[2] ~= '') then
+  setRoomUserData(gmcp.Room.Info.num, 'drink-target', matches[2])
+else
+  clearRoomUserDataItem(gmcp.Room.Info.num, 'drink-target')
+end</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^map drink ?(.*)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>map - set open command</name>
+			<script>if (matches[2] and matches[2] ~= '') then
+  setRoomUserData(gmcp.Room.Info.num, 'open-' .. matches[2], matches[3])
+else
+  clearRoomUserDataItem(gmcp.Room.Info.num, 'open-' .. matches[2])
+end</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^map open (n|e|s|w|u|d) ?(.*)$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage>
@@ -1065,6 +1087,7 @@ common.toMurderString = function (victim)
   
   local ignoreTerminalI = {
     yeti = true,
+    targi = true,
     ['mammoth yeti'] = true,
   }
   
@@ -2787,6 +2810,117 @@ end</script>
   
 end</script>
 				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>gmcp-events</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>gmcp handling</name>
+				<packageName></packageName>
+				<script>njs50 = njs50 or {}
+
+njs50.gmcp = njs50.gmcp or {}
+
+njs50.gmcp.events = njs50.gmcp.events or {}
+
+njs50.gmcp.events.ROOM_EXITS_UPDATE = "gmcp: room exits changed"
+
+njs50.gmcp.previous = njs50.gmcp.previous or {}
+
+njs50.gmcp.logLevel = 'debug'
+
+njs50.recursiveDiff = function(t1, t2)
+  
+  local diff = {}
+
+  for idx, key in ipairs(table.keys(t1)) do
+    
+    if t2[key] then  
+
+      if (type(t1[key]) == 'table') then
+        diff[key] = njs50.recursiveDiff(t1[key],t2[key])
+      else
+        if t2[key] ~= t1[key] then
+          -- display(key, t2[key], t1[key])
+          diff[key] = t2[key]
+        end
+      end
+
+    else
+      -- not in t2 at all
+      diff[key] = table.deepcopy(t1[key])
+    end
+    
+  end    
+  
+  -- anything left from t2
+  for idx, key in ipairs(table.keys(t2)) do
+    if not (t1[key]) then
+      diff[key] = table.deepcopy(t2[key])
+    end
+  end
+  
+  if (#table.keys(diff) == 0) then
+    return nil
+  end
+  
+  return diff
+  
+end
+
+
+njs50.tableHasValueChanges = function(t1, t2) 
+
+  t1 = t1 or {}
+  t2 = t2 or {}
+  
+  local td = njs50.recursiveDiff(t1, t2)
+
+  -- if (njs50.gmcp.logLevel == 'debug') then
+    -- cecho('\n&lt;yellow&gt;GMCP:&lt;white&gt; table diff:\n')
+    -- display(td) 
+    -- cecho('\n&lt;white&gt;-- end of diff\n')
+  -- end
+  
+  return (td ~= nil)
+  
+end
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>njs50.room_info_update</name>
+				<packageName></packageName>
+				<script>
+
+njs50.room_info_update = function()
+
+  if (gmcp.Room.Info.num ~= njs50.gmcp.previous.roomNum) then
+    njs50.gmcp.previous.roomNum = gmcp.Room.Info.num
+  else
+    
+    -- only looking for exit info changes when the room hasn't changed!
+    if (njs50.tableHasValueChanges(gmcp.Room.Info.exit_info, njs50.gmcp.previous.exitInfo)) then
+      
+      cecho('&lt;green&gt; &lt;-- exit info updated ')
+      njs50.gmcp.previous.exitInfo = table.deepcopy(gmcp.Room.Info.exit_info)
+      
+      raiseEvent(njs50.gmcp.events.ROOM_EXITS_UPDATE)
+      
+    end
+
+  end
+
+
+end
+
+</script>
+				<eventHandlerList>
+					<string>gmcp.Room.Info</string>
+				</eventHandlerList>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
