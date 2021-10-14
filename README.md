@@ -41,7 +41,11 @@ map load https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.
 
 `map update` - updates this package to the latest version in github. beware: this would kill any changes you've made in the package. (best to install as a module if you want to make changes).
 
-`map exit [n|e|s|w|u|d|in|out] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse.
+`map open [n|e|s|w|u|d] <cmd>` - gives the map the command to open an exit. e.g `map open e knock gate` to get the guards to open the east gate. if used without `<cmd>` it will clear the open command. perhaps if you did it in the wrong room you'd want to do this.
+
+`map exit [n|e|s|w|u|d|in|out] <cmd>` - adds a one way special exit to the map. e.g `map exit u climb up` will add an exit up which will use the command "climb up" to traverse. you should only use this when the exit isn't openable, which is probalby any time you can't scan the next room.
+
+`map drink <target>` - sets a drink target for this room. e.g. `map drink stream`. sets metadata on the room for a drink source. you could use this in trigger/timer/alias by doing getRoomUserData(gmcp.Room.Info.num, 'drink-target'). will be cleared if you don't provide `<target>`.
 
 `map exit cancel` - will cancel any pending special exits. this is only going to be useful if the command failed to move rooms, otherwise you might need to delete the rooms in mudlet and try again.
 
@@ -62,5 +66,9 @@ e.g. from the waterfall north of chiiron. if you entered the crevice you would d
 `go <room number> [cmd|alias]` - if you can get there this will take you there... takes optional command or alias to run when you arrive
 
 `stop|pause|resume` - pause or resume or stop speedwalk
+
+## helper commands
+
+`map fix special exits` - will loop over all rooms in your map and attempt to replace "special exits" with room open commands. you might have to modify it as it was really just to fix commands in my map.
 
 
