@@ -1691,6 +1691,14 @@ tfe.openExit = function(direction)
   local exitInfo = gmcp.Room.Info.exit_info[direction]
   local openCommand = getRoomUserData(gmcp.Room.Info.num, 'open-' .. direction)
   
+  local isMounted = table.contains(gmcp.Char.Status.flags,"mounted")
+  local isHidden = table.contains(gmcp.Char.Status.flags,"hiding")
+  local isCamo = table.contains(gmcp.Char.Status.flags,"camouflaged")
+  
+  if isMounted then
+    send('dismount')
+  end
+  
   if openCommand ~= '' then
     send(openCommand)
   else
@@ -1702,6 +1710,18 @@ tfe.openExit = function(direction)
     end
     
     send('open ' .. direction)
+  end
+  
+  if isMounted then
+    send('mount')
+  end
+  
+  if isHidden then
+    send('hide')
+  end
+  
+  if isCamo then
+    send('camo')
   end
 
 end
