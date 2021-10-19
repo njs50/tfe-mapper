@@ -194,17 +194,21 @@ end, 'reenable closed door trig')
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>no exit - use special exit</name>
-				<script>disableTrigger('no exit - use special exit')
+				<script>-- disableTrigger('no exit - use special exit')
 
 local exit = matches[2]
 
 if (exit == 'below') then exit = 'down' end
 if (exit == 'above') then exit = 'up' end
 
+-- if an exit opens scan
 
 
+
+
+-- 
 local exits = getRoomExits(tfe.roomInfo.num)
 local specialExits = getSpecialExits(tfe.roomInfo.num)
 
@@ -217,16 +221,24 @@ if (exits and specialExits) then
       send(command)
     end
   else
-    cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exit .. '... you can use "map exit [n|e|s|w|u|d] &lt;cmd&gt;" to add a special exit \n' )
+    njs50.tempTimedNextEvent(5, njs50.gmcp.events.ROOM_EXITS_UPDATE, function()
+      send('scan')
+    end)  
+    tfe.openExit(exit)    
   end
 
 else
-  cecho('\n&lt;green&gt;MOVE: &lt;white&gt;failed to go ' .. exit .. '... you can use "map exit [n|e|s|w|u|d] &lt;cmd&gt;" to add a special exit \n' )
+  
+  njs50.tempTimedNextEvent(5, njs50.gmcp.events.ROOM_EXITS_UPDATE, function()
+    send('scan')
+  end)  
+  tfe.openExit(exit)
+  
 end
-
-tempTimer(1, function ()
-	enableTrigger('no exit - use special exit')
-end, 'reenable closed door trig')</script>
+-- 
+-- tempTimer(1, function ()
+	-- enableTrigger('no exit - use special exit')
+-- end, 'reenable closed door trig')</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -855,6 +867,22 @@ end</script>
 			<packageName></packageName>
 			<script>njs50 = njs50 or {}
 
+njs50.tempTimedNextEvent = function(timeout, evt, callback)
+  local eventWatcher, timer
+  
+  eventWatcher = njs50.onNextEvent(evt, function(evt, args)
+  		-- cecho('\n&lt;green&gt;EVENT: time limited next event happened: ' .. evt .. '\n')  
+    killTimer(timer)
+  		callback(evt, args)
+  end)
+  
+  timer = tempTimer(timeout, function()
+    -- cecho('\n&lt;orange&gt;EVENT: event didn\'t occur in time: ' .. evt .. '\n')
+    eventWatcher()
+  end)
+  
+end
+
 njs50.onNextEvent = function (evt, callback)
 
 	if not evt then
@@ -942,7 +970,9 @@ end
 
 
 timedTempTrigger = njs50.timedTempTrigger
-killTimedTempTrigger = njs50.killTimedTempTrigger</script>
+killTimedTempTrigger = njs50.killTimedTempTrigger
+
+tempTimedNextEvent = njs50.tempTimedNextEvent</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
@@ -1703,9 +1733,12 @@ tfe.openExit = function(direction)
     send(openCommand)
   else
     cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to open the exit ' .. direction .. '\n')
-    cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "map open ' .. direction:sub(1,1) .. ' &lt;command&gt;" to set the opening command\n')
-    
+    cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map open ' .. direction:sub(1,1) .. ' &lt;cmd&gt;&lt;white&gt;" to set the command to open the exit\n')
+    cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map exit [n|e|s|w|u|d|in|out] &lt;cmd&gt;&lt;white&gt;" to add a special exit command \n' )
+    cecho('&lt;yellow&gt;TFE MAP: &lt;white&gt;setting an open command with &lt;green&gt;map open&lt;white&gt; is best, but for exits like enter portal where no\n') 
+    cecho('         &lt;white&gt;entrance appears you need to use a special exit\n' )
     if (exitInfo and table.contains(exitInfo.flags, 'locked')) then
+    
       send('unlock ' .. direction)
     end
     
@@ -2307,6 +2340,7 @@ local lookup = {
   darkCitadel = 23074, 
   luerna = 31051,
   plantation = 16776,
+  kobolds = 26574,
 }
 
 for name, vnum in pairs(lookup) do
@@ -2960,15 +2994,15 @@ njs50.gmcp.events.ROOM_EXITS_UPDATE = "gmcp: room exits changed"
 
 njs50.gmcp.previous = njs50.gmcp.previous or {}
 
-njs50.gmcp.logLevel = 'debug'
+njs50.gmcp.logLevel = 'errors'
 
 njs50.recursiveDiff = function(t1, t2)
-  
+  -- display('comparing:', t1, t2)
   local diff = {}
 
   for idx, key in ipairs(table.keys(t1)) do
     
-    if t2[key] then  
+    if t2[key] ~= nil then  
 
       if (type(t1[key]) == 'table') then
         diff[key] = njs50.recursiveDiff(t1[key],t2[key])
@@ -2988,7 +3022,7 @@ njs50.recursiveDiff = function(t1, t2)
   
   -- anything left from t2
   for idx, key in ipairs(table.keys(t2)) do
-    if not (t1[key]) then
+    if (t1[key] == nil) then
       diff[key] = table.deepcopy(t2[key])
     end
   end
@@ -3009,11 +3043,11 @@ njs50.tableHasValueChanges = function(t1, t2)
   
   local td = njs50.recursiveDiff(t1, t2)
 
-  -- if (njs50.gmcp.logLevel == 'debug') then
-    -- cecho('\n&lt;yellow&gt;GMCP:&lt;white&gt; table diff:\n')
-    -- display(td) 
-    -- cecho('\n&lt;white&gt;-- end of diff\n')
-  -- end
+  if (njs50.gmcp.logLevel == 'debug') then
+    cecho('\n&lt;yellow&gt;GMCP:&lt;white&gt; table diff:\n')
+    display(td) 
+    cecho('\n&lt;white&gt;-- end of diff\n')
+  end
   
   return (td ~= nil)
   
