@@ -93,10 +93,12 @@ else
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
-				<script>if (group.leader == player.name) then
-  murder.scan('rescan because something died')
-else
-  cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
+				<script>if (not combat.active) then
+  if (group.leader == player.name) then
+    murder.scan('rescan because something died (out of combat)')
+  -- else
+    -- cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
+  end
 end
 
 --       A fair gnomish lass is DEAD!!</script>
@@ -2284,8 +2286,8 @@ local lookup = {
 	chi = 25000,
 	zaranders = 27500,
 	barbs = 66071,
-	denab = 28132,
 	brith = 63534,
+  brithBank = 63521,
 	tg = 17331,
 	cycs = 44765,
 	stonies = 19164,
@@ -2297,6 +2299,7 @@ local lookup = {
 	cairnValley = 57258,
 	temple = 21257,
 	narak = 36070,
+  narakBank = 36094,
 	halflings = 21076,
   midnight = 76594,
   corsair = 42511,
@@ -2321,6 +2324,9 @@ local lookup = {
   fgs = 92559,
   direwolves = 33027,
   darkhaven = 30026,
+  dh = 30026,
+  darkhavenBank = 30011,
+  dhBank = 30011,
   jungle = 5821,
   beach = 5874,
   cave = 5860,
@@ -2341,6 +2347,7 @@ local lookup = {
   luerna = 31051,
   plantation = 16776,
   kobolds = 26574,
+  rabbits = 38324,
 }
 
 for name, vnum in pairs(lookup) do
