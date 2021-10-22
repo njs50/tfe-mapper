@@ -1703,9 +1703,21 @@ end
 tfe.isExitClosed = function(direction)
   
   if(direction and direction ~= '') then
+    
+    local isSpecialExit = false
+    local exits = getRoomExits(tfe.roomInfo.num)
+    local specialExits = getSpecialExits(tfe.roomInfo.num)
+    
+    if (exits and specialExits) then
+      local targetRoom = exits[direction]
+      if (targetRoom and specialExits[targetRoom]) then
+        isSpecialExit = true
+      end
+    end
+  
     -- if it's a standard exit it needs to have exit info
     -- if it's a special exit we will assume it is open/passable with that command
-    if tfe.consts.standardExits[direction] then
+    if tfe.consts.standardExits[direction] and not isSpecialExit then
       local exitInfo = gmcp.Room.Info.exit_info[direction]
       if not exitInfo or table.contains(exitInfo.flags, 'closed') then
         return true
