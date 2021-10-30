@@ -869,7 +869,7 @@ end</script>
 			<packageName></packageName>
 			<script>njs50 = njs50 or {}
 
-njs50.tempTimedNextEvent = function(timeout, evt, callback)
+njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
   local eventWatcher, timer
   
   eventWatcher = njs50.onNextEvent(evt, function(evt, args)
@@ -881,7 +881,16 @@ njs50.tempTimedNextEvent = function(timeout, evt, callback)
   timer = tempTimer(timeout, function()
     -- cecho('\n&lt;orange&gt;EVENT: event didn\'t occur in time: ' .. evt .. '\n')
     eventWatcher()
-  end)
+    if (failCallback) then
+      failCallback(evt, args)
+    end
+  end, 'event: ' .. evt .. ' (' .. tostring(timeout) .. 's)')
+  
+  -- destoy this temp timed event watcher
+  return function()
+    killTimer(timer)
+    eventWatcher()
+  end
   
 end
 
@@ -1873,10 +1882,26 @@ tfe.getNextStep = function (reverse)
 
   -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
-    tfe.rerouteSpeedwalk()
-    send('queue scan')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;2 expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in ' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
+    
+    local expectedArea = getRoomAreaName(getRoomArea(tfe.speedwalking.path[tfe.speedwalking.pathPosition]))
+    -- if they expected to be in the ways send them back there
+    
+    if (gmcp.Char.Score.class == 'druid' and rex.match(expectedArea, [[^The Ways]]) and druid and druid.landwalk) then
+      tfe.supressNextRoomChange = true
+      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;going to ways\n')
+      druid.landwalk(function()
+        tfe.supressNextRoomChange = nil
+        tfe.rerouteSpeedwalk()
+        send('queue scan')      
+      end)
+    else
+      tfe.rerouteSpeedwalk()
+      send('queue scan')
+    end
+    
     return ''
+    
   end  
   
   -- at destination
@@ -1927,7 +1952,7 @@ tfe.getNextDirection = function (reverse)
    
     -- check if we are lost and need to reroute...  
   if (tostring(tfe.roomInfo.num) ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;expected to be in room ' .. tfe.speedwalking.path[tfe.speedwalking.pathPosition] .. ' but was in ' .. tostring(tfe.roomInfo.num) ..', recalculating path \n')
     tfe.rerouteSpeedwalk()
     send('queue scan')
     return nil
@@ -2425,11 +2450,13 @@ njs50bot.sleepUntilFull = function (cb)
   
     njs50bot.log('\n&lt;green&gt;njs50bot:&lt;white&gt; not full, waiting on gmcp update\n')
  
-    -- not full, check again on next gmcp update
-    njs50.onNextEvent('gmcp.Char.Vitals', function()
-      njs50bot.log(' &lt;yellow&gt;&lt;- gmcp update\n')
+    -- not full, check again on next gmcp update (or after 5 seconds)
+  
+    local retry = function()
+      njs50bot.log(' &lt;yellow&gt;&lt;- gmcp update (or 5s timeout)\n')
       njs50bot.sleepUntilFull(cb)
-    end)
+    end
+    njs50.tempTimedNextEvent(5, 'gmcp.Char.Vitals', retry, retry)
     
   end
 
@@ -2757,6 +2784,19 @@ tfe.room_info_update = function()
 			if (tfe.roomInfo.num ~= gmcp.Room.Info.num) then
 			
         roomChanged = true
+        
+        -- reset the scanner as it's possible for a scan to be in progress while
+        -- we are changing rooms.
+        -- this happens if we have a move queued and the previous scan was waiting for
+        -- and empty line/prompt to complete.
+        
+        -- i.e north: some stuff 
+        -- &lt;gmcp room change due to queued move&gt;
+        -- &lt;new line from gmcp update causes scan to complete&gt;
+        if (njs50.scanner.scan_in_progress) then
+          cecho('&lt;yellow&gt; &lt;--- &lt;white&gt;cleared in progress scan\n')
+          njs50.scanner.resetScanner()
+        end
         -- cecho('&lt;yellow&gt; &lt;--- #' .. tostring(gmcp.Room.Info.num) .. '\n')
       
         tfe.previousRoomInfo = tfe.roomInfo
