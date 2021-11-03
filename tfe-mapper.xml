@@ -477,6 +477,10 @@ end</script>
 			<script>local src = matches[2]
 local dest = matches[3]
 
+if not dest or dest == '' then
+  dest = src
+  src = gmcp.Room.Info.num
+end
 
 local path = tfe.getPath(src, dest)
 
@@ -491,7 +495,7 @@ else
 end</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^path (\S+)\s(\S+)$</regex>
+			<regex>^path (\S+)\s?(\S+)?$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>^(stop|pause|resume)$</name>
@@ -999,6 +1003,10 @@ common.itemShortenOverride['shadowbox'] = 'shadowbox'
 
 -- bung keywords on item
 common.itemShortenOverride['orange headband'] = 'orange.strip'
+common.itemShortenOverride['emerald bracelet'] = 'emerald.bracelet'
+common.itemShortenOverride['orange.headband'] = 'orange.strip'
+common.itemShortenOverride['emerald.bracelet'] = 'emerald.bracelet'
+
 
 common.consoleMessage = function(console, message, statusColor, excludeAll)
 
@@ -1124,6 +1132,8 @@ common.itemShorten = function(item)
   item = rex.gsub(item, [['([^']+)\s[^']+']], '%1')
 
   item = common.dotCase(common.itemSanitize(item))
+  
+  -- display(common.itemShortenOverride, item)
   
   if (common.itemShortenOverride[item]) then
     return common.itemShortenOverride[item]
@@ -2272,7 +2282,6 @@ tfe.getPath = function(src, dest)
         
       end
       
-      addCurrent()
       finishCurrent()
       
       return instructions
@@ -2953,7 +2962,10 @@ tfe.room_info_update = function()
       if (tfe.supressNextRoomChange) then
         tfe.supressNextRoomChange = nil
       else
-        raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+        tempRegexTrigger([[^(\|      Exits:|\[Exits:)]], function()
+          cecho('&lt;green&gt; &lt;-- exit') 
+          raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
+        end, 1)        
       end
     end
  
@@ -3128,7 +3140,7 @@ njs50.room_info_update = function()
     -- only looking for exit info changes when the room hasn't changed!
     if (njs50.tableHasValueChanges(gmcp.Room.Info.exit_info, njs50.gmcp.previous.exitInfo)) then
       
-      cecho('&lt;green&gt; &lt;-- exit info updated ')
+      -- cecho('&lt;green&gt; &lt;-- exit info updated ')
       njs50.gmcp.previous.exitInfo = table.deepcopy(gmcp.Room.Info.exit_info)
       
       raiseEvent(njs50.gmcp.events.ROOM_EXITS_UPDATE)
