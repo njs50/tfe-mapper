@@ -124,7 +124,7 @@ end
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You can't do that while mounted.</name>
 				<script>njs50.onNextEvent(tfe.events.ROOM_CHANGED, function ()
-	send('mount')
+  send('mount')
 end)
 send('dismount')
 </script>
@@ -142,11 +142,13 @@ send('dismount')
 					<string>You can't do that while mounted.</string>
 					<string>You can't do that while mounted!</string>
 					<string>You cannot go there while mounted.</string>
+					<string>^\w+ is too large to fit through the .* to the (north|east|south|west)\.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -896,6 +898,11 @@ njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
     eventWatcher()
   end
   
+end
+
+
+njs50.tempTimedNextEventAnyway = function(timeout, evt, callback)
+  return njs50.tempTimedNextEvent(timeout, evt, callback, callback)
 end
 
 njs50.onNextEvent = function (evt, callback)
@@ -2307,46 +2314,46 @@ end</script>
 			<script>tfe.locations = tfe.locations or {}
 
 local lookup = {
-	hillies = 28018,
-	pixies = 44904,
+  hillies = 28018,
+  pixies = 44904,
   denab = 28132,
   denabBank = 30389,
-	kha = 27008,
-	khaBank = 27042,
-	med = 107,
-	medBank = 144,
+  kha = 27008,
+  khaBank = 27042,
+  med = 107,
+  medBank = 144,
   khaWeap = 27031,
   khaArmor = 27036,
-	pen = 37013,
-	penBank = 37249,
-	sos = 30752,
+  pen = 37013,
+  penBank = 37249,
+  sos = 30752,
   sosBank = 30874,
-	voal = 20088,
-	voalBank = 20027,
-	cairn = 26568,
-	knight = 21096,
-	hollow = 91675,
-	blade = 19370,
-	wayward = 40585,
+  voal = 20088,
+  voalBank = 20027,
+  cairn = 26568,
+  knight = 21096,
+  hollow = 91675,
+  blade = 19370,
+  wayward = 40585,
   whisper = 28134,
-	chi = 25000,
-	zaranders = 27500,
-	barbs = 66071,
-	brith = 63534,
+  chi = 25000,
+  zaranders = 27500,
+  barbs = 66071,
+  brith = 63534,
   brithBank = 63521,
-	tg = 17331,
-	cycs = 44765,
-	stonies = 19164,
-	toys = 39008,
-	vyans = 28146,
-	root = 19376,
-	yetis = 94611,
-	ettercaps = 70104,
-	cairnValley = 57258,
-	temple = 21257,
-	narak = 36070,
+  tg = 17331,
+  cycs = 44765,
+  stonies = 19164,
+  toys = 39008,
+  vyans = 28146,
+  root = 19376,
+  yetis = 94611,
+  ettercaps = 70104,
+  cairnValley = 57258,
+  temple = 21257,
+  narak = 36070,
   narakBank = 36094,
-	halflings = 21076,
+  halflings = 21076,
   midnight = 76594,
   corsair = 42511,
   titans = 36759,
@@ -2394,6 +2401,7 @@ local lookup = {
   plantation = 16776,
   kobolds = 26574,
   rabbits = 38324,
+  tombOfOrder = 57309,
 }
 
 for name, vnum in pairs(lookup) do
