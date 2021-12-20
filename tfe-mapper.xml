@@ -414,6 +414,32 @@ end
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>pending movement</name>
+				<script>-- You stomp west.
+-- You leave east.
+-- You ride Stinky east.
+-- 
+-- tfe.pendingMoveDirection = matches[2]
+
+raiseEvent(tfe.events.ROOM_CHANGE_PENDING, matches[2])</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You (?:\w+|ride \w+) (north|east|south|west|up|down)\.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
@@ -1121,7 +1147,7 @@ common.itemSanitize = function(string)
 
 
 
-	string = rex.gsub(string, [[(\+evil\+ |\+good\+ |enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
+	string = rex.gsub(string, [[(\+chaotic\+ |\+lawful\+ |\+evil\+ |\+good\+ |enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
     string = rex.gsub(string, [[frost-covered ]], '')
@@ -1178,7 +1204,7 @@ end
 common.toMurderString = function (victim)
 
 	-- remove any articles etc
-	victim = rex.gsub(victim, [[(?i)\b(a|an|the|\+evil\+|\+good\+|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
+	victim = rex.gsub(victim, [[(?i)\b(a|an|the|\+chaotic\+|\+lawful\+|\+evil\+|\+good\+|good|evil|The|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\s]], '')
 
 	-- turn elves back into elf, dwarves etc
 	victim = rex.gsub(victim, [[ves$]], 'f')
@@ -1495,6 +1521,7 @@ tfe = tfe or {}
 
 tfe.events = {
   ROOM_CHANGED = 'tfe mapper: room found',
+  ROOM_CHANGE_PENDING = 'tfe mapper: move pending',
   WALK_COMPLETE = 'tfe mapper: speedwalk complete',
 }
 
@@ -2402,6 +2429,8 @@ local lookup = {
   kobolds = 26574,
   rabbits = 38324,
   tombOfOrder = 57309,
+  crone = 36011,
+  isle = 36126,
 }
 
 for name, vnum in pairs(lookup) do
