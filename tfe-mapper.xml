@@ -1141,13 +1141,13 @@ end
 
 common.itemSanitize = function(string)
 
-	if (not string or string == '') then
-		return ''
-	end
+  if (not string or string == '') then
+    return ''
+  end
 
 
 
-	string = rex.gsub(string, [[(\+chaotic\+ |\+lawful\+ |\+evil\+ |\+good\+ |enchanted |empty, |flaming, frost-covered |flaming |labeled |empty |\s\+\d)]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |frost-covered,? |flaming,? |labeled |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
     string = rex.gsub(string, [[frost-covered ]], '')
