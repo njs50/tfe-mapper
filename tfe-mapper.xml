@@ -143,11 +143,13 @@ send('dismount')
 					<string>You can't do that while mounted!</string>
 					<string>You cannot go there while mounted.</string>
 					<string>^\w+ is too large to fit through the .* to the (north|east|south|west)\.</string>
+					<string>^\w+ is too large to fit through the hole beneath the dune below you\.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
+					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
@@ -1767,6 +1769,11 @@ tfe.isExitClosed = function(direction)
         isSpecialExit = true
       end
     end
+    
+    -- if it's not a special exit it must be linked in our map
+    if (not isSpecialExit and tfe.consts.standardExits[direction] and not exits[direction]) then
+      return false
+    end
   
     -- if it's a standard exit it needs to have exit info
     -- if it's a special exit we will assume it is open/passable with that command
@@ -2431,6 +2438,8 @@ local lookup = {
   tombOfOrder = 57309,
   crone = 36011,
   isle = 36126,
+  orl = 33501,
+  orlBank = 33551,
 }
 
 for name, vnum in pairs(lookup) do
@@ -2444,6 +2453,195 @@ end</script>
 			<name>last script (to trigger dependencies!)</name>
 			<packageName></packageName>
 			<script>raiseEvent('tfeMapperLoaded')</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>searches</name>
+			<packageName></packageName>
+			<script>njs50 = njs50 or {}
+
+njs50.roomSearches = {
+
+
+  -- spooky isles part 1
+  
+  ['10607'] = {
+    'search seaweed',
+    'search seashell',
+    'search shell',
+  },
+  
+  ['10608'] = {
+    'search tree',
+    'search trunk',
+  },
+  
+  ['10609'] = {
+    'search rib'
+  },
+  
+  ['10612'] = {
+    'search tree'
+  },
+    
+  ['10613'] = {
+    'search fern'
+  },  
+      
+  ['10616'] = {
+    'pick plant &amp; pluck plant &amp; pick plant &amp; pluck plant'
+  },
+ 
+  ['10618'] = {
+    'pick thorn &amp; pick thorn &amp; pick thorn &amp; pick thorn &amp; put all.thorn backpack'
+  },
+  
+    
+  ['10621'] = {
+    'search puddle &amp; search puddle'
+  },  
+  
+  ['10626'] = {
+    'pick berry &amp; pick berry &amp; pick berry &amp; pick berry &amp; pick berry'
+  },
+   
+  ['10628'] = {
+    'search vine &amp; search vine'
+  }, 
+  
+
+
+  ['10630'] = {
+    'pick berry &amp; pick berry &amp; pick berry &amp; pick berry &amp; pick berry'
+  },   
+  
+  ['10634'] = {
+    'pick flower &amp; pick flower &amp; pick flower &amp; pick flower'
+  }, 
+    
+  ['10635'] = {
+    'search trunk &amp; search trunk',
+    'harvest cassava &amp; harvest cassava &amp; harvest cassava',
+  },
+    
+  
+  ['10637'] = {
+    'pick berry &amp; pick berry &amp; pick berry &amp; pick berry &amp; pick berry'
+  },   
+      
+  ['10638'] = {
+    'search root'
+  },
+   
+      
+  ['10643'] = {
+    'search bush'
+  },
+     
+  ['10646'] = {
+    'search couch',
+    'search tap'
+  },  
+
+  ['10647'] = {
+    'search furniture',
+    'search ash',
+  },
+   
+  ['10648'] = {
+    'search table',
+    'search bench',
+    'search cabinet',
+  },
+    
+  
+  ['10649'] = {
+    'search shel',
+    'search table',
+    'search scon',
+    'search ash',
+    'search sill',
+    'search window',
+    'search bench',
+  },
+  
+    
+  ['10668'] = {
+    'search sand &amp; search sand &amp; search jelly',
+  },
+  
+  -- spooky isles part 2
+
+  
+  ['11104'] = {
+    'search fungus',
+    'get raff',
+  },
+    
+  ['11105'] = {
+    'pick flower &amp; pick flower &amp; pick flower &amp; pick flower',
+    'pluck flower &amp; pluck flower &amp; pluck flower',
+    'get bark &amp; get bark',
+  },
+
+  ['11109'] = {
+    'search crevice'
+  },  
+
+  ['11110'] = {
+    'search fern',
+    'search moss',
+  },
+  
+  ['11112'] = {
+    'search fern'
+  },
+  
+-- this one might hurt
+-- ['11114'] = {
+  -- 'cut tendril'
+  -- -- 'cut tendril'
+-- },
+
+  ['11116'] = {
+    'search vine',
+    'pick flower &amp; pick flower &amp; pick flower &amp; pick flower'
+  },
+
+   
+  ['11122'] = {
+    'search book',
+    'search cabinet',
+    'search table',
+  },    
+
+   
+  ['11123'] = {
+    'search couch',
+    'search bed',
+    'search shelf',
+    'search table',
+  },    
+  
+
+
+}
+
+njs50.search = function(vnum)
+  
+  vnum = vnum or gmcp.Room.Info.vnum
+  
+  vnum = tostring(vnum)
+  
+  local searches = njs50.roomSearches[vnum]
+  
+  if (searches) then
+    for idx, cmd in ipairs(searches) do 
+      send(cmd)
+    end
+  end
+
+end</script>
 			<eventHandlerList />
 		</Script>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -2999,7 +3197,7 @@ tfe.room_info_update = function()
       if (tfe.supressNextRoomChange) then
         tfe.supressNextRoomChange = nil
       else
-        tempRegexTrigger([[^(\|      Exits:|\[Exits:)]], function()
+        tempRegexTrigger([[^(\|      Exits:|\[Exits:|DARKNESS)]], function()
           cecho('&lt;green&gt; &lt;-- exit') 
           raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
         end, 1)        
