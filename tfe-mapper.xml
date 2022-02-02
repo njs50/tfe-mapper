@@ -1567,6 +1567,7 @@ tfe.environment = {
   Tundra = 35, 
   Field = 52,
   
+  Lake = 60,
   Beach = 43,
   Desert = 48,
   ["White Sand"] = 39,
@@ -1658,6 +1659,7 @@ tfe.environmentColor = {
   
   Underwater = 'navy_blue',
   
+  Lake = 'dodger_blue',
   Water = 'dodger_blue',
   River = 'dodger_blue',
   ["Ocean Water"] = 'dodger_blue',
@@ -2440,6 +2442,7 @@ local lookup = {
   isle = 36126,
   orl = 33501,
   orlBank = 33551,
+  trogPortal = 49326,
 }
 
 for name, vnum in pairs(lookup) do
