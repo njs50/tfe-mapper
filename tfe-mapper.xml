@@ -144,11 +144,13 @@ send('dismount')
 					<string>You cannot go there while mounted.</string>
 					<string>^\w+ is too large to fit through the .* to the (north|east|south|west)\.</string>
 					<string>^\w+ is too large to fit through the hole beneath the dune below you\.</string>
+					<string>^\w+ cannot be ridden underwater\.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
+					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
@@ -2443,6 +2445,7 @@ local lookup = {
   orl = 33501,
   orlBank = 33551,
   trogPortal = 49326,
+  efreets = 23091,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3032,6 +3035,9 @@ tfe.room_info_update = function()
 			
         roomChanged = true
         
+        -- set exit info so we can check when doors open
+        njs50.gmcp.previous.exitInfo = table.deepcopy(gmcp.Room.Info.exit_info)
+        
         -- reset the scanner as it's possible for a scan to be in progress while
         -- we are changing rooms.
         -- this happens if we have a move queued and the previous scan was waiting for
@@ -3073,6 +3079,18 @@ tfe.room_info_update = function()
           -- tfe.lastMoveDirection = ''
         -- end
         
+      else -- room didn't change but room info might have...
+      
+        -- only looking for exit info changes when the room hasn't changed!
+        if (njs50.tableHasValueChanges(gmcp.Room.Info.exit_info, njs50.gmcp.previous.exitInfo)) then
+          cecho('\n&lt;green&gt;mapper&lt;white&gt;: exit change\n')
+          -- cecho('&lt;green&gt; &lt;-- exit info updated ')
+          njs50.gmcp.previous.exitInfo = table.deepcopy(gmcp.Room.Info.exit_info)
+          
+          raiseEvent(njs50.gmcp.events.ROOM_EXITS_UPDATE)
+          
+        end      
+        
 			end -- end if this room is diff from the prev room info room
 
     else
@@ -3084,7 +3102,7 @@ tfe.room_info_update = function()
     end -- end if has room info
     
     tfe.roomInfo = gmcp.Room.Info 
-    
+        
     local areaId = tfe.getAreaID(tfe.roomInfo)
     
     -- if existing room center map on it
@@ -3363,37 +3381,6 @@ njs50.tableHasValueChanges = function(t1, t2)
 end
 </script>
 				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>njs50.room_info_update</name>
-				<packageName></packageName>
-				<script>
-
-njs50.room_info_update = function()
-
-  if (gmcp.Room.Info.num ~= njs50.gmcp.previous.roomNum) then
-    njs50.gmcp.previous.roomNum = gmcp.Room.Info.num
-  else
-    
-    -- only looking for exit info changes when the room hasn't changed!
-    if (njs50.tableHasValueChanges(gmcp.Room.Info.exit_info, njs50.gmcp.previous.exitInfo)) then
-      
-      -- cecho('&lt;green&gt; &lt;-- exit info updated ')
-      njs50.gmcp.previous.exitInfo = table.deepcopy(gmcp.Room.Info.exit_info)
-      
-      raiseEvent(njs50.gmcp.events.ROOM_EXITS_UPDATE)
-      
-    end
-
-  end
-
-
-end
-
-</script>
-				<eventHandlerList>
-					<string>gmcp.Room.Info</string>
-				</eventHandlerList>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
