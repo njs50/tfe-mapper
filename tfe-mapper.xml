@@ -93,7 +93,8 @@ else
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
-				<script>if (not combat.active) then
+				<script>-- 
+if (combat and not combat.active and murder and murder.scan) then
   if (group.leader == player.name) then
     murder.scan('rescan because something died (out of combat)')
   -- else
@@ -150,53 +151,6 @@ send('dismount')
 					<integer>2</integer>
 					<integer>2</integer>
 					<integer>2</integer>
-					<integer>1</integer>
-					<integer>1</integer>
-					<integer>1</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>The x to the y is closed.</name>
-				<script>disableTrigger('The x to the y is closed.')
-
-local vic = njs50.dotCase(njs50.toMurderString(matches[2]))
-
--- convert north gate etc -&gt; gate
-vic = rex.gsub(vic, '(north|east|south|west|down|up|above|below).', '') 
-
-local dir = matches[3]
-
-send('move beam &amp; pull lever &amp; turn crank &amp; pull cord &amp; trace rune')
-send('unlock ' .. vic .. ' &amp; unlock ' .. dir)
-send('open ' .. vic .. ' &amp; open ' .. dir)
-send('knock ' .. vic .. ' &amp; knock ' .. dir)
-send('pound ' .. vic .. ' &amp; pound ' .. dir)
-
-tempTimer(2, function () send('scan') end, 'scan after attempting to open')
-
-tempTimer(1, function ()
-	enableTrigger('The x to the y is closed.')
-end, 'reenable closed door trig')
--- 
--- if (tfe.speedwalking) then
-	-- send(tfe.lastMoveDirection)
--- end</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^The (.+) to the (.+) (is|are) closed.</string>
-					<string>^Perhaps you should open the (double) (doors)</string>
-					<string>^The (.*) (below|above) you (is|are) closed.</string>
-				</regexCodeList>
-				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
@@ -1009,7 +963,7 @@ njs50.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, 
 	tempTimerId = tempTimer(timeout, function ()
 		-- echo('\n -- killing temp timed trigger\n')
 	   fcb()
-	end, 'timed temp trigger')
+	end)
 
 	return {triggerId = triggerId, timerId = tempTimerId}
 
@@ -1052,8 +1006,11 @@ common.consoleMessage = function(console, message, statusColor, excludeAll)
   if (statusColor) then
     color = statusColor
   end
-
-  common.chatConsole:cecho(console, '&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n", excludeAll)
+  
+  if (common.chatConsole) then
+    common.chatConsole:cecho(console, '&lt;' .. color .. '&gt;' .. getTime(true, "hh:mm:ss") .. ': &lt;white&gt;' .. message .. "\n", excludeAll)
+  end
+  
 end
 
 
@@ -1488,7 +1445,7 @@ murder.scan = function(reason)
       murder.scanPending = nil
       cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
       murder.scan()
-    end, 'pending scan')
+    end)
     
     common.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
       murder.scanPending = nil
@@ -2832,7 +2789,7 @@ njs50bot.checkRepop = function (roomId, regex, callback)
         
         tempTimer(delay, function () 
           njs50bot.checkRepop(roomId, regex, callback)
-        end, 'repop check') 
+        end) 
              
       end
     
