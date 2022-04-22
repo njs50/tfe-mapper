@@ -716,6 +716,10 @@ end
 
 local URL = matches[2]
 
+if (not URL or URL == '') then
+  URL = "map load https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.dat"
+end
+
 uninstallPackage("generic_mapper")
 
 if not URL:ends("dat") then
@@ -744,7 +748,7 @@ else
 end</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^map load (.*)$</regex>
+			<regex>^map load ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map - set drink target</name>
@@ -1663,7 +1667,8 @@ tfe.startShortSpeedWalkTimer = function ()
 		cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;5 seconds without room change!!! - updating path...\n')
     send('queue scan')
     tempTimer(2, function()
-  		tfe.rerouteSpeedwalk()
+      cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;reroute from short speed walk timeout\n')
+  		  tfe.rerouteSpeedwalk()
       tfe.speedWalkStep()
     end)
 	end)
@@ -2005,6 +2010,12 @@ end
 
 
 tfe.advanceStepPosition = function (reverse)
+
+  -- at destination
+  if (not tfe.speedwalking) then
+    cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;attempted to advance step position when not speed walking\n')
+    return nil
+  end  
 
   -- at destination
   if (not reverse and tfe.speedwalking.pathPosition &gt; #tfe.speedwalking.directions ) then
@@ -2403,6 +2414,9 @@ local lookup = {
   orlBank = 33551,
   trogPortal = 49326,
   efreets = 23091,
+  seaSprites = 22046,
+  bullywugs = 1049,
+  dragonHatchery = 1022,
 }
 
 for name, vnum in pairs(lookup) do
