@@ -717,7 +717,7 @@ end
 local URL = matches[2]
 
 if (not URL or URL == '') then
-  URL = "map load https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.dat"
+  URL = "https://github.com/njs50/tfe-mapper/raw/master/njs50-comprehensive-map.dat"
 end
 
 uninstallPackage("generic_mapper")
