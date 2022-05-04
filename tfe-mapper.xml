@@ -1766,11 +1766,11 @@ tfe.openExit = function(direction)
   local isCamo = table.contains(gmcp.Char.Status.flags,"camouflaged")
   
   if isMounted then
-    send('dismount')
+    send('|dismount')
   end
   
   if openCommand ~= '' then
-    send(openCommand)
+    send('|' .. openCommand)
   else
     cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to open the exit ' .. direction .. '\n')
     cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map open ' .. direction:sub(1,1) .. ' &lt;cmd&gt;&lt;white&gt;" to set the command to open the exit\n')
@@ -1786,15 +1786,15 @@ tfe.openExit = function(direction)
   end
   
   if isMounted then
-    send('mount')
+    send('|mount')
   end
   
   if isHidden then
-    send('hide')
+    send('|hide')
   end
   
   if isCamo then
-    send('camo')
+    send('|camo')
   end
 
 end
