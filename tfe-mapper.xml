@@ -878,7 +878,7 @@ njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
     if (failCallback) then
       failCallback(evt, args)
     end
-  end, 'event: ' .. evt .. ' (' .. tostring(timeout) .. 's)')
+  end) -- , 'event: ' .. evt .. ' (' .. tostring(timeout) .. 's)'
   
   -- destoy this temp timed event watcher
   return function()
