@@ -2044,28 +2044,37 @@ tfe.rerouteSpeedwalk = function ()
   if (tfe.speedwalking) then 
   
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
-
-      -- remove any destinations we have already passed
     
-      local currentWptIdx = 1 
-      for pv = 1, tfe.speedwalking.pathPosition do
-        if (tfe.speedwalking.path[pv] == tfe.speedwalking.destination[currentWptIdx]) then
-          currentWptIdx = currentWptIdx + 1
+    if tfe.speedwalking.pathPosition == #tfe.speedwalking.path then
+      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to reroute as already at destination\n')
+      return
+    end
+   
+      local pd = 0
+      for pp = 1, tfe.speedwalking.pathPosition do
+        -- display(pp, tfe.speedwalking.path[pp], tfe.speedwalking.destination[pd+1])
+        if tonumber(tfe.speedwalking.path[pp]) == tonumber(tfe.speedwalking.destination[pd+1]) then
+          display(tfe.speedwalking.path[pp])
+          pd = pd + 1
         end
       end
-      
+    
       local newDestinations = {}
       
-      for ndIdx = currentWptIdx, #tfe.speedwalking.destination do
+      for ndIdx = pd +1, #tfe.speedwalking.destination do
         table.insert(newDestinations, tfe.speedwalking.destination[ndIdx])
       end
+
 
     if (tfe.speedwalking.roomChangeWatcher) then
       tfe.speedwalking.roomChangeWatcher()
       tfe.speedwalking.roomChangeWatcher = nil
     end
     
-    return tfe.configureWalkPath(newDestinations, tfe.speedwalking.options, false)
+    
+    local result = tfe.configureWalkPath(newDestinations, tfe.speedwalking.options, false)
+     -- display(tfe.speedwalking)
+    return result
   
   end
   
