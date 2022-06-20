@@ -2046,8 +2046,15 @@ tfe.rerouteSpeedwalk = function ()
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;rerouting speedwalk\n')
     
     if tfe.speedwalking.pathPosition == #tfe.speedwalking.path then
-      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to reroute as already at destination\n')
-      return
+      
+      if (gmcp.Room.Info.num ~= tfe.speedwalking.path[tfe.speedwalking.pathPosition]) then
+        tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition - 1
+      else
+    
+        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unable to reroute as already at destination\n')
+        return
+        
+      end
     end
    
       local pd = 0
@@ -2609,9 +2616,112 @@ njs50.roomSearches = {
     'search table',
   },    
   
+  
+  -- western expanse (in brith)
+  
+  ['63542'] = { 
+    'search bar',
+  },
 
+  
+  ['63543'] = { 
+    'search bone',
+  },
+  
+  -- western expanse
+  
+  ['72202'] = { 
+    'search pile',
+  },
+  
+  ['72210'] = { 
+    'pick flower',
+  },
+  
+  ['72212'] = { 
+    'meteorite_alias', -- dig crater w/ shovel equipped
+  },  
+
+  ['72220'] = { 
+    'search guano',
+  },
+  
+  ['72221'] = { 
+    'pick honey',
+  },
+
+  ['72240'] = { 
+    'pick black',
+  },
+  
+  ['72242'] = { 
+    'pick flower',
+  },
+  
+  ['72243'] = { 
+    'pick iris',
+  },
+  
+  
+  ['72245'] = { 
+    'snapping_turtle_alias', -- move branch/kill turtle/search alcove -&gt; turtle egg
+  },    
+  
+  ['72250'] = { 
+    'pick flower',
+  },
+  
+  ['72264'] = { 
+    'search bone',
+  },
+  
+  ['72271'] = { 
+    'search camp',
+  },
+  
+  ['72276'] = { 
+    'search cra',
+    'get all water-',
+  },
+
+  
+  ['72299'] = { 
+    'search stone',
+  },    
+  
+  ['72300'] = { 
+    'search bone',
+  },
+  
+  ['72312'] = { 
+    'search dec',
+  },
+  
+  ['72313'] = { 
+    'search lil &amp; |search dec',
+  },
+  
+    
+  ['72317'] = { 
+    'search rot &amp; |search can',
+  },
+  
+    
+  ['72335'] = { 
+    'get all corpse',
+  },
+  
+  ['72338'] = { 
+    'search guano',
+  },
 
 }
+
+njs50.addSearchSymbolsToMap = function()
+  for idx in pairs(njs50.roomSearches) do
+    setRoomChar(idx, '#')
+  end
+end
 
 njs50.search = function(vnum)
   
