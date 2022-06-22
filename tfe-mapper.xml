@@ -426,6 +426,13 @@ end</script>
 			<regex>^map (reset|update)\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
+			<name>map search</name>
+			<script>njs50.search()</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^map search$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
 			<name>go</name>
 			<script>local dest = matches[2]
 
@@ -1187,6 +1194,7 @@ common.toMurderString = function (victim)
   local specialCases = {
     mice = 'mouse',
     ["ash-spirits"] = 'ash spirits',
+    ["greater faeries"] = 'greater faerie',    
   }
 
   if (specialCases[victim]) then
@@ -1216,7 +1224,6 @@ common.toMurderString = function (victim)
 	victim = rex.gsub(victim, [[,]], '')
 
 	-- kill any parts less than 3 charaters
-
 	victim = rex.gsub(victim, [[(^|\.|\s)\S\S?(\s|\.|$)]], '%1%2')
 
 	-- kill any extra whitepsace or multiple .'s
@@ -2715,6 +2722,76 @@ njs50.roomSearches = {
     'search guano',
   },
 
+  -- dragonspire valley
+  
+   
+  ['50662'] = { 
+    'search pile',
+  }, 
+
+  ['50660'] = { 
+    'search pile',
+  }, 
+
+  ['50658'] = { 
+    'search pile',
+  }, 
+
+  ['50655'] = { 
+    'search pile',
+  }, 
+   
+  ['50656'] = { 
+    'search ivy',
+  }, 
+   
+  ['50652'] = { 
+    'search lean', 
+    'search wood',
+  },    
+  
+  ['50672'] = { 
+    'search pebble',
+  },    
+  
+  ['50667'] = { 
+    'search herb',
+    'search herb',
+    'search herb',
+    'search herb',
+  },
+  
+  ['50673'] = { 
+    'search herb',
+    'search herb',
+    'search herb',
+    'search herb',
+  },      
+      
+  ['50687'] = { 
+    'search cage',
+  },     
+  
+      
+  ['50674'] = { 
+    'pick flower',
+  },      
+  
+      
+  ['50650'] = { 
+    'get nest &amp; get all nest',
+  },   
+      
+  ['50651'] = { 
+    'get nest &amp; get all nest',
+  },     
+
+      
+  ['50686'] = { 
+    'search book',
+  },      
+
+
 }
 
 njs50.addSearchSymbolsToMap = function()
@@ -2733,7 +2810,7 @@ njs50.search = function(vnum)
   
   if (searches) then
     for idx, cmd in ipairs(searches) do 
-      send(cmd)
+      expandAlias(cmd)
     end
   end
 
