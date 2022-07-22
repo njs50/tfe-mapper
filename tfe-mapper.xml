@@ -412,8 +412,6 @@ raiseEvent(tfe.events.ROOM_CHANGE_PENDING, matches[2])</script>
     end
   end,
   
-  update = njs50.update_mapper,
-  
 }
 
 if (commands[matches[2]]) then
@@ -423,14 +421,14 @@ else
 end</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^map (reset|update)\s?(.*)$</regex>
+			<regex>^map (reset)\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map search</name>
 			<script>njs50.search()</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^map search$</regex>
+			<regex>^(map search|ms)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>go</name>
@@ -2440,6 +2438,7 @@ local lookup = {
   seaSprites = 22046,
   bullywugs = 1049,
   dragonHatchery = 1022,
+  trogs = 19348,
 }
 
 for name, vnum in pairs(lookup) do
@@ -2460,7 +2459,9 @@ end</script>
 			<packageName></packageName>
 			<script>njs50 = njs50 or {}
 
-njs50.roomSearches = {
+njs50.roomSearches = njs50.roomSearches or {}
+
+local defaultSearches = {
 
 
   -- spooky isles part 1
@@ -2774,6 +2775,7 @@ njs50.roomSearches = {
   
       
   ['50674'] = { 
+    'get stone',
     'pick flower',
   },      
   
@@ -2791,8 +2793,24 @@ njs50.roomSearches = {
     'search book',
   },      
 
+  -- cathedral
+      
+  ['11519'] = { 
+    'search pile',
+  },  
+  
+      
+  ['11513'] = { 
+    'search desk',
+    'get all desk',
+  },    
+
 
 }
+
+for k, v in pairs(defaultSearches) do
+  njs50.roomSearches[k] = v
+end
 
 njs50.addSearchSymbolsToMap = function()
   for idx in pairs(njs50.roomSearches) do
@@ -2814,6 +2832,26 @@ njs50.search = function(vnum)
     end
   end
 
+end</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>custom searches example</name>
+			<packageName></packageName>
+			<script>njs50 = njs50 or {}
+njs50.roomSearches = njs50.roomSearches or {}
+
+
+local customSearches = {
+  
+  ['5117'] = { 
+    "search dung"
+  },
+  
+}
+
+for k, v in pairs(customSearches) do
+  njs50.roomSearches[k] = v
 end</script>
 			<eventHandlerList />
 		</Script>
