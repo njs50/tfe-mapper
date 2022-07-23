@@ -821,6 +821,13 @@ end</script>
 			<packageName></packageName>
 			<regex>^map fix special exits$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>map open door (dir)</name>
+			<script>tfe.openExit(tfe.consts.exitmap[matches[2]])</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^mod (n|e|s|w|u|d|north|east|south|west|up|down)$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage>
@@ -1658,6 +1665,8 @@ for terrain, color in pairs(tfe.environmentColor) do
 end
 
 
+
+
 local shortSpeedWalkTimerId
 
 tfe.startShortSpeedWalkTimer = function ()
@@ -1701,7 +1710,13 @@ tfe.speedwalkResume = function ()
   if (tfe.speedwalking) then
     tfe.speedwalking.paused = nil
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking resumed\n')
-    tfe.speedWalkStep()
+    
+    if tfe.speedwalking.walkType == 'turbo' then 
+      tfe.turboWalkStep()
+    else
+      tfe.speedWalkStep()
+    end
+    
   else
      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;not currently speedwalking\n')
   end
@@ -1710,13 +1725,19 @@ end
 tfe.speedwalkStop = function ()
  
  if (tfe.speedwalking) then
-    tfe.clearShortSpeedWalkTimer()
-    -- clear any room change watcher if it exists
-    if (tfe.speedwalking.roomChangeWatcher) then
-      tfe.speedwalking.roomChangeWatcher()
-      tfe.speedwalking.roomChangeWatcher = nil
-    end
     
+    if tfe.speedwalking.walkType == 'turbo' then
+      tfe.turboSpeedwalkStop()
+    else
+ 
+      tfe.clearShortSpeedWalkTimer()
+      -- clear any room change watcher if it exists
+      if (tfe.speedwalking.roomChangeWatcher) then
+        tfe.speedwalking.roomChangeWatcher()
+        tfe.speedwalking.roomChangeWatcher = nil
+      end
+
+    end
     tfe.speedwalking = nil
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking stopped\n')
   else
@@ -1726,9 +1747,26 @@ tfe.speedwalkStop = function ()
 end
 
 
+tfe.isDoor = function(roomId, direction)
+  
+  direction = tfe.consts.exitmap[direction]
+  
+  -- if it's not a standard exit dir it can't have a door open cmd
+  if (not direction) then
+    return false, ''
+  end
+  
+  local openCommand = getRoomUserData(roomId, 'open-' .. direction)
+  
+  return openCommand ~= '', openCommand
+  
+end
+
 tfe.isExitClosed = function(direction)
   
   if(direction and direction ~= '') then
+  
+    direction = tfe.consts.exitmap[direction]
     
     local isSpecialExit = false
     local exits = getRoomExits(tfe.roomInfo.num)
@@ -1761,45 +1799,79 @@ tfe.isExitClosed = function(direction)
         
 end
 
-tfe.openExit = function(direction)
+tfe.openExit = function(direction, callback)
 
-  local exitInfo = gmcp.Room.Info.exit_info[direction]
-  local openCommand = getRoomUserData(gmcp.Room.Info.num, 'open-' .. direction)
+  direction = tfe.consts.exitmap[direction]
   
-  local isMounted = table.contains(gmcp.Char.Status.flags,"mounted")
-  local isHidden = table.contains(gmcp.Char.Status.flags,"hiding")
-  local isCamo = table.contains(gmcp.Char.Status.flags,"camouflaged")
+  if not tfe.isExitClosed(direction) then
   
-  if isMounted then
-    send('|dismount')
-  end
-  
-  if openCommand ~= '' then
-    send('|' .. openCommand)
-  else
-    cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to open the exit ' .. direction .. '\n')
-    cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map open ' .. direction:sub(1,1) .. ' &lt;cmd&gt;&lt;white&gt;" to set the command to open the exit\n')
-    cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map exit [n|e|s|w|u|d|in|out] &lt;cmd&gt;&lt;white&gt;" to add a special exit command \n' )
-    cecho('&lt;yellow&gt;TFE MAP: &lt;white&gt;setting an open command with &lt;green&gt;map open&lt;white&gt; is best, but for exits like enter portal where no\n') 
-    cecho('         &lt;white&gt;entrance appears you need to use a special exit\n' )
-    if (exitInfo and table.contains(exitInfo.flags, 'locked')) then
-    
-      send('unlock ' .. direction)
+    cecho('\n&lt;green&gt;mapper&lt;white&gt;: ' .. direction .. ' is already open\n')
+    if (callback) then
+      callback()
     end
     
-    send('open ' .. direction)
-  end
+  else
   
-  if isMounted then
-    send('|mount')
-  end
+    if (callback) then
+    
+      local pendingExitOpen
+      
+      cecho('\n&lt;green&gt;mapper&lt;white&gt;: waiting for ' .. direction .. ' to open\n')
+      
+      local roomChangeWatcher = njs50.onNextEvent(tfe.events.ROOM_CHANGED, function() 
+        pendingExitOpen()
+        pendingExitOpen = nil
+        cecho('\n&lt;orange&gt;mapper&lt;white&gt;: room changed before exit opened!\n')
+      end)
+      
+      pendingExitOpen = njs50.onNextEvent(njs50.gmcp.events.ROOM_EXITS_UPDATE, function() 
+        -- step completed. do next step    
+        roomChangeWatcher()
+        roomChangeWatcher = nil
+        pendingExitOpen = nil
+        callback()
+      end)    
+          
+    end  
   
-  if isHidden then
-    send('|hide')
-  end
-  
-  if isCamo then
-    send('|camo')
+    local exitInfo = gmcp.Room.Info.exit_info[direction]
+    local openCommand = getRoomUserData(gmcp.Room.Info.num, 'open-' .. direction)
+    
+    local isMounted = table.contains(gmcp.Char.Status.flags,"mounted")
+    local isHidden = table.contains(gmcp.Char.Status.flags,"hiding")
+    local isCamo = table.contains(gmcp.Char.Status.flags,"camouflaged")
+    
+    if isMounted then
+      send('|dismount')
+    end
+    
+    if openCommand ~= '' then
+      send('|' .. openCommand)
+    else
+      cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to open the exit ' .. direction .. '\n')
+      cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map open ' .. direction:sub(1,1) .. ' &lt;cmd&gt;&lt;white&gt;" to set the command to open the exit\n')
+      cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map exit [n|e|s|w|u|d|in|out] &lt;cmd&gt;&lt;white&gt;" to add a special exit command \n' )
+      cecho('&lt;yellow&gt;TFE MAP: &lt;white&gt;setting an open command with &lt;green&gt;map open&lt;white&gt; is best, but for exits like enter portal where no\n') 
+      cecho('         &lt;white&gt;entrance appears you need to use a special exit\n' )
+      if (exitInfo and table.contains(exitInfo.flags, 'locked')) then      
+        send('unlock ' .. direction)
+      end
+      
+      send('open ' .. direction)
+    end
+    
+    if isMounted then
+      send('|mount')
+    end
+    
+    if isHidden then
+      send('|hide')
+    end
+    
+    if isCamo then
+      send('|camo')
+    end
+    
   end
 
 end
@@ -2151,6 +2223,7 @@ tfe.configureWalkPath = function (vnum, options, takeStep)
   if tfe.getExpandedPath(currentRoom, vnum) then
   
     tfe.speedwalking = {
+      walkType = 'standard',
       destination = vnum,
       path = speedWalkPath,
       directions = speedWalkDir,
@@ -2202,7 +2275,6 @@ tfe.configureWalkPath = function (vnum, options, takeStep)
 end
 
 
-
 tfe.gotoRoom = function (vnum, options)
   
   if (type(options) == 'function') then
@@ -2229,6 +2301,128 @@ tfe.gotoRoom = function (vnum, options)
 
 end
 
+tfe.speedWalkToRoom = function(vnum, options)
+  
+  if (type(options) == 'function') then
+    local optCB = options
+    options = {callback = optCB}
+  elseif (type(options) == 'string') then
+    local optString = options 
+    options = {callback = function() send(optString) end}
+  elseif (type(options) ~= 'table') then
+    if (options ~= nil) then
+      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unknown options provided to tfe.speedWalkToRoom\n')
+      display(type(options), options)
+    end
+    options = {}
+  end
+  
+  -- make sure vnum is a number
+  vnum = tfe.locations[vnum] or vnum
+  if (type(vnum) == 'string' and vnum:match([[^%d+$]])) then
+    vnum = tonumber(vnum)
+  end 
+  
+  local path = tfe.getPath(gmcp.Room.Info.num, vnum, true)
+  
+  -- for idx = 1, #path.path do
+    -- display(idx, path.path[idx], path.waypoints[idx])
+  -- end
+
+  tfe.speedwalking = {
+    walkType = 'turbo',
+    destination = vnum,
+    options = options or {},
+    pathPosition = 0,
+    path = path.path,
+    roomCounts = path.roomCounts,
+    waypoints = path.waypoints
+  }
+  
+  tfe.timeout.create('turbowalk-idle-check', 15, function()
+    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk timed out\n')
+  end)
+  
+  tfe.turboWalkStep()
+  
+end
+
+tfe.turboWalkReroute = function()
+  
+  local path = tfe.getPath(gmcp.Room.Info.num, tfe.speedwalking.destrination, true)
+  tfe.speedwalking.pathPosition = 0
+  tfe.speedwalking.path = path.path
+  tfe.speedwalking.roomCounts = path.roomCounts
+  tfe.speedwalking.waypoints = path.waypoints
+
+end
+
+tfe.turboSpeedwalkStop = function()
+  if (tfe.roomChangeWatch) then
+    killAnonymousEventHandler(tfe.roomChangeWatch)
+    tfe.roomChangeWatch = nil
+  end
+end
+
+
+tfe.turboWalkStep = function()
+  
+  if (not tfe.speedwalking) then
+    -- this speedwalk has been cancelled
+    return
+  end
+  
+  if (tfe.speedwalking.paused) then
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;turbo speedwalk is paused\n')
+    return
+  end
+  
+  tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
+  
+  if (tfe.speedwalking.pathPosition &gt; #tfe.speedwalking.path) then
+    
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;reached end of speedwalk instructions\n')
+  
+  else
+    
+    local cmd = tfe.speedwalking.path[tfe.speedwalking.pathPosition]
+    local dest = tfe.speedwalking.waypoints[tfe.speedwalking.pathPosition]
+    local steps = tfe.speedwalking.roomCounts[tfe.speedwalking.pathPosition]
+  
+    if steps &gt; 0 then
+    
+      if (tfe.roomChangeWatch) then
+        killAnonymousEventHandler(tfe.roomChangeWatch)
+        tfe.roomChangeWatch = nil
+      end
+      
+      tfe.roomChangeWatch = registerAnonymousEventHandler(tfe.events.ROOM_CHANGED, function ()  
+        steps = steps - 1
+        
+        if steps == 0 then
+          tfe.turboWalkStep()
+        end
+      end)
+  
+      send(cmd)
+    
+    else -- no actual step, just open a door...
+    
+      local dir = rex.match(cmd, [[^mod (\w+)$]])
+      if (dir) then
+        tempTimer(0, function()     
+          tfe.openExit(dir, tfe.turboWalkStep)
+        end, 'delay for room to be processed')
+      else
+        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk unsure how to proceed with: ' .. cmd .. '\n')
+      end
+      
+    end
+    
+  end
+
+end
+
 
 -- to allow clicking the map
 function doSpeedWalk()
@@ -2236,7 +2430,7 @@ function doSpeedWalk()
 end
 
 
-tfe.getPath = function(src, dest) 
+tfe.getPath = function(src, dest, useOpenAlias) 
   
   tfe.locations = tfe.locations or {}
   
@@ -2266,45 +2460,76 @@ tfe.getPath = function(src, dest)
     cecho('&lt;green&gt;TFE MAP:&lt;white&gt; pathing from ' .. getRoomName(srcRnum) .. ' to ' .. getRoomName(destRnum) .. '\n')
     
     local pathDirs = speedWalkDir
+    local pathNums = speedWalkPath
+  -- display(pathDirs,pathNums)
     
-    local pathDirssToString = function(dirs)
+    local pathDirssToString = function(dirs, rooms)
     
       local currentDir = ''
       local currentCount = 0
+      local currentRC = 0
     
       local speedString = ''
       
       local instructions = {}
+      local stepNums = {}
+      local stepRooms = {}
       
       local addCurrent = function()
         if (currentDir ~= '') then
+          currentRC = currentRC + currentCount
           if (currentCount &gt; 1) then
-            speedString = speedString .. tostring(currentCount)
+            speedString = speedString .. tostring(currentCount)            
           end
           speedString = speedString .. currentDir
         end    
       end
       
-      local finishCurrent = function()
+      local finishCurrent = function(room)        
+        
         if (currentDir ~= '') then
           addCurrent()
           currentDir = ''
           currentCount = 0
         end
         if (speedString ~= '') then
+          -- display('end of direction cmd:', room, i)   
+          table.insert(stepNums, room)
+          table.insert(stepRooms, currentRC)
           table.insert(instructions, '|speed ' .. speedString)
           speedString = ''
         end
+        currentRC = 0
       end
       
       for i = 1, #dirs do
         
         local dir = dirs[i]
+        local room = rooms[i]
+        local prevRoom = rooms[i - 1] or srcRnum
+        
         if (dir == 'up') then dir = 'u' end
         if (dir == 'down') then dir = 'd' end
         
-        if not dir:match("^[neswud]$") then
-          finishCurrent()
+        local isDoor, openCmd = tfe.isDoor(prevRoom, dir)
+        
+        if isDoor then
+          finishCurrent(prevRoom)
+          table.insert(stepNums, prevRoom)
+          table.insert(stepRooms, 0)
+          if (useOpenAlias) then
+            table.insert(instructions, 'mod ' .. dir)
+          else
+            table.insert(instructions, '|' .. openCmd)
+          end
+          addCurrent()
+          currentDir = dir
+          currentCount = 1          
+        elseif not dir:match("^[neswud]$") then
+          finishCurrent(prevRoom)
+          table.insert(stepNums, room)
+          table.insert(stepRooms, 1)       
+          -- display('non direction cmd:', room, i)   
           table.insert(instructions, '|' .. rex.gsub(dir, ' &amp; ([^|])', ' &amp; |%1'))
         elseif dir ~= currentDir then
           addCurrent()
@@ -2316,16 +2541,20 @@ tfe.getPath = function(src, dest)
         
       end
       
-      finishCurrent()
+      finishCurrent(rooms[#rooms])
       
-      return instructions
+      return instructions, stepNums, stepRooms
     
     end
+    
+    local path, pathPoints, roomCounts = pathDirssToString(pathDirs, speedWalkPath)
     
     return {
       from = getRoomName(srcRnum),
         to = getRoomName(destRnum),
-      path = pathDirssToString(pathDirs),
+      path = path,
+      waypoints = pathPoints,
+      roomCounts = roomCounts,
     }
      
   else
@@ -2855,6 +3084,54 @@ for k, v in pairs(customSearches) do
 end</script>
 			<eventHandlerList />
 		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>timers</name>
+			<packageName></packageName>
+			<script>tfe.timeout = tfe.timeout or {}
+tfe.timeout.timers = tfe.timeout.timers or {}
+
+tfe.timeout.create = function(name, timeout, onTimeout)
+  
+  -- kill any existing timer with this name
+  if (tfe.timeout.timers[name]) then
+    tfe.timeout.kill(name)
+  end
+  
+  tfe.timeout.timers[name] = {
+    timeout = timeout,
+    onTimeout = function()
+      tfe.timeout.timers[name] = nil
+      onTimeout()
+    end    
+  }
+  
+  tfe.timeout.refresh(name)  
+  
+end
+
+tfe.timeout.kill = function(name)
+  if (tfe.timeout.timers[name]) then
+    killTimer(tfe.timeout.timers[name].timerId)
+  end 
+  tfe.timeout.timers[name] = nil
+end
+
+tfe.timeout.refresh = function(name)
+  if (tfe.timeout.timers[name]) then
+    if (tfe.timeout.timers[name].timerId) then
+      killTimer(tfe.timeout.timers[name].timerId)
+    end
+    tfe.timeout.timers[name].timerId = tempTimer(tfe.timeout.timers[name].timeout, tfe.timeout.timers[name].onTimeout, tfe.timeout.timers[name].name)    
+  else
+    cecho('\n\n&lt;red&gt;Timer: &lt;white&gt;attempted to refresh non existant timer - ' .. name .. '\n\n')
+  end 
+end
+
+
+
+</script>
+			<eventHandlerList />
+		</Script>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>example-murder-bot</name>
 			<packageName></packageName>
@@ -3172,6 +3449,9 @@ tfe.consts.exitmap = {
     W = 'west',     S = 'south',
     U = 'up',       D = 'down',
     ["in"] = 'in',  out = 'out',
+    north = 'north',east = 'east',
+    west = 'west',  south = 'south',
+    up = 'up',      down = 'down',
 }
 
 
