@@ -160,6 +160,12 @@ send('dismount')
 				<name>no exit - use special exit</name>
 				<script>-- disableTrigger('no exit - use special exit')
 
+-- cause a turbo walk to be flagged interrupted if it isn't already
+if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
+  tfe.turboWalkInterrupted()
+end
+
+
 local exit = matches[2]
 
 if (exit == 'below') then exit = 'down' end
@@ -398,6 +404,63 @@ raiseEvent(tfe.events.ROOM_CHANGE_PENDING, matches[2])</script>
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Speed walking interrupted/aborted.</name>
+				<script>-- maybe don't need to do anything. idle timer may take care of it...
+
+-- You see no exit to the south.
+
+if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
+  tfe.turboWalkInterrupted()
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>Speed walking aborted.</string>
+					<string>^(.*) is blocking the \w+ to the (north|east|south|west|up|down)\.$</string>
+					<string>^(.*) is blocking the \w+ (above|below) you\.$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>something died while speedwalking</name>
+				<script>if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo' and tfe.speedwalking.interrupted) then
+
+  cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;turbo walk resumed on seeing something die\n')
+  tfe.turboWalkResume()
+  
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>is DEAD!!$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
@@ -462,6 +525,39 @@ end</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>turbo go</name>
+			<script>local dest = matches[2]
+
+tfe.locations = tfe.locations or {}
+
+local rnum = tfe.locations[dest] or dest
+
+if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
+  rnum = tonumber(rnum)
+end
+
+if (type(rnum) == 'number' and roomExists(rnum)) then
+
+	cecho('&lt;green&gt;TFE MAP:&lt;white&gt; going to ' .. getRoomName(rnum) .. '\n')
+ 
+  local endCmd = matches[3]
+
+	tfe.turboWalkToRoom(rnum, { 
+    callback = function () 
+  		if (endCmd) then
+  			expandAlias(endCmd)
+  		end
+  	end
+  })
+	
+else
+	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location: ' .. tostring(rnum) .. '\n')
+end</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^tgo (\S+)\s?&amp;?\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>path</name>
@@ -1699,21 +1795,27 @@ end
 
 tfe.speedwalkPause = function ()
   if (tfe.speedwalking) then
-    tfe.speedwalking.paused = true
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking paused\n')
+    if tfe.speedwalking.walkType == 'turbo' then 
+      tfe.turboWalkPause()
+    else
+      tfe.speedwalking.paused = true
+    end
   else
    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;not currently speedwalking\n')
   end
 end
 
+
 tfe.speedwalkResume = function ()
   if (tfe.speedwalking) then
-    tfe.speedwalking.paused = nil
+    
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;speedwalking resumed\n')
     
     if tfe.speedwalking.walkType == 'turbo' then 
-      tfe.turboWalkStep()
+      tfe.turboWalkResume()
     else
+      tfe.speedwalking.paused = nil
       tfe.speedWalkStep()
     end
     
@@ -2301,7 +2403,7 @@ tfe.gotoRoom = function (vnum, options)
 
 end
 
-tfe.speedWalkToRoom = function(vnum, options)
+tfe.turboWalkToRoom = function(vnum, options)
   
   if (type(options) == 'function') then
     local optCB = options
@@ -2339,36 +2441,84 @@ tfe.speedWalkToRoom = function(vnum, options)
     waypoints = path.waypoints
   }
   
-  tfe.timeout.create('turbowalk-idle-check', 15, function()
-    cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk timed out\n')
-  end)
-  
   tfe.turboWalkStep()
   
 end
 
+
+tfe.turboWalkPause = function()
+  tfe.speedwalking.paused = true
+  tfe.tuboWalkKillRoomChangeWatcher()
+  tfe.timeout.kill('turbowalk-idle-check')  
+  send('+gasp')
+end
+
+tfe.turboWalkResume = function()
+  if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
+    tfe.speedwalking.paused = nil
+    tfe.speedwalking.interrupted = nil
+    tfe.turboWalkReroute()
+    tfe.turboWalkActionStep()
+  else
+    cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;attempted to resume non existant turbo route\n')
+  end
+end
+
 tfe.turboWalkReroute = function()
-  
-  local path = tfe.getPath(gmcp.Room.Info.num, tfe.speedwalking.destrination, true)
+  cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;rerouting turbo walk\n')
+  local path = tfe.getPath(gmcp.Room.Info.num, tfe.speedwalking.destination, true)
   tfe.speedwalking.pathPosition = 0
   tfe.speedwalking.path = path.path
   tfe.speedwalking.roomCounts = path.roomCounts
   tfe.speedwalking.waypoints = path.waypoints
-
+  tfe.speedwalking.interrupted = nil
 end
 
 tfe.turboSpeedwalkStop = function()
+  cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;turbo walk stopped\n')
+  tfe.tuboWalkKillRoomChangeWatcher()
+  tfe.timeout.kill('turbowalk-idle-check')
+  send('+gasp')
+end
+
+tfe.tuboWalkKillRoomChangeWatcher = function()
   if (tfe.roomChangeWatch) then
     killAnonymousEventHandler(tfe.roomChangeWatch)
     tfe.roomChangeWatch = nil
   end
 end
 
+ 
+tfe.turboWalkInterrupted = function()
+  tfe.speedwalking.interrupted = true
+end 
+
+tfe.turboWalkActionStep = function()
+  
+  local action = tfe.speedwalking.options.stepAction
+  
+  if (action and type(action) == 'string') then
+    expandAlias(action)
+    tfe.turboWalkStep()
+  elseif (action and type(action) == 'function') then
+    tfe.speedwalking.step_action_pending = true
+    tfe.timeout.kill('turbowalk-idle-check')
+    action(function()
+      tfe.speedwalking.step_action_pending = nil
+      tfe.turboWalkStep()
+    end)
+  else
+    tfe.turboWalkStep()
+  end
+
+end
 
 tfe.turboWalkStep = function()
   
   if (not tfe.speedwalking) then
     -- this speedwalk has been cancelled
+    tfe.tuboWalkKillRoomChangeWatcher()
+    tfe.timeout.kill('turbowalk-idle-check')
     return
   end
   
@@ -2377,31 +2527,60 @@ tfe.turboWalkStep = function()
     return
   end
   
+  if (tfe.speedwalking.step_action_pending) then
+    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;attempted turbo speedwalk step while a step action was pending\n')
+    return
+  end
+    
   tfe.speedwalking.pathPosition = tfe.speedwalking.pathPosition + 1
   
   if (tfe.speedwalking.pathPosition &gt; #tfe.speedwalking.path) then
     
     cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;reached end of speedwalk instructions\n')
+    
+    local cb = tfe.speedwalking.options.callback
+    
+    tfe.speedwalking = nil
+    
+    if (cb) then cb() end     
   
   else
-    
+  
+    tfe.timeout.create('turbowalk-idle-check', 10, function()
+      cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk timed out - rerouting and resuming\n')      
+      tfe.turboWalkReroute()    
+      tfe.turboWalkActionStep()
+    end)    
+  
     local cmd = tfe.speedwalking.path[tfe.speedwalking.pathPosition]
     local dest = tfe.speedwalking.waypoints[tfe.speedwalking.pathPosition]
     local steps = tfe.speedwalking.roomCounts[tfe.speedwalking.pathPosition]
   
     if steps &gt; 0 then
     
-      if (tfe.roomChangeWatch) then
-        killAnonymousEventHandler(tfe.roomChangeWatch)
-        tfe.roomChangeWatch = nil
-      end
+      tfe.tuboWalkKillRoomChangeWatcher()
       
       tfe.roomChangeWatch = registerAnonymousEventHandler(tfe.events.ROOM_CHANGED, function ()  
-        steps = steps - 1
         
+        steps = steps - 1        
         if steps == 0 then
-          tfe.turboWalkStep()
+                  
+          tfe.timeout.kill('turbowalk-idle-check')
+          tfe.tuboWalkKillRoomChangeWatcher()
+          
+          -- check we made it to the correct room before proceeding
+          if (gmcp.Room.Info.num == dest) then          
+            tfe.turboWalkActionStep()
+          else
+            cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk finished in the wrong room - rerouting\n')      
+            tfe.turboWalkReroute()    
+            tfe.turboWalkActionStep()
+          end
+          
+        else
+          tfe.timeout.refresh('turbowalk-idle-check')
         end
+        
       end)
   
       send(cmd)
@@ -2411,7 +2590,10 @@ tfe.turboWalkStep = function()
       local dir = rex.match(cmd, [[^mod (\w+)$]])
       if (dir) then
         tempTimer(0, function()     
-          tfe.openExit(dir, tfe.turboWalkStep)
+          tfe.openExit(dir, function()            
+            tfe.timeout.kill('turbowalk-idle-check')
+            tfe.turboWalkActionStep()          
+          end)
         end, 'delay for room to be processed')
       else
         cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk unsure how to proceed with: ' .. cmd .. '\n')
@@ -3094,6 +3276,7 @@ tfe.timeout.create = function(name, timeout, onTimeout)
   
   -- kill any existing timer with this name
   if (tfe.timeout.timers[name]) then
+    cecho('\n\n&lt;red&gt;Timer: &lt;white&gt;created timer with same name as existing timer - ' .. name .. '\n\n')
     tfe.timeout.kill(name)
   end
   
@@ -3105,20 +3288,32 @@ tfe.timeout.create = function(name, timeout, onTimeout)
     end    
   }
   
+  cecho('\n&lt;green&gt;Timer: &lt;white&gt;created new timer - ' .. name .. '\n')
   tfe.timeout.refresh(name)  
   
 end
 
 tfe.timeout.kill = function(name)
   if (tfe.timeout.timers[name]) then
+    cecho('\n&lt;green&gt;Timer: &lt;white&gt;killed timer - ' .. name .. '\n')
     killTimer(tfe.timeout.timers[name].timerId)
   end 
   tfe.timeout.timers[name] = nil
 end
 
-tfe.timeout.refresh = function(name)
+
+tfe.timeout.suspend = function(name)
   if (tfe.timeout.timers[name]) then
+    cecho('\n&lt;green&gt;Timer: &lt;white&gt;suspended timer - ' .. name .. '\n')
+    killTimer(tfe.timeout.timers[name].timerId)
+    tfe.timeout.timers[name].timerId = nil
+  end 
+end
+
+tfe.timeout.refresh = function(name)
+  if (tfe.timeout.timers[name]) then    
     if (tfe.timeout.timers[name].timerId) then
+      cecho('\n&lt;green&gt;Timer: &lt;white&gt;refresh timer - ' .. name .. '\n')
       killTimer(tfe.timeout.timers[name].timerId)
     end
     tfe.timeout.timers[name].timerId = tempTimer(tfe.timeout.timers[name].timeout, tfe.timeout.timers[name].onTimeout, tfe.timeout.timers[name].name)    
