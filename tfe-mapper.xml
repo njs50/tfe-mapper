@@ -440,7 +440,32 @@ end
 				<script>if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo' and tfe.speedwalking.interrupted) then
 
   cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;turbo walk resumed on seeing something die\n')
-  tfe.turboWalkResume()
+
+  if (common and common.events and common.events.COMBAT_ENDED) then
+    
+    if (combat and combat.active) then
+      
+      -- don't setup resume if a resume is already pending on combat ending
+      if (not tfe.speedwalking.resumePending) then
+        tfe.speedwalking.resumePending = true
+        common.onNextEvent(common.events.COMBAT_ENDED, function()
+          tfe.speedwalking.resumePending = nil
+          tfe.turboWalkResume()
+        end)
+      end
+      
+    else
+      -- don't resume if we have another resume queued for the end of combat
+      if (not tfe.speedwalking.resumePending) then
+        tfe.turboWalkResume()
+      end
+    end
+    
+  else
+  
+    tfe.turboWalkResume()
+    
+  end
   
 end
 </script>
@@ -546,10 +571,10 @@ if (type(rnum) == 'number' and roomExists(rnum)) then
 
 	tfe.turboWalkToRoom(rnum, { 
     callback = function () 
-  		if (endCmd) then
-  			expandAlias(endCmd)
-  		end
-  	end
+    		if (endCmd) then
+    			expandAlias(endCmd)
+    		end
+    	end
   })
 	
 else
@@ -1110,6 +1135,9 @@ common.itemShortenOverride['emerald bracelet'] = 'emerald.bracelet'
 common.itemShortenOverride['orange.headband'] = 'orange.strip'
 common.itemShortenOverride['emerald.bracelet'] = 'emerald.bracelet'
 
+common.itemShortenOverride["flowing.silver.greatsword.Unbending"] = 'flow.silv.grea'
+common.itemShortenOverride["flowing.silver.shortspear.Hand.the"] = 'flow.silv.shor'
+
 
 common.consoleMessage = function(console, message, statusColor, excludeAll)
 
@@ -1218,14 +1246,12 @@ common.itemSanitize = function(string)
     return ''
   end
 
-
-
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |frost-covered,? |flaming,? |labeled |\s\+\d)]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |flaming,? |labeled |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
-    string = rex.gsub(string, [[frost-covered ]], '')
+    string = rex.gsub(string, [[frost-covered,? ]], '')
   end
-
+  
   return string
 
 end
@@ -2430,18 +2456,43 @@ tfe.turboWalkToRoom = function(vnum, options)
   -- for idx = 1, #path.path do
     -- display(idx, path.path[idx], path.waypoints[idx])
   -- end
-
-  tfe.speedwalking = {
-    walkType = 'turbo',
-    destination = vnum,
-    options = options or {},
-    pathPosition = 0,
-    path = path.path,
-    roomCounts = path.roomCounts,
-    waypoints = path.waypoints
-  }
   
-  tfe.turboWalkStep()
+  local doWalk = function()
+    tfe.speedwalking = {
+      walkType = 'turbo',
+      destination = vnum,
+      options = options or {},
+      pathPosition = 0,
+      path = path.path,
+      roomCounts = path.roomCounts,
+      waypoints = path.waypoints
+    }
+    
+    tfe.turboWalkStep()  
+  end
+  
+  -- equip a travel set if player has one and going more than 30 rooms
+  if path.distance &gt; 20 and player.gearSets and player.gearSets.travel then
+  
+    local cb = options.callback
+    
+    options.callback = function()
+      resetGear(cb)
+    end
+  
+    equipPartial('travel', function()    
+      doWalk()
+    end)
+    
+  else
+    doWalk()
+  end
+
+          
+  
+
+  
+
   
 end
 
@@ -2650,6 +2701,7 @@ tfe.getPath = function(src, dest, useOpenAlias)
       local currentDir = ''
       local currentCount = 0
       local currentRC = 0
+      local distance = 0
     
       local speedString = ''
       
@@ -2678,6 +2730,7 @@ tfe.getPath = function(src, dest, useOpenAlias)
           -- display('end of direction cmd:', room, i)   
           table.insert(stepNums, room)
           table.insert(stepRooms, currentRC)
+          distance = distance + currentRC
           table.insert(instructions, '|speed ' .. speedString)
           speedString = ''
         end
@@ -2710,7 +2763,8 @@ tfe.getPath = function(src, dest, useOpenAlias)
         elseif not dir:match("^[neswud]$") then
           finishCurrent(prevRoom)
           table.insert(stepNums, room)
-          table.insert(stepRooms, 1)       
+          table.insert(stepRooms, 1)
+          distance = distance + 1       
           -- display('non direction cmd:', room, i)   
           table.insert(instructions, '|' .. rex.gsub(dir, ' &amp; ([^|])', ' &amp; |%1'))
         elseif dir ~= currentDir then
@@ -2725,11 +2779,11 @@ tfe.getPath = function(src, dest, useOpenAlias)
       
       finishCurrent(rooms[#rooms])
       
-      return instructions, stepNums, stepRooms
+      return instructions, stepNums, stepRooms, distance
     
     end
     
-    local path, pathPoints, roomCounts = pathDirssToString(pathDirs, speedWalkPath)
+    local path, pathPoints, roomCounts, distance = pathDirssToString(pathDirs, speedWalkPath)
     
     return {
       from = getRoomName(srcRnum),
@@ -2737,6 +2791,7 @@ tfe.getPath = function(src, dest, useOpenAlias)
       path = path,
       waypoints = pathPoints,
       roomCounts = roomCounts,
+      distance = distance,
     }
      
   else
@@ -2794,7 +2849,7 @@ local lookup = {
   halflings = 21076,
   midnight = 76594,
   corsair = 42511,
-  titans = 36759,
+  titans = 28028,
   fire = 25559,
   midnight = 76594,
   amber = 95016,
@@ -3216,6 +3271,16 @@ local defaultSearches = {
     'get all desk',
   },    
 
+  -- heidi and co
+  
+      
+  ['92571'] = { 
+    'search stream',
+  },  
+      
+  ['92572'] = { 
+    'search tool',
+  },      
 
 }
 
@@ -3703,6 +3768,10 @@ end
 
 tfe.room_info_update = function()
   
+-- tfe.flatMapper = 'Mojune'
+-- tfe.showFlatMap = true  
+  
+  
   local roomChanged = false
   
   -- only proceed if there is actually room info
@@ -3829,15 +3898,15 @@ tfe.room_info_update = function()
 
       addRoom(tfe.roomInfo.num)
 		  setRoomArea(tfe.roomInfo.num, areaId);
-  	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
-  	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)
+    	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
+    	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)
 
     end
     
     -- updating exiting room if we haven't been into it before
     -- we can tell because it won't have a name yet...
     if (tfe.roomInfo.name ~= getRoomName(tfe.roomInfo.num)) then
-  	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
+  	    setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
       -- clear the temp room env color (grey)
       setRoomWeight(tfe.roomInfo.num, 1)
     end
