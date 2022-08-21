@@ -413,7 +413,10 @@ raiseEvent(tfe.events.ROOM_CHANGE_PENDING, matches[2])</script>
 if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
   tfe.turboWalkInterrupted()
 end
-</script>
+
+if (matches[2] and matches[2] ~= '') then
+  raiseEvent(tfe.events.EXIT_BLOCKED, matches[2])
+end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1622,6 +1625,7 @@ tfe.events = {
   ROOM_CHANGED = 'tfe mapper: room found',
   ROOM_CHANGE_PENDING = 'tfe mapper: move pending',
   WALK_COMPLETE = 'tfe mapper: speedwalk complete',
+  EXIT_BLOCKED = 'tfe mapper: exit blocked by mob',
 }
 
 
@@ -1930,6 +1934,13 @@ end
 tfe.openExit = function(direction, callback)
 
   direction = tfe.consts.exitmap[direction]
+
+  -- kill any existing room change watcher etc (if this is a retry perhaps)
+  if (pendingExitOpen) then
+    roomChangeWatcher()
+    roomChangeWatcher = nil
+    pendingExitOpen = nil        
+  end
   
   if not tfe.isExitClosed(direction) then
   
@@ -1939,7 +1950,8 @@ tfe.openExit = function(direction, callback)
     end
     
   else
-  
+    
+    
     if (callback) then
     
       local pendingExitOpen
@@ -1974,7 +1986,7 @@ tfe.openExit = function(direction, callback)
     end
     
     if openCommand ~= '' then
-      send('|' .. openCommand)
+      expandAlias(openCommand)
     else
       cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to open the exit ' .. direction .. '\n')
       cecho('&lt;orange&gt;TFE MAP: &lt;white&gt;use "&lt;green&gt;map open ' .. direction:sub(1,1) .. ' &lt;cmd&gt;&lt;white&gt;" to set the command to open the exit\n')
@@ -2415,6 +2427,7 @@ tfe.gotoRoom = function (vnum, options)
     if (options ~= nil) then
       cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unknown options provided to tfe.gotoRoom\n')
       display(type(options), options)
+      return
     end
     options = {}
   end
@@ -2430,7 +2443,7 @@ tfe.gotoRoom = function (vnum, options)
 end
 
 tfe.turboWalkToRoom = function(vnum, options)
-  
+      
   if (type(options) == 'function') then
     local optCB = options
     options = {callback = optCB}
@@ -2441,8 +2454,34 @@ tfe.turboWalkToRoom = function(vnum, options)
     if (options ~= nil) then
       cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;unknown options provided to tfe.speedWalkToRoom\n')
       display(type(options), options)
+      return
     end
     options = {}
+  end
+  
+  if (type(vnum) == 'table') then
+    
+    local oCB = options.callback or function() end
+    local co
+    
+    co = coroutine.create(function()
+    
+      options.callback = function()        
+        coroutine.resume(co)
+      end      
+      
+      for idx, num in ipairs(vnum) do      
+        tfe.turboWalkToRoom(num, options)        
+        coroutine.yield()      
+      end
+      
+      oCB()
+      
+    end) -- end of coroutine
+    
+    coroutine.resume(co) 
+    
+    return
   end
   
   -- make sure vnum is a number
@@ -2620,7 +2659,7 @@ tfe.turboWalkStep = function()
           tfe.tuboWalkKillRoomChangeWatcher()
           
           -- check we made it to the correct room before proceeding
-          if (gmcp.Room.Info.num == dest) then          
+          if (gmcp.Room.Info.num == tonumber(dest)) then          
             tfe.turboWalkActionStep()
           else
             cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk finished in the wrong room - rerouting\n')      
