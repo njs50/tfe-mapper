@@ -1249,7 +1249,7 @@ common.itemSanitize = function(string)
     return ''
   end
 
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |flaming,? |labeled |\s\+\d)]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
     string = rex.gsub(string, [[frost-covered,? ]], '')
@@ -2944,6 +2944,7 @@ local lookup = {
   bullywugs = 1049,
   dragonHatchery = 1022,
   trogs = 19348,
+  cart = 82220,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3320,6 +3321,13 @@ local defaultSearches = {
   ['92572'] = { 
     'search tool',
   },      
+  
+  
+  -- tireth swamp
+  ['67519'] = {
+    'search weap',
+    'get breast'
+  }
 
 }
 
