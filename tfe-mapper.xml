@@ -1633,6 +1633,14 @@ tfe.druidWayAreas = {
   ['The Ways : 51'] = true,
   ['The Ways : 52'] = true,
 }
+
+-- duplicate rooms from one zone to another zone
+-- useful when there are 
+tfe.shadowZones = {
+  -- spooky isle
+  ['Isle of Broken Promises : 73'] = '??? : 78',
+  ['??? : 78'] = 'Isle of Broken Promises : 73',
+}
   
 
 
@@ -1704,6 +1712,9 @@ tfe.environment = {
   
   -- added by njs50 while wandering...
   ["Sandy Cavern"] = 100,
+  
+  -- entirely fictitious (for rooms duplicated in another map)
+  ["Shadow Room"] = 201,
   
 }
 
@@ -1782,6 +1793,8 @@ tfe.environmentColor = {
 
   -- added by njs50 (missing from terrain data)
   ["Sandy Cavern"] = 'navajo_white',
+  
+  ["Shadow Room"] = 'slate_grey',
   
 }
 
@@ -2945,6 +2958,8 @@ local lookup = {
   dragonHatchery = 1022,
   trogs = 19348,
   cart = 82220,
+  narakDock = 36126,
+  arhimans = 11349,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3087,7 +3102,6 @@ local defaultSearches = {
     
   ['11105'] = {
     'pick flower &amp; pick flower &amp; pick flower &amp; pick flower',
-    'pluck flower &amp; pluck flower &amp; pluck flower',
     'get bark &amp; get bark',
   },
 
@@ -3327,7 +3341,146 @@ local defaultSearches = {
   ['67519'] = {
     'search weap',
     'get breast'
-  }
+  },
+  
+  -- brem
+
+  ['17009'] = {
+    'search ash',
+    'search chair'
+  },
+
+  ['17012'] = {
+    'search desk',
+  },
+
+  ['17019'] = {
+    'search chest',
+    'search tub'
+  },
+
+  ['17024'] = {
+    'search box',
+  },
+
+  ['17022'] = {
+    'search shel',
+  },
+
+  ['17023'] = {
+    'search shel',
+  },
+
+  ['17034'] = {
+    'search tack',
+  },
+
+  ['17042'] = {
+    'search notch',
+  },
+
+  ['17045'] = {
+    'search hedge',
+  },
+
+  ['17047'] = {
+    'search nest &amp; |break pellet',
+  },
+  
+  ['17059'] = {
+    'shake branch &amp; |get feather',
+  },
+  
+  -- ahrimans
+
+
+  ['5614'] = {
+    'search bones',
+    'search skul',
+  },
+
+  ['5616'] = {
+    'search rubble',
+    'search books',
+  },
+  
+
+  ['5618'] = {
+    'search bones',
+    'pull manacle',
+  },  
+
+  ['5618'] = {
+    'move stone &amp; |get all &amp; |drop all.corpse',
+  },  
+
+  ['5620'] = {
+    'search table',
+  },  
+      
+  ['5643'] = {
+    'search rags',
+  },
+
+  ['5644'] = {
+    'search rubble',
+  },
+
+  ['5621'] = {
+    'search wood',
+  },
+
+  ['5645'] = {
+    'pull manacle',
+  },
+
+  ['5646'] = {
+    'search moss',
+  },
+
+  ['5640'] = {
+    'search books',
+  },
+
+  ['5629'] = {
+    'pull manacle',
+  },
+  
+  ['5630'] = {
+    'search desk',
+  },
+  
+  
+  ['5631'] = {
+    'get staff',
+  },
+  
+  ['5641'] = {
+    'search draw',
+  },
+
+  ['5642'] = {
+    'search crates',
+    'search laundry',
+  },
+
+  ['5637'] = {
+    'search desk',
+  },
+
+  ['5639'] = {
+    'search tome',
+  },
+
+  ['5634'] = {
+    'get all books',
+  },
+
+  ['5636'] = {
+    'search table',
+  },
+  
+  
 
 }
 
@@ -3899,7 +4052,11 @@ tfe.room_info_update = function()
     
     tfe.roomInfo = gmcp.Room.Info 
         
-    local areaId = tfe.getAreaID(tfe.roomInfo)
+    local areaId, shadowAreaId = tfe.getAreaID(tfe.roomInfo)
+     
+    
+    -- display(areaId)
+    -- shadow room nums will be + 500,000 on regular num
     
     -- if existing room center map on it
     if (not roomExists(tfe.roomInfo.num)) then
@@ -3948,7 +4105,8 @@ tfe.room_info_update = function()
     	  setRoomName(tfe.roomInfo.num, tfe.roomInfo.name)
     	  setRoomCoordinates(tfe.roomInfo.num, x, y, z)
 
-    end
+    end -- end of creating new room
+    
     
     -- updating exiting room if we haven't been into it before
     -- we can tell because it won't have a name yet...
@@ -4006,6 +4164,67 @@ tfe.room_info_update = function()
         
 			end
     end -- end looping over exits
+    
+    
+    -- duplicate room into shadow zone if it has one
+    if (shadowAreaId) then             
+      
+      
+      local makeShadowCopy = function(roomId, areaId) 
+        local shadowId = roomId + 500000
+        addRoom(shadowId)
+        setRoomArea(shadowId, shadowAreaId);
+        local x, y, z = getRoomCoordinates(roomId)
+        setRoomCoordinates(shadowId, x, y, z)   
+        setRoomChar(shadowId, '*') 
+        setRoomEnv(shadowId, tfe.environment['Shadow Room'])        
+      end
+      
+      tfe.roomInfo.shadowNum = tfe.roomInfo.num + 500000
+      tfe.roomInfo.shadowAreaId = shadowAreaId      
+      
+      -- display(tfe.roomInfo)
+      if (not roomExists(tfe.roomInfo.shadowNum)) then
+        makeShadowCopy(tfe.roomInfo.num, shadowAreaId)        
+      else        
+        
+        -- fix shadow room area id if it's broken
+        if (getRoomArea(tfe.roomInfo.shadowNum) ~= shadowAreaId) then          
+          setRoomArea(tfe.roomInfo.shadowNum, shadowAreaId);
+        end
+        
+         
+      end   
+      
+      -- update exits if required
+      local roomExits = getRoomExits(tfe.roomInfo.num)
+      local shadowExits = getRoomExits(tfe.roomInfo.shadowNum)   
+      
+      for exit, exitNum in pairs(roomExits) do
+        
+        -- update exists if exit room is in the same zone as us and not connected
+        if (not shadowExits[exit] and (getRoomArea(exitNum) == areaId)) then
+                          
+          local linkedRoomId = exitNum + 500000
+          
+          -- create linked room if it doesn't exist
+          if (not roomExists(linkedRoomId)) then
+            makeShadowCopy(exitNum, shadowAreaId)                            
+          end
+        
+          -- join rooms
+          setExit(tfe.roomInfo.shadowNum, linkedRoomId, tfe.consts.stubmap[exit])
+          setExit(linkedRoomId, tfe.roomInfo.shadowNum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])                      
+   
+        end
+      end
+      
+      
+      
+    else -- not a shadow room
+      tfe.roomInfo.shadowNum = nil
+      tfe.roomInfo.shadowAreaId = nil
+    end        
   
   	centerview(tfe.roomInfo.num)
 
@@ -4053,12 +4272,27 @@ tfe.getAreaID = function(roomInfo)
 
 	local areas = getAreaTable()
   
-  if (areas[area]) then
-    return areas[area]
-  else
-    cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;created new area: ' .. area .. '\n')
-    return addAreaName(area)
+  
+  local getId = function(area) 
+    local areaId
+    if (areas[area]) then
+      areaId = areas[area]
+    else
+      cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt;created new area: ' .. area .. '\n')
+      areaId = addAreaName(area)
+    end
+    return areaId
   end
+  
+  
+  local areaId = getId(area)
+  local shadowAreaId
+  
+  if (tfe.shadowZones[area]) then    
+    shadowAreaId = getId(tfe.shadowZones[area])    
+  end
+  
+  return areaId, shadowAreaId
 
 end
 
