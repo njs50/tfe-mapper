@@ -1324,7 +1324,8 @@ common.toMurderString = function (victim)
   local specialCases = {
     mice = 'mouse',
     ["ash-spirits"] = 'ash spirits',
-    ["greater faeries"] = 'greater faerie',    
+    ["greater faeries"] = 'greater faerie',
+    ["bulettes"] = 'bulette',    
   }
 
   if (specialCases[victim]) then
@@ -2850,6 +2851,19 @@ tfe.getPath = function(src, dest, useOpenAlias)
     return { error = 'No known path from ' .. getRoomName(srcRnum) .. ' to ' .. getRoomName(destRnum) }
   end
   
+end
+
+
+tfe.getDirectionToPreviousRoom = function()
+  local dir = ''
+  for exitDir, num in pairs(tfe.roomInfo.exits) do
+    if num == tfe.previousRoomInfo.num then
+      dir = exitDir
+    end
+  end
+  
+  return dir  
+  
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -2960,6 +2974,9 @@ local lookup = {
   cart = 82220,
   narakDock = 36126,
   arhimans = 11349,
+  ahrimans = 11349,
+  zaf = 99106,
+  reaver = 30346,
 }
 
 for name, vnum in pairs(lookup) do
