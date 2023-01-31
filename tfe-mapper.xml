@@ -1115,10 +1115,17 @@ njs50.killTimedTempTrigger = function (oTT)
 end
 
 
+common = common or {}
+
+common.timedTempTrigger = njs50.timedTempTrigger
 timedTempTrigger = njs50.timedTempTrigger
+
+common.killTimedTempTrigger = njs50.killTimedTempTrigger
 killTimedTempTrigger = njs50.killTimedTempTrigger
 
-tempTimedNextEvent = njs50.tempTimedNextEvent</script>
+
+tempTimedNextEvent = njs50.tempTimedNextEvent
+common.tempTimedNextEvent = njs50.tempTimedNextEvent</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
