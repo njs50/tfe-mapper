@@ -269,6 +269,29 @@ end</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>where is x</name>
+				<script>local vic = matches[2]
+local dest = matches[3]
+
+tfe.mapFind(dest, 'tell ' .. vic)</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^([A-Za-z]+) .*tells you:\s*"find (.+)"$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>modify exits line</name>
 				<script>if (gmcp and gmcp.Room and gmcp.Room.Info) then
   
@@ -344,7 +367,11 @@ end</script>
 
 
 local locStr = ''
-for idx, loc in ipairs(table.keys(tfe.locations)) do
+local idx = 0
+
+for loc, rnum in spairs(tfe.locations) do
+  
+  idx = idx + 1
   
   if (idx % 25 == 1 and locStr ~= '') then
     send('tell ' .. vic .. ' I know about: ' .. locStr)
@@ -951,6 +978,14 @@ end</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^mod (n|e|s|w|u|d|north|east|south|west|up|down)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>map find</name>
+			<script>
+tfe.mapFind(matches[3], 'gstat')</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(mf|map find) (.+)$</regex>
 		</Alias>
 	</AliasPackage>
 	<ActionPackage />
@@ -2871,6 +2906,28 @@ tfe.getDirectionToPreviousRoom = function()
   
   return dir  
   
+end
+
+tfe.mapFind = function(room, chan)
+
+  chan = chan or 'gstat'
+
+  local roomlist = searchRoom(room)
+  
+  local roomMatch = false
+  
+  for roomId, roomName in pairs(roomlist) do
+    -- if (roomName == room) then
+      send(chan .. ' location: ' .. common.getAreaName(roomId) .. ' : #' .. tostring(roomId) .. ' ' .. roomName) 
+      roomMatch = true
+    -- end
+  end
+  
+  if (not roomMatch) then
+    send(chan .. ' location: not found')
+  end
+ 
+
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -2984,6 +3041,8 @@ local lookup = {
   ahrimans = 11349,
   zaf = 99106,
   reaver = 30346,
+  citadel = 23074,
+  palace = 20081,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3503,6 +3562,68 @@ local defaultSearches = {
   ['5636'] = {
     'search table',
   },
+  
+  -- cairn peak ruins
+
+  ['51039'] = {
+    'search part',
+  },
+
+  ['51068'] = {
+    'pick flower',
+  },
+
+  ['51026'] = {
+    'search fern',
+  },   
+  
+  ['51123'] = {
+    'search shelv',
+  }, 
+
+  ['51124'] = {
+    'search desk',
+    'search bureau',
+  }, 
+
+  ['51121'] = {
+    'search wood',
+  }, 
+
+  ['51127'] = {
+    'search shel',
+  }, 
+
+  ['51126'] = {
+    'search shelv',
+  }, 
+
+  ['51125'] = {
+    'search detr',
+  }, 
+
+  ['51129'] = {
+    'search shelves',
+    'search strongbox',
+    'search table',
+  }, 
+  
+  ['51132'] = {
+    'search bur',
+  }, 
+  
+  ['51122'] = {
+    'search bed',
+    'search desk',
+  }, 
+ 
+  ['51149'] = {
+    'search shel',
+    'search ches',
+  }, 
+   
+  
+       
   
   
 
