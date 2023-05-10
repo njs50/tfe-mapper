@@ -123,6 +123,35 @@ end
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>rescan if we regain sight</name>
+				<script>-- 
+if (murder and murder.scan) then
+  if (group.leader == player.name) then
+    murder.scan('rescan because we can see again')
+  -- else
+    -- cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
+  end
+end
+
+--       A fair gnomish lass is DEAD!!</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You can see again.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You can't do that while mounted.</name>
 				<script>njs50.onNextEvent(tfe.events.ROOM_CHANGED, function ()
   send('mount')
@@ -1144,6 +1173,10 @@ njs50.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, 
 
 end
 
+njs50.timedTempTriggerAnyway = function(timeout, maxTriggerCount, pattern, callback)
+  njs50.timedTempTrigger(timeout, maxTriggerCount, pattern, callback, callback)
+end
+
 njs50.killTimedTempTrigger = function (oTT)
   killTimer(oTT.timerId)
   killTrigger(oTT.triggerId)
@@ -1681,8 +1714,8 @@ tfe.druidWayAreas = {
 -- useful when there are 
 tfe.shadowZones = {
   -- spooky isle
-  ['Isle of Broken Promises : 73'] = '??? : 78',
-  ['??? : 78'] = 'Isle of Broken Promises : 73',
+  ['Isle of Broken Promises : 73'] = 'n101 : 78',
+  ['n101 : 78'] = 'Isle of Broken Promises : 73',
 }
   
 
@@ -1861,7 +1894,6 @@ tfe.startShortSpeedWalkTimer = function ()
 	shortSpeedWalkTimerId = tempTimer(5, function ()
 		shortSpeedWalkTimerId = nil
 		cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;5 seconds without room change!!! - updating path...\n')
-    send('queue scan')
     tempTimer(2, function()
       cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt;reroute from short speed walk timeout\n')
   		  tfe.rerouteSpeedwalk()
@@ -2987,6 +3019,7 @@ local lookup = {
   khiren = 34579,
   crabtown = 48158,
   fgs = 92559,
+  monestry = 28067,
   monastery = 28067,
   slens = 76542,
   tgOut = 35817,
@@ -3043,6 +3076,18 @@ local lookup = {
   reaver = 30346,
   citadel = 23074,
   palace = 20081,
+  monkJar = 12559,
+  citizen = 152,
+  quickstep = 36098,
+  teacher = 155,
+  narakRescue = 36148,
+  narakDisarm = 36074,
+  crone = 36011,
+  mistKing = 10679,
+  mistDragon = 10680,
+  mistExit = 10681,
+  mistCave = 10683,
+  mistBoss = 10678,  
 }
 
 for name, vnum in pairs(lookup) do
@@ -4111,10 +4156,64 @@ tfe.resetRoom = function ()
 end
 
 
+tfe.findConnectingRoomsInRange = function(num, minRnum, maxRnum)
+
+  local exitPriority = { 'north', 'east', 'south', 'west', 'up', 'down' }
+  -- getRoomExits()
+  for vnum = minRnum, maxRnum do
+  
+    local exits = getRoomExits(vnum)
+    
+    if (exits) then
+    
+      for idx, exit in pairs(exitPriority) do
+        
+        if (exits[exit] == num) then
+        
+          display(vnum, exits)
+        
+        end
+      
+      end
+    
+    end
+  
+  end
+
+end
+
+tfe.removeDuplicatedExits = function()
+  
+  local exitPriority = { 'north', 'east', 'south', 'west', 'up', 'down' }
+  
+  local foundExits = {}
+  
+  for idx, exit in pairs(exitPriority) do
+  
+    if (gmcp.Room.Info.exits[exit]) then
+      local vnum = gmcp.Room.Info.exits[exit]
+      if (foundExits[vnum] or vnum == gmcp.Room.Info.num) then
+        gmcp.Room.Info.exits[exit] = nil
+        gmcp.Room.Info.exit_info[exit] = nil
+        cecho('\n&lt;red&gt;MAPPER&lt;white&gt;: removed duplicate/fake exit to ' .. exit .. '\n')
+      else
+        foundExits[vnum] = true
+      end
+    
+    end
+    
+  end
+
+end
+
 tfe.room_info_update = function()
   
 -- tfe.flatMapper = 'Mojune'
 -- tfe.showFlatMap = true  
+  
+  -- remove any exits that appear more than once. prioritize NESW over UD  
+  tfe.removeDuplicatedExits()
+  
   
   
   local roomChanged = false
@@ -4303,6 +4402,8 @@ tfe.room_info_update = function()
         setExit(tfe.roomInfo.num, exitInfo.num, tfe.consts.stubmap[exit])
         if (tfe.roomInfo.area == 'The Ways' and exitInfo.area ~= 'The Ways') then
           cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to the ways\n')
+        elseif exitInfo.name == "Plains of Elemental Mist" then
+          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to rooms in the elemental mist\n')
         else
           setExit(exitInfo.num, tfe.roomInfo.num, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
         end
