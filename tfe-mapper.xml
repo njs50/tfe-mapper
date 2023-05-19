@@ -2131,7 +2131,14 @@ tfe.speedWalkStep = function ()
         local cb = tfe.speedwalking.options.callback
         tfe.speedwalking = nil
         raiseEvent(tfe.events.WALK_COMPLETE)
-        cb()
+        
+        -- in the final room we want to wait for the scan to be fully processed before we invoke the callback
+        njs50.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function() 
+          tempTimer(0, function()
+            cb()
+          end, 'waiting for scan process handling to be completed')        
+        end)
+        
       else  
         tfe.speedwalking = nil
         raiseEvent(tfe.events.WALK_COMPLETE)
@@ -2526,7 +2533,15 @@ tfe.gotoRoom = function (vnum, options)
     vnum = tonumber(vnum)
   end 
   
-  tfe.configureWalkPath(vnum, options, true)
+  if (vnum == gmcp.Room.Info.num) then
+    cecho('\n&lt;orange&gt;TFE MAP: &lt;white&gt;already at destination, no need to go anywhere!\n')
+    if (options and options.callback) then
+      options.callback()
+    end
+    raiseEvent(tfe.events.WALK_COMPLETE)    
+  else  
+    tfe.configureWalkPath(vnum, options, true)
+  end
 
 end
 
