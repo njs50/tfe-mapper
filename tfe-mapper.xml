@@ -545,6 +545,63 @@ end
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>turbo walk was interrupted by a random event we can recover from</name>
+				<script>tfe.speedwalking.resumeOnInterrupt = true
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You get stuck on some thorns.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>run outa moves during turbo go</name>
+				<script>-- You are too exhausted.
+if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
+  
+  -- debounce this trigger
+  disableTrigger('run outa moves during turbo go')  
+  tempTimer(2, function()
+    enableTrigger('run outa moves during turbo go')
+  end)
+  
+  tfe.turboWalkPause()
+  send('gstat I have run outa moves during a speed walk')
+  
+  njs50bot.sleepUntilFull(function()
+    tfe.turboWalkResume()
+  end)
+  
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You are too exhausted.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
@@ -1031,8 +1088,6 @@ njs50.config = {
 
 
 
-
-
 njs50.update_mapper = function ()
 
   local URL = "https://raw.githubusercontent.com/njs50/tfe-mapper/master/tfe-mapper.xml"
@@ -1068,8 +1123,8 @@ njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
   
   eventWatcher = njs50.onNextEvent(evt, function(evt, args)
   		-- cecho('\n&lt;green&gt;EVENT: time limited next event happened: ' .. evt .. '\n')  
-    killTimer(timer)
-  		callback(evt, args)
+    if (timer) then killTimer(timer) end
+  	callback(evt, args)
   end)
   
   timer = tempTimer(timeout, function()
@@ -1082,7 +1137,7 @@ njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
   
   -- destoy this temp timed event watcher
   return function()
-    killTimer(timer)
+    if (timer) then killTimer(timer) end
     eventWatcher()
   end
   
@@ -1146,8 +1201,8 @@ njs50.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, 
     if (count &gt;= maxTriggerCount) then
       killTrigger(triggerId)
     end
-    -- echo('\n -- killing temp timed trigger timer\n')
-    killTimer(tempTimerId)
+    -- echo('\n -- killing temp timed trigger timer\n')    
+    if (tempTimerId) then killTimer(tempTimerId) end
 		if (ocb) then
 			ocb()
 		end
@@ -1178,7 +1233,7 @@ njs50.timedTempTriggerAnyway = function(timeout, maxTriggerCount, pattern, callb
 end
 
 njs50.killTimedTempTrigger = function (oTT)
-  killTimer(oTT.timerId)
+  if (oTT.timerId) then killTimer(oTT.timerId) end
   killTrigger(oTT.triggerId)
 end
 
@@ -1324,7 +1379,7 @@ common.itemSanitize = function(string)
     return ''
   end
 
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled |\s\+\d)]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled |\s\+\d)]], '')
 
   if (string ~= 'frost-covered ring') then
     string = rex.gsub(string, [[frost-covered,? ]], '')
@@ -1401,7 +1456,10 @@ common.toMurderString = function (victim)
     ["ash-spirits"] = 'ash spirits',
     ["greater faeries"] = 'greater faerie',
     ["bulettes"] = 'bulette',    
+    ["swarm of tsetse flies"] = 'swarm tsetse flie',
   }
+  
+  -- display(victim)
 
   if (specialCases[victim]) then
     victim = specialCases[victim]
@@ -1654,19 +1712,36 @@ murder.scan = function(reason)
     cecho('\n&lt;green&gt;SCANNER:&lt;white&gt; scan because: ' .. reason .. '\n')
   end
 
-  if (not  murder.scanPending) then
+  if (not murder.scanPending) then
     
     murder.scanPending = true
     
+    local blindTrig, scanWatcher
+    
     local scanTimer = tempTimer(10, function()
       murder.scanPending = nil
+      killTrigger(blindTrig)
+      scanWatcher()
       cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
-      murder.scan()
+      murder.scan('retry scan due to timeout')
     end)
     
-    common.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
+    -- 
+    blindTrig = tempBeginOfLineTrigger([[You can't see a thing!]], function()      
+      if (scanTimer) then killTimer(scanTimer) end
+      scanWatcher()     
+      tempTimer(10, function()
+        murder.scanPending = nil
+        murder.scan('previous scan failed due to blind')
+      end)
+      send('gstat cb ' .. player.name)
+    end, 1)
+    
+    
+    scanWatcher = common.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function()
       murder.scanPending = nil
-      killTimer(scanTimer)
+      if (scanTimer) then killTimer(scanTimer) end
+      killTrigger(blindTrig)
     end)
     
     send('queue scan')
@@ -2136,7 +2211,7 @@ tfe.speedWalkStep = function ()
         njs50.onNextEvent(njs50.scanner.events.SCAN_PROCESSED, function() 
           tempTimer(0, function()
             cb()
-          end, 'waiting for scan process handling to be completed')        
+          end) -- , 'waiting for scan process handling to be completed'        
         end)
         
       else  
@@ -2614,7 +2689,7 @@ tfe.turboWalkToRoom = function(vnum, options)
   end
   
   -- equip a travel set if player has one and going more than 30 rooms
-  if path.distance &gt; 20 and player.gearSets and player.gearSets.travel then
+  if path.distance &gt; 20 and player and player.gearSets and player.gearSets.travel then
   
     local cb = options.callback
     
@@ -2683,7 +2758,13 @@ end
 
  
 tfe.turboWalkInterrupted = function()
-  tfe.speedwalking.interrupted = true
+  
+  if (tfe.speedwalking.resumeOnInterrupt) then
+    tfe.speedwalking.resumeOnInterrupt = nil
+    tfe.turboWalkResume()
+  else
+    tfe.speedwalking.interrupted = true
+  end
 end 
 
 tfe.turboWalkActionStep = function()
@@ -2787,7 +2868,7 @@ tfe.turboWalkStep = function()
             tfe.timeout.kill('turbowalk-idle-check')
             tfe.turboWalkActionStep()          
           end)
-        end, 'delay for room to be processed')
+        end) -- , 'delay for room to be processed'
       else
         cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;turbo speedwalk unsure how to proceed with: ' .. cmd .. '\n')
       end
@@ -3000,6 +3081,7 @@ local lookup = {
   sosBank = 30874,
   voal = 20088,
   voalBank = 20027,
+  voalWeap = 20010,
   cairn = 26568,
   knight = 21096,
   hollow = 91675,
@@ -3027,6 +3109,7 @@ local lookup = {
   midnight = 76594,
   corsair = 42511,
   titans = 28028,
+  titansStart = 36772,
   fire = 25559,
   midnight = 76594,
   amber = 95016,
@@ -3089,6 +3172,7 @@ local lookup = {
   ahrimans = 11349,
   zaf = 99106,
   reaver = 30346,
+  legate = 57534,
   citadel = 23074,
   palace = 20081,
   monkJar = 12559,
@@ -3102,7 +3186,9 @@ local lookup = {
   mistDragon = 10680,
   mistExit = 10681,
   mistCave = 10683,
-  mistBoss = 10678,  
+  mistBoss = 10678,
+  pandas = 25558,  
+  sosWeap = 30754,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3468,6 +3554,35 @@ local defaultSearches = {
     'get all desk',
   },    
 
+  -- fire giants
+  
+  ['10530'] = { 
+    'get human barrel &amp; get all human.corpse &amp; drop human.corpse',
+  },  
+  
+  ['10560'] = { 
+    'smash barrel &amp; get all &amp; get all corpse &amp; drop all.corpse',
+    'search hole &amp; drop all.rancid.slab'
+  },  
+  
+  ['10569'] = { 
+    'search skeleton',
+    'search ash',
+  },  
+  
+  ['10573'] = { 
+    'search throne',
+  },  
+  
+  ['10584'] = { 
+    'get all.crystal,all.chunk',
+  },     
+
+-- Room# 10542: Shaper Chest: unfinished mithril axe-head, chunk of vulcanized adamantium, chain-linked mithril belt
+
+-- Room# 10575: Fire Lord Chest: large gold mesh gown, block of marble, vulcanized adamantium
+-- Room# 10584: East of Lava Dancer: chunk of vulcanized adamantium, Crystal of duality
+
   -- heidi and co
   
       
@@ -3683,9 +3798,19 @@ local defaultSearches = {
   }, 
    
   
+  -- black wastes
+  
+  ['51440'] = {
+    'get all corpse',
+  },   
        
+  ['51391'] = {
+    'pick flower'
+  },
   
-  
+  ['51350'] = {
+    'get crystal'
+  },
 
 }
 
@@ -3766,7 +3891,7 @@ end
 tfe.timeout.kill = function(name)
   if (tfe.timeout.timers[name]) then
     cecho('\n&lt;green&gt;Timer: &lt;white&gt;killed timer - ' .. name .. '\n')
-    killTimer(tfe.timeout.timers[name].timerId)
+    if (tfe.timeout.timers[name].timerId) then killTimer(tfe.timeout.timers[name].timerId) end
   end 
   tfe.timeout.timers[name] = nil
 end
@@ -3775,7 +3900,7 @@ end
 tfe.timeout.suspend = function(name)
   if (tfe.timeout.timers[name]) then
     cecho('\n&lt;green&gt;Timer: &lt;white&gt;suspended timer - ' .. name .. '\n')
-    killTimer(tfe.timeout.timers[name].timerId)
+    if (tfe.timeout.timers[name].timerId) then killTimer(tfe.timeout.timers[name].timerId) end
     tfe.timeout.timers[name].timerId = nil
   end 
 end
@@ -3784,9 +3909,9 @@ tfe.timeout.refresh = function(name)
   if (tfe.timeout.timers[name]) then    
     if (tfe.timeout.timers[name].timerId) then
       cecho('\n&lt;green&gt;Timer: &lt;white&gt;refresh timer - ' .. name .. '\n')
-      killTimer(tfe.timeout.timers[name].timerId)
+      if (tfe.timeout.timers[name].timerId) then killTimer(tfe.timeout.timers[name].timerId) end
     end
-    tfe.timeout.timers[name].timerId = tempTimer(tfe.timeout.timers[name].timeout, tfe.timeout.timers[name].onTimeout, tfe.timeout.timers[name].name)    
+    tfe.timeout.timers[name].timerId = tempTimer(tfe.timeout.timers[name].timeout, tfe.timeout.timers[name].onTimeout) -- , tfe.timeout.timers[name].name    
   else
     cecho('\n\n&lt;red&gt;Timer: &lt;white&gt;attempted to refresh non existant timer - ' .. name .. '\n\n')
   end 
