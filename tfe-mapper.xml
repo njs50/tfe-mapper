@@ -1373,15 +1373,19 @@ common.dotCase = function(string)
 end
 
 
-common.itemSanitize = function(string)
+common.itemSanitize = function(string, keepEnchant)
 
   if (not string or string == '') then
     return ''
   end
 
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled |\s\+\d)]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled )]], '')
 
-  if (string ~= 'frost-covered ring') then
+  if (keepEnchant ~= true) then
+    string = rex.gsub(string, [[(\s\+\d)]], '')  
+  end
+
+  if (not rex.find(string, [[frost-covered ring]])) then
     string = rex.gsub(string, [[frost-covered,? ]], '')
   end
   
@@ -1390,13 +1394,13 @@ common.itemSanitize = function(string)
 end
 
 
-common.itemShorten = function(item)
+common.itemShorten = function(item, keepEnchant)
 
   -- replace "a large chopper 'big daddy'" with "a large chopper big"
   -- mud can't match big.dad. bah
   item = rex.gsub(item, [['([^']+)\s[^']+']], '%1')
 
-  item = common.dotCase(common.itemSanitize(item))
+  item = common.dotCase(common.itemSanitize(item, keepEnchant))
   
   -- display(common.itemShortenOverride, item)
   
@@ -3189,6 +3193,10 @@ local lookup = {
   mistBoss = 10678,
   pandas = 25558,  
   sosWeap = 30754,
+  bloodwash = 76504,
+  hakkDock = 50919,
+  medDock = 21112,
+  hakkBank = 50937,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3291,7 +3299,8 @@ local defaultSearches = {
      
   ['10646'] = {
     'search couch',
-    'search tap'
+    'search tap',
+    'get candle',
   },  
 
   ['10647'] = {
@@ -3332,6 +3341,8 @@ local defaultSearches = {
   ['11105'] = {
     'pick flower &amp; pick flower &amp; pick flower &amp; pick flower',
     'get bark &amp; get bark',
+    'pick goose &amp; pick goose &amp; pick goose &amp; pick goose &amp; pick goose &amp; pick goose',
+    
   },
 
   ['11109'] = {
@@ -3373,6 +3384,19 @@ local defaultSearches = {
     'search table',
   },    
   
+  ['11130'] = {
+    'search blanket',
+  },   
+  
+  
+  ['11130'] = {
+    'get crystal',
+  },   
+  
+  
+  ['11142'] = {
+    'break crystal',
+  },    
   
   -- western expanse (in brith)
   
@@ -3811,6 +3835,164 @@ local defaultSearches = {
   ['51350'] = {
     'get crystal'
   },
+  
+  
+  -- training grounds
+  ['17317'] = {
+    'search desk &amp; search desk &amp; search desk',
+  }, 
+
+  ['17313'] = {
+    'search shelves',
+    'search fire',
+    'search canvas',
+  },  
+
+  ['17312'] = {
+    'search book',
+    'search fire',
+    'get all table',
+  },
+  
+  ['17321'] = {
+    'search drain'
+  },
+  
+  ['17328'] = {
+    'search feed &amp; search feed &amp; search feed'
+  },
+  
+  ['17346'] = {
+    'search grave'
+  },
+  
+  ['17262'] = {
+    'search bar'
+  },  
+  
+
+  -- bloodwash hills
+  
+  ['15131'] = {
+    'pick blackb &amp; pick blackb &amp; pick blackb &amp; pick blackb'
+  },
+
+  ['15129'] = {
+    'pick rasp &amp; pick rasp &amp; pick rasp &amp; pick rasp'
+  },
+  
+  ['15133'] = {
+    'pick grape &amp; pick grape &amp; pick grape &amp; pick grape'
+  },  
+
+  
+  ['15135'] = {
+    'get blade' -- probably nothing
+  }, 
+       
+  ['15136'] = {
+    'search container'
+  },
+  
+  ['15137'] = {
+    'search barrels'
+  },
+  
+  ['15142'] = {
+    'search cabinet &amp; search cabinet &amp; search cabinet &amp; search cabinet &amp; search cabinet',
+    'search bed',
+  },
+    
+  ['15145'] = {
+    'search shelf &amp; search bench &amp; search shelf &amp; search bench'
+  },
+  
+  ['15146'] = {
+    -- takes multiple searches sometimes
+    'search bone &amp; search bone &amp; search bone &amp; search bone &amp; search bone &amp; search bone'
+  },
+  
+  ['15148'] = {
+    'search rack'
+  },
+  
+  ['15149'] = {
+    'search crate'
+  },
+  
+  ['15154'] = {
+    'get statuette'
+  },
+  
+  ['15155'] = {
+    'search shelf'
+  },
+  
+  ['15156'] = {
+    'get javelin',
+    'get all rack',
+  },
+  
+  -- crank sets trap east of here
+  -- ['15171'] = {
+    -- 'turn crank'
+  -- },
+    -- 
+  -- ['15172'] = {
+    -- 'turn crank'
+  -- },
+    
+  ['15175'] = {
+    'search mound'
+  },
+
+  ['15178'] = {
+    'search cot',
+    'get all table'
+  },
+  
+  ['15180'] = {
+    'search pile',
+    'get all corpse'
+  },
+  
+  ['15182'] = {
+    'search shelves'
+  },    
+  
+  -- minos
+  ['98862'] = {
+    'search shel &amp; search shel &amp; search shel &amp; search shel'
+  },  
+  
+  ['98877'] = {
+    'search desk'
+  },
+  
+  ['98873'] = {
+    'search shel &amp; search shel &amp; search shel &amp; search shel'
+  },
+  
+  ['98876'] = {
+    'search shel &amp; search shel &amp; search shel &amp; search shel'
+  },
+  
+  -- ['98890'] = { -- need to be on the quest or something
+    -- 'search alcove'
+  -- },  
+  
+  ['98891'] = {
+    'search shel &amp; search shel &amp; search shel &amp; search shel',
+    'search table',
+  },
+  
+  ['98896'] = {
+    'search shel &amp; search shel &amp; search shel &amp; search shel'
+  },       
+  
+
+-- Room # (Warlord)- get all from table - large raw carrot, iron mug, wide parchment, steel two-handed battle axe.  
+  
 
 }
 
@@ -4100,7 +4282,7 @@ njs50bot.checkRepop = function (roomId, regex, callback)
         -- no repop
         local delay = 12 + math.random (1,8)
         
-        njs50bot.log('\n\n&lt;orange&gt;-=[ no repop, waiting ' .. tostring(delay) .. 's ]=-\n')
+        njs50bot.log('\n\n&lt;orange&gt;-=[ no repop, waiting ' .. tostring(delay) .. 's ]=-\n')        
         
         tempTimer(delay, function () 
           njs50bot.checkRepop(roomId, regex, callback)
@@ -4620,7 +4802,7 @@ tfe.room_info_update = function()
         tfe.supressNextRoomChange = nil
       else
         tempRegexTrigger([[^(\|      Exits:|\[Exits:|DARKNESS)]], function()
-          cecho('&lt;green&gt; &lt;-- exit') 
+          -- cecho('&lt;green&gt; &lt;-- exit') 
           raiseEvent(tfe.events.ROOM_CHANGED, tfe.roomInfo)
         end, 1)        
       end
