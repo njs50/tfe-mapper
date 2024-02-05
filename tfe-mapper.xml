@@ -3992,6 +3992,13 @@ local defaultSearches = {
   
 
 -- Room # (Warlord)- get all from table - large raw carrot, iron mug, wide parchment, steel two-handed battle axe.  
+
+  -- hakk
+
+  ['50929'] = {
+    'search frame &amp; search frame',
+    'get all 2.table &amp; get all table &amp; drop all.food',
+  }, 
   
 
 }
