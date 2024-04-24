@@ -1073,6 +1073,69 @@ tfe.mapFind(matches[3], 'gstat')</script>
 			<packageName></packageName>
 			<regex>^(mf|map find) (.+)$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>map help</name>
+			<script>
+cecho('\n&lt;green&gt;MAP:&lt;white&gt; map help - this help page\n\n') 
+
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map load - replace your current mudlet map file with my comprehensive map\n') 
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map load &lt;url&gt; - load a map file from someplace else on the internet\n\n') 
+
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map exit &lt;direction&gt; &lt;command&gt; - set a special exit from this room in that direction\n') 
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map exit cancel - cancel adding a special exit if you messed up the previous command\n') 
+  
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map open &lt;direction&gt; &lt;command&gt; - set the command to open the exit in that direction\n')
+  cecho('&lt;green&gt;MAP:&lt;white&gt; map reset - completely clear the map for the current zone (are you sure?)\n\n')  
+  
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; locations - show all the room number aliases configured in tfe.locations\n') 
+  
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; go &lt;location | room number&gt; - go to this place, one room at a time\n') 
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; tgo &lt;location | room number&gt; - go to this place, using speedwalks\n') 
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; stop - stop movement\n')
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; pause - pause movement \n')
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; resume - resume movement\n')
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; path &lt;location | room number&gt; - display a speedwalk to get to this place\n')
+  cecho('&lt;yellow&gt;MAP:&lt;white&gt; path &lt;place&gt; &lt;place&gt; - display a speedwalk to get from one place to another\n\n')
+  
+ cecho('&lt;orange&gt;MAP:&lt;white&gt; njs50pm update tfe-mapper - update this package!\n\n') 
+
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^map help$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>locations</name>
+			<script>
+local locStr = ''
+local idx = 0
+
+
+cecho('&lt;green&gt;MAP&lt;white&gt;: locations I know about..\n')
+
+for loc, rnum in spairs(tfe.locations) do
+  
+  idx = idx + 1
+  
+  if (idx % 10 == 1 and locStr ~= '') then
+    cecho('     ' .. locStr .. '\n')
+    locStr = ''
+  end
+  
+  if (idx % 10 ~= 1) then locStr = locStr .. ' ' end
+  
+  locStr = locStr .. loc
+
+end
+
+if (locStr ~= '') then
+  cecho('     ' .. locStr .. '\n')
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^locations$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage>
