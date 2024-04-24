@@ -1726,8 +1726,12 @@ murder.scan = function(reason)
       murder.scanPending = nil
       killTrigger(blindTrig)
       scanWatcher()
-      cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
-      murder.scan('retry scan due to timeout')
+      if autoconnect.connected then
+        cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
+        murder.scan('retry scan due to timeout')
+      else
+        cecho('\n&lt;red&gt;SCANNER:&lt;white&gt; not connected so skipping scan\n')
+      end
     end)
     
     -- 
@@ -1738,7 +1742,7 @@ murder.scan = function(reason)
         murder.scanPending = nil
         murder.scan('previous scan failed due to blind')
       end)
-      send('gstat cb ' .. player.name)
+      send('gstat ' .. player.name .. ' has unresolved blindness')
     end, 1)
     
     
@@ -3994,6 +3998,22 @@ local defaultSearches = {
 -- Room # (Warlord)- get all from table - large raw carrot, iron mug, wide parchment, steel two-handed battle axe.  
 
   -- hakk
+
+  ['13003'] = {
+    'get all dolphin',
+  }, 
+  
+
+  ['13015'] = {
+    'search scaf',
+    'search wood',
+    
+  },  
+  
+  -- ['13016'] = {
+    -- 'search debris',
+    -- 'search rubble',
+  -- },   
 
   ['50929'] = {
     'search frame &amp; search frame',
