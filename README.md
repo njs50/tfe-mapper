@@ -3,24 +3,17 @@ a mudlet mapper for the forests edge mud
 
 ## getting started
 
-uninstall the mudlet generic mapper:
+the best option is to install the mapper via my package manager:
 ```lua
-lua uninstallPackage('generic_mapper')
+lua postPMInstall='tfe-mapper'; uninstallPackage('njs50-package-manager'); installPackage('https://tinyurl.com/ykjbnsf8/njs50-package-manager.xml')
 ```
-install my mudlet package manager:
-```lua
-lua installPackage('https://tinyurl.com/ykjbnsf8/njs50-package-manager.xml')
-```
-install the mapper:
-```lua
-njs50pm install tfe-mapper
-```
-load my comprehensive map (optional):
+
+load my comprehensive map (optional - will override existing map data):
 ```lua
 map load
 ```
 
-or you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/tfe-mapper.xml) and install it via package or module managemer
+or you can download the package file [tfe-mapper.xml](https://github.com/njs50/tfe-mapper/raw/master/tfe-mapper.xml) and install it manually in mudlet
 
 ## quick start
 

@@ -1076,29 +1076,29 @@ tfe.mapFind(matches[3], 'gstat')</script>
 		<Alias isActive="yes" isFolder="no">
 			<name>map help</name>
 			<script>
-cecho('\n&lt;green&gt;MAP:&lt;white&gt; map help - this help page\n\n') 
+cecho('\n&lt;green&gt;MAP:&lt;white&gt; tfe-mapper commands\n\n') 
 
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map load - replace your current mudlet map file with my comprehensive map\n') 
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map load &lt;url&gt; - load a map file from someplace else on the internet\n\n') 
+cecho('&lt;white&gt;map load             &lt;reset&gt;- replace your current mudlet map file with my comprehensive map\n') 
+cecho('&lt;white&gt;map load &lt;url&gt;       &lt;reset&gt;- load a map file from someplace else on the internet\n\n') 
 
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map exit &lt;direction&gt; &lt;command&gt; - set a special exit from this room in that direction\n') 
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map exit cancel - cancel adding a special exit if you messed up the previous command\n') 
-  
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map open &lt;direction&gt; &lt;command&gt; - set the command to open the exit in that direction\n')
-  cecho('&lt;green&gt;MAP:&lt;white&gt; map reset - completely clear the map for the current zone (are you sure?)\n\n')  
-  
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; locations - show all the room number aliases configured in tfe.locations\n') 
-  
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; go &lt;location | room number&gt; - go to this place, one room at a time\n') 
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; tgo &lt;location | room number&gt; - go to this place, using speedwalks\n') 
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; stop - stop movement\n')
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; pause - pause movement \n')
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; resume - resume movement\n')
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; path &lt;location | room number&gt; - display a speedwalk to get to this place\n')
-  cecho('&lt;yellow&gt;MAP:&lt;white&gt; path &lt;place&gt; &lt;place&gt; - display a speedwalk to get from one place to another\n\n')
-  
- cecho('&lt;orange&gt;MAP:&lt;white&gt; njs50pm update tfe-mapper - update this package!\n\n') 
+cecho('&lt;white&gt;map exit &lt;dir&gt; &lt;cmd&gt; &lt;reset&gt;- set a special exit from this room in that direction\n') 
+cecho('&lt;white&gt;map exit cancel      &lt;reset&gt;- cancel adding a special exit (if changing rooms failed)\n') 
 
+cecho('&lt;white&gt;map open &lt;dir&gt; &lt;cmd&gt; &lt;reset&gt;- set the command to open the exit in that direction\n')
+cecho('&lt;white&gt;map reset            &lt;reset&gt;- completely clear the map for the current zone (are you sure?)\n\n')  
+
+cecho('&lt;white&gt;locations            &lt;reset&gt;- show all the room number aliases configured in tfe.locations\n') 
+
+cecho('&lt;white&gt;go &lt;place | rnum&gt;    &lt;reset&gt;- go to this place, one room at a time\n') 
+cecho('&lt;white&gt;tgo &lt;place | rnum&gt;   &lt;reset&gt;- go to this place, using speedwalks\n') 
+cecho('&lt;white&gt;stop                 &lt;reset&gt;- stop movement\n')
+cecho('&lt;white&gt;pause                &lt;reset&gt;- pause movement \n')
+cecho('&lt;white&gt;resume               &lt;reset&gt;- resume movement\n')
+cecho('&lt;white&gt;path &lt;place | rnum&gt;  &lt;reset&gt;- display a speedwalk to get to this place\n')
+cecho('&lt;white&gt;path &lt;place&gt; &lt;place&gt; &lt;reset&gt;- display a speedwalk to get from one place to another\n\n')
+
+cecho('&lt;green&gt;njs50pm:&lt;white&gt; njs50pm update tfe-mapper &lt;reset&gt;- update this package!\n') 
+cecho('&lt;green&gt;MAP:&lt;white&gt; for more info see: https://github.com/njs50/tfe-mapper\n')
 </script>
 			<command></command>
 			<packageName></packageName>
@@ -5069,6 +5069,21 @@ njs50.tableHasValueChanges = function(t1, t2)
 end
 </script>
 				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>tfe.postMapperInstallHandler</name>
+				<packageName></packageName>
+				<script>tfe.postMapperInstallHandler = function(evt, name, file)
+
+  -- after installing the package manager see if there is a package we should install
+  if (name == "tfe-mapper") then      
+    expandAlias('map help')
+  end
+
+end</script>
+				<eventHandlerList>
+					<string>sysInstallPackage</string>
+				</eventHandlerList>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
