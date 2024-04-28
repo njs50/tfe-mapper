@@ -1224,9 +1224,9 @@ njs50.onNextEvent = function (evt, callback)
 	local handlerId = nil
 	local cb2 = callback
 
-	local cb = function (evt, args)
+	local cb = function (evt, ...)
 		killAnonymousEventHandler(handlerId)
-		cb2(evt, args)
+		cb2(evt, unpack(arg))
 	end
 
 	handlerId = registerAnonymousEventHandler(evt, cb, true)
