@@ -100,6 +100,8 @@ if (combat and not combat.active and murder and murder.scan) then
   -- else
     -- cecho('&lt;green&gt;&lt;-- skipped scan due to not being leader\n')
   end
+-- else  
+  -- cecho('&lt;green&gt;MAPPER:&lt;white&gt; &lt;-- skipped scan due to combat.active:'.. tostring(combat.active) .. '\n')
 end
 
 --       A fair gnomish lass is DEAD!!</script>
@@ -4083,6 +4085,69 @@ local defaultSearches = {
     'get all 2.table &amp; get all table &amp; drop all.food',
   }, 
   
+  -- marble temple
+
+  ['3850'] = {
+    'search fern &amp; search fern &amp; search fern &amp; search fern',
+  },   
+
+  ['3858'] = {
+    'search plant &amp; search plant &amp; search plant',
+  },   
+
+  ['3864'] = {
+    'search sconce',
+  },   
+
+  ['3867'] = {
+    'search debris',
+  },    
+
+  ['3868'] = {
+    'search hole',
+  },    
+
+  ['3879'] = {
+    'move rubble &amp; |get all &amp; |drop all.corpse',
+  },    
+
+  ['3882'] = {
+    'search sconce',
+  },    
+
+  ['3885'] = {
+    'search barrel &amp; search barrel &amp; search barrel',
+    'search shelf &amp; search shelf &amp; search shelf',
+  },     
+
+  ['3888'] = {
+    'open desk &amp; get all desk',
+  },     
+
+  ['3891'] = {
+    'search blanket',
+  },     
+
+  ['3892'] = {
+    'search blanket',
+  },     
+
+  ['3893'] = {
+    'search blanket',
+  },      
+
+  ['3895'] = {
+    'search shelf',
+  },      
+
+  ['3896'] = {
+    'search cup',
+  },      
+
+  ['3898'] = {
+    'search barrel &amp; search barrel &amp; search barrel',
+    'search shelf &amp; search shelf &amp; search shelf',
+  },     
 
 }
 
@@ -5076,7 +5141,13 @@ end
 				<script>tfe.postMapperInstallHandler = function(evt, name, file)
 
   -- after installing the package manager see if there is a package we should install
-  if (name == "tfe-mapper") then      
+  if (name == "tfe-mapper") then   
+    
+    -- uninstall mudlets generic mapper if it is installed
+    if table.contains(getPackages(), 'generic_mapper') then
+      uninstallPackage('generic_mapper')
+    end
+     
     expandAlias('map help')
   end
 
