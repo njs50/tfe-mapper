@@ -642,29 +642,58 @@ end</script>
 
 tfe.locations = tfe.locations or {}
 
+local fatalError = false
+
 local rnum = tfe.locations[dest] or dest
 
 if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
   rnum = tonumber(rnum)
 end
 
-if (type(rnum) == 'number' and roomExists(rnum)) then
+if (type(rnum) == 'table' or (type(rnum) == 'number' and roomExists(rnum))) then
 
-	cecho('&lt;green&gt;TFE MAP:&lt;white&gt; going to ' .. getRoomName(rnum) .. '\n')
- 
+  if type(rnum) == 'table' then
+
+    local rnames = {}
+  
+    table.foreach(rnum, function(idx, num)
+      if roomExists(num) then
+        table.insert(rnames, getRoomName(num))
+      else
+        fatalError = true
+        cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; unknown room number in path: ' .. tostring(num) .. '\n')                    
+      end
+    end)      
+    
+    local droom = table.remove(rnames, #rnames)
+    
+    cecho('&lt;green&gt;TFE MAP:&lt;white&gt; walking to ' .. droom)    
+    if #rnum &gt; 1 then
+      cecho(' via ' .. table.concat(rnames, ', '))      
+    end    
+    cecho('\n')    
+    
+  else  
+    cecho('&lt;green&gt;TFE MAP:&lt;white&gt; walking to ' .. getRoomName(rnum) .. '\n')  
+  end
+
+
   local endCmd = matches[3]
 
-	tfe.gotoRoom(rnum, { 
-    callback = function () 
-  		if (endCmd) then
-  			expandAlias(endCmd)
-  		end
-  	end
-  })
-	
+  if ( not fatalError ) then
+  	tfe.gotoRoom(rnum, { 
+      callback = function () 
+      		if (endCmd) then
+      			expandAlias(endCmd)
+      		end
+      	end
+    })
+	end
+  
 else
-	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location: ' .. tostring(rnum) .. '\n')
-end</script>
+	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid location: ' .. tostring(rnum) .. '\n')
+end
+</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
@@ -675,26 +704,55 @@ end</script>
 
 tfe.locations = tfe.locations or {}
 
+local fatalError = false
+
 local rnum = tfe.locations[dest] or dest
 
 if (type(rnum) == 'string' and rnum:match([[^%d+$]])) then
   rnum = tonumber(rnum)
 end
 
-if (type(rnum) == 'number' and roomExists(rnum)) then
+if (type(rnum) == 'table' or (type(rnum) == 'number' and roomExists(rnum))) then
 
-	cecho('&lt;green&gt;TFE MAP:&lt;white&gt; going to ' .. getRoomName(rnum) .. '\n')
- 
+  if type(rnum) == 'table' then
+
+    local rnames = {}
+  
+    table.foreach(rnum, function(idx, num)
+      if roomExists(num) then
+        table.insert(rnames, getRoomName(num))
+      else
+        fatalError = true
+        cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; unknown room number in path: ' .. tostring(num) .. '\n')                    
+      end
+    end)      
+  
+    
+    local droom = table.remove(rnames, #rnames)
+    
+    cecho('&lt;green&gt;TFE MAP:&lt;white&gt; speed walking to ' .. droom)    
+    if #rnum &gt; 1 then
+      cecho(' via ' .. table.concat(rnames, ', '))      
+    end    
+    cecho('\n')    
+    
+  else  
+    cecho('&lt;green&gt;TFE MAP:&lt;white&gt; speed walking to ' .. getRoomName(rnum) .. '\n')  
+  end
+
+
   local endCmd = matches[3]
 
-	tfe.turboWalkToRoom(rnum, { 
-    callback = function () 
-    		if (endCmd) then
-    			expandAlias(endCmd)
-    		end
-    	end
-  })
-	
+  if ( not fatalError ) then
+  	tfe.turboWalkToRoom(rnum, { 
+      callback = function () 
+      		if (endCmd) then
+      			expandAlias(endCmd)
+      		end
+      	end
+    })
+	end
+  
 else
 	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location: ' .. tostring(rnum) .. '\n')
 end</script>
@@ -1107,6 +1165,62 @@ cecho('&lt;green&gt;MAP:&lt;white&gt; for more info see: https://github.com/njs5
 			<regex>^map help$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
+			<name>enable autoscan</name>
+			<script>-- local options = {'Enable.Autoscan','','Autoscan.Far.Scans','Scan.Far.Scans',
+                 -- 'Autoscan.Towns','Autoscan.Current.Room', 'Ignore.Wordwrap',
+                 -- 'Scan.When.Looking','Autoscan.Shows.Empty'}
+
+local desiredState = matches[2]
+
+
+
+-- 
+-- (*) Enable.Autoscan
+-- ( ) Autoscan.Far.Scans
+-- ( ) Scan.Far.Scans
+-- ( ) Autoscan.Towns
+-- ( ) Autoscan.Current.Room
+-- ( ) Ignore.Wordwrap
+-- ( ) Scan.When.Looking
+-- ( ) Autoscan.Shows.Empty
+
+                                -- Scan Options 
+-- Scan delimiter: ',' (set with 'scan -d')
+
+local optionParser
+
+tempRegexTrigger([[^\s+Scan Options]], function()
+  cecho('\n&lt;green&gt;&lt;-- start checking options')
+  
+  optionParser = tempRegexTrigger([[^\(([ *])\)\s+(.*)$]], function() -- \([ *]\)\s+
+    cecho(' &lt;green&gt;&lt;-- option:&lt;white&gt; ' .. matches[3])
+    
+    if desiredState == 'true' and matches[2] ~= '*' then
+      send('scan -o ' .. matches[3])
+    end
+    
+    if desiredState == 'false' and matches[2] ~= ' ' then
+      send('scan -o ' .. matches[3])
+    end
+    
+  end)
+  
+end, 1)
+
+
+tempRegexTrigger([[^Scan delimiter:]], function()
+  cecho('\n&lt;green&gt;&lt;-- stop checking options')
+  killTrigger(optionParser)
+end, 1)
+
+
+
+send('scan -o')</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^autoscan (true|false)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
 			<name>locations</name>
 			<script>
 local locStr = ''
@@ -1332,6 +1446,9 @@ common.itemShortenOverride['orange headband'] = 'orange.strip'
 common.itemShortenOverride['emerald bracelet'] = 'emerald.bracelet'
 common.itemShortenOverride['orange.headband'] = 'orange.strip'
 common.itemShortenOverride['emerald.bracelet'] = 'emerald.bracelet'
+
+common.itemShortenOverride['steel-tipped boots'] = 'steel-tip.boots'
+common.itemShortenOverride['steel-tipped.boots'] = 'steel-tip.boots'
 
 common.itemShortenOverride["flowing.silver.greatsword.Unbending"] = 'flow.silv.grea'
 common.itemShortenOverride["flowing.silver.shortspear.Hand.the"] = 'flow.silv.shor'
@@ -1940,6 +2057,9 @@ tfe.environment = {
   -- entirely fictitious (for rooms duplicated in another map)
   ["Shadow Room"] = 201,
   
+  -- 
+  ["uninspected"] = 202
+  
 }
 
 
@@ -2019,6 +2139,8 @@ tfe.environmentColor = {
   ["Sandy Cavern"] = 'navajo_white',
   
   ["Shadow Room"] = 'slate_grey',
+  
+  ["uninspected"] = 'violet_red',
   
 }
 
@@ -3266,12 +3388,18 @@ local lookup = {
   hakkDock = 50919,
   medDock = 21112,
   hakkBank = 50937,
+  fireAnts = 42579,
+  sphinxes = 21000,
+  lonil = 57445,
+  chiBank = 924,
+  grems = 37092,
+  medBridge = 513,
+  medToYetisDry = {513, 494, 94611},
+  yetisToMedDry = {94611, 494, 513},
 }
 
 for name, vnum in pairs(lookup) do
-  if (not tfe.locations[name]) then
-    tfe.locations[name] = vnum
-  end
+  tfe.locations[name] = vnum
 end</script>
 			<eventHandlerList />
 		</Script>
@@ -3659,7 +3787,7 @@ local defaultSearches = {
   },  
   
   ['10569'] = { 
-    'search skeleton',
+    'search skeleton &amp; |smash skull',
     'search ash',
   },  
   
@@ -4148,7 +4276,35 @@ local defaultSearches = {
     'search barrel &amp; search barrel &amp; search barrel',
     'search shelf &amp; search shelf &amp; search shelf',
   },     
+  
+  
+  -- wood imps
 
+  ['47524'] = {
+    'search hole',
+  }, 
+
+  ['47528'] = {
+    'search stone',
+  }, 
+
+  ['47514'] = {
+    'search supp',
+  },     
+  
+  -- lost caravan
+
+  ['70031'] = {
+    'search pillow',
+  }, 
+
+  ['70033'] = {
+    'search cushion',
+  }, 
+
+  ['70015'] = {
+    'pick clover',
+  },   
 }
 
 for k, v in pairs(defaultSearches) do
@@ -4159,7 +4315,74 @@ njs50.addSearchSymbolsToMap = function()
   for idx in pairs(njs50.roomSearches) do
     setRoomChar(idx, '#')
   end
+  
+  
+  
+  
 end
+
+
+njs50.markRoomsFromInspect = function()
+
+  local areas = getAreaTable()
+  local areaId = areas[tfe.roomInfo.area .. ' : ' .. tostring(tfe.roomInfo.area_id)]
+
+  local rooms = getAreaRooms(areaId)
+
+
+  for roomIdx = 0, #rooms do
+
+  -- add in searches from map data
+  local results = getRoomUserData(rooms[roomIdx], "inspectResult")  
+  if (results and results ~= "") then
+    results = yajl.to_value(results)
+    if (#results.searchWords &gt; 0) then
+      -- cecho('\n&lt;green&gt;MAP&lt;white&gt;: performing searches stored in map data\n')
+      -- for words, text in pairs(results.search) do
+        -- send('search ' .. words)
+      -- end 
+      setRoomChar(rooms[roomIdx], '#')  
+      cecho(tostring(rooms[roomIdx]) .. ' setting search char\n')
+    end 
+  else
+    cecho(tostring(rooms[roomIdx]) .. ' not inspected\n')  
+    setRoomEnv(rooms[roomIdx], tfe.environment.uninspected)
+  end    
+  
+  end
+  
+
+end
+
+njs50.displayRoomsFromInspect = function()
+
+  local areas = getAreaTable()
+  local areaId = areas[tfe.roomInfo.area .. ' : ' .. tostring(tfe.roomInfo.area_id)]
+
+  local rooms = getAreaRooms(areaId)
+
+
+  for roomIdx = 0, #rooms do
+
+  -- add in searches from map data
+  local results = getRoomUserData(rooms[roomIdx], "inspectResult")  
+  if (results and results ~= "") then
+    results = yajl.to_value(results)
+    if (#results.searchWords &gt; 0) then
+      cecho('#' .. rooms[roomIdx] .. ': ')
+      for words, text in pairs(results.search) do
+        cecho('search ' .. words)
+      end 
+      cecho('\n')
+    end 
+  end    
+  
+  end
+  
+
+end
+
+
 
 njs50.search = function(vnum)
   
@@ -4174,6 +4397,20 @@ njs50.search = function(vnum)
       expandAlias(cmd)
     end
   end
+  
+  -- add in searches from map data
+  local results = getRoomUserData(tfe.roomInfo.num, "inspectResult")  
+  if (results and results ~= "") then
+    results = yajl.to_value(results)
+    if (#results.searchWords &gt; 0) then
+      cecho('\n&lt;green&gt;MAP&lt;white&gt;: performing searches stored in map data\n')
+      for words, text in pairs(results.search) do
+        for idx, word in ipairs(string.split(words, ', ')) do
+          send('search ' .. word)
+        end
+      end   
+    end 
+  end    
 
 end</script>
 			<eventHandlerList />
@@ -4687,6 +4924,35 @@ tfe.room_info_update = function()
   
 -- tfe.flatMapper = 'Mojune'
 -- tfe.showFlatMap = true  
+
+
+  -- fix broken exits in gmcp data.
+  
+  local fixExits = {
+    -- in lag castle, secret exit down
+    ['33357'] = { down = 9053 },
+    ['9053'] = { up = 33357 },
+  }
+
+  local fixExit = fixExits[tostring(gmcp.Room.Info.num)]
+
+  if (fixExit) then
+    cecho('&lt;yellow&gt; &lt;--- &lt;white&gt;fixing a dodgy exit in gmcp data\n')
+    
+    for dir, num in pairs(fixExit) do
+    
+      if (gmcp.Room.Info.exits[dir]) then
+        gmcp.Room.Info.exits[dir] = num
+        gmcp.Room.Info.exit_info[dir].num = num
+        gmcp.Room.Info.exit_info[dir].vnum = num
+      end
+    
+    end
+    
+  
+  end
+
+
   
   -- remove any exits that appear more than once. prioritize NESW over UD  
   tfe.removeDuplicatedExits()
