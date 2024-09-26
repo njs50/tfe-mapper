@@ -604,6 +604,28 @@ end</script>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>serene sunshine exit changes</name>
+				<script>tfe.updateRoomExits()
+
+-- murder.reroute()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^As you take a step toward the (north|east|south|west), you quickly realize that the ground will not bear your weight!!!</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
@@ -1252,6 +1274,13 @@ end
 			<packageName></packageName>
 			<regex>^locations$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>list rooms in area</name>
+			<script>njs50.displayRooms()</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(rlist|roomlist)$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage>
@@ -1359,6 +1388,7 @@ njs50.tablelength = function(T)
   for _ in pairs(T) do count = count + 1 end
   return count
 end
+
 
 njs50.timedTempTrigger = function (timeout, maxTriggerCount, pattern, callback, failcallback)
 
@@ -1574,6 +1604,15 @@ common.itemSanitize = function(string, keepEnchant)
   return string
 
 end
+
+common.itemEquipListFormat = function(item)
+  item = common.itemSanitize(item)
+  
+  item = rex.gsub(item, [[^(a|an|a pair of|a set of) ]], '')
+  
+  return item
+end
+
 
 
 common.itemShorten = function(item, keepEnchant)
@@ -1895,7 +1934,7 @@ murder = murder or {}
 murder.scan = function(reason)
 
   if (reason) then
-    cecho('\n&lt;green&gt;SCANNER:&lt;white&gt; scan because: ' .. reason .. '\n')
+    common.log('\n&lt;green&gt;SCANNER:&lt;white&gt; scan because: ' .. reason .. '\n')
   end
 
   if (not murder.scanPending) then
@@ -1909,10 +1948,10 @@ murder.scan = function(reason)
       killTrigger(blindTrig)
       scanWatcher()
       if autoconnect.connected then
-        cecho('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
+        common.log('\n&lt;orange&gt;SCANNER:&lt;white&gt; no scan within 10 seconds, trying again\n')
         murder.scan('retry scan due to timeout')
       else
-        cecho('\n&lt;red&gt;SCANNER:&lt;white&gt; not connected so skipping scan\n')
+        common.log('\n&lt;red&gt;SCANNER:&lt;white&gt; not connected so skipping scan\n')
       end
     end)
     
@@ -1939,7 +1978,7 @@ murder.scan = function(reason)
     
   else
   
-    cecho('\n&lt;yellow&gt;SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
+    common.log('\n&lt;yellow&gt;SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
     
   end
   
@@ -2892,7 +2931,13 @@ tfe.turboWalkToRoom = function(vnum, options)
       resetGear(cb)
     end
   
-    equipPartial('travel', function()    
+    local setName = 'tavel' 
+    
+    if (gmcp.Char.Score.level &gt;= 55 and player.gearSets.travel55) then
+      setName = 'travel55'
+    end
+  
+    equipPartial(setName, function()    
       doWalk()
     end)
     
@@ -3396,6 +3441,10 @@ local lookup = {
   medBridge = 513,
   medToYetisDry = {513, 494, 94611},
   yetisToMedDry = {94611, 494, 513},
+  entMoot = 19311,
+  brem = 89000,
+  bremBank = 89045,
+  grove = 48127,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3780,6 +3829,11 @@ local defaultSearches = {
   ['10530'] = { 
     'get human barrel &amp; get all human.corpse &amp; drop human.corpse',
   },  
+
+  
+  ['10534'] = { 
+    'climb vine',
+  },  
   
   ['10560'] = { 
     'smash barrel &amp; get all &amp; get all corpse &amp; drop all.corpse',
@@ -4126,7 +4180,7 @@ local defaultSearches = {
   },
   
   ['15156'] = {
-    'get javelin',
+    'get javelin &amp; |drop all.javalin.corpse',
     'get all rack',
   },
   
@@ -4377,6 +4431,43 @@ njs50.displayRoomsFromInspect = function()
     end 
   end    
   
+  end
+  
+
+end
+
+
+njs50.displayRooms = function()
+
+  local areas = getAreaTable()
+  local areaId = areas[tfe.roomInfo.area .. ' : ' .. tostring(tfe.roomInfo.area_id)]
+
+  local rooms = getAreaRooms(areaId)
+
+  local br = rooms[0]
+  
+  rooms[0] = nil
+  
+  table.insert(rooms, 1, br)
+
+
+  table.sort(rooms)
+
+  local lnum 
+  
+  
+  cecho('\n&lt;white&gt;Rooms in ' .. tfe.roomInfo.area .. '&lt;reset&gt;\n')
+  
+  local str = ''
+  
+  for idx, num in ipairs(rooms) do
+    if (lnum and lnum + 1 ~= num) then
+      str = '&lt;red&gt;'
+    else
+      str = '&lt;green&gt;'  
+    end
+    cecho(str .. '#' .. tostring(num) .. '&lt;reset&gt;: ' .. getRoomName(num) .. '\n')  
+    lnum = num
   end
   
 
@@ -4818,6 +4909,13 @@ tfe.consts.exitmap = {
     up = 'up',      down = 'down',
 }
 
+-- only add exits when rooms are initially found
+-- this way fake exits are no readded
+tfe.consts.noRoomExitUpdates = {
+  ["Serene Sunshine"] = true,
+}
+
+
 
 tfe.consts.short = {}
 for k,v in pairs(tfe.consts.exitmap) do
@@ -4916,6 +5014,20 @@ tfe.removeDuplicatedExits = function()
     
     end
     
+  end
+
+end
+
+tfe.updateRoomExits = function()
+  
+  local exits = getRoomExits(gmcp.Room.Info.num)
+  
+  for exit, rnum in pairs(exits) do
+    if (not gmcp.Room.Info.exits[exit]) then
+      cecho('\n\n&lt;orange&gt;MAP:&lt;white&gt; removing missing exit (' .. exit .. ') from map\n')
+      setExit(gmcp.Room.Info.num, -1, exit)
+      setExit(rnum, -1, tfe.consts.reverse_dirs[exit])
+    end
   end
 
 end
@@ -5125,11 +5237,16 @@ tfe.room_info_update = function()
     local existingExits = getRoomExits(tfe.roomInfo.num)
 		
     for exit, exitInfo in pairs(tfe.roomInfo.exit_info) do
-			if(not existingExits[exit] and tfe.consts.short[exit]) then
-      	setExitStub(tfe.roomInfo.num, tfe.consts.short[exit], true)
+    
+      -- display('checkin exits...')
+    
+			if(not existingExits[exit] and tfe.consts.short[exit]) then              
+        
+        local bNewRoom = false
         
         -- add in a temp room for any rooms we haven't visited yet
         if (not roomExists(exitInfo.num)) then
+          bNewRoom = true
           addRoom(exitInfo.num)
           setRoomArea(exitInfo.num, tfe.getAreaID(exitInfo));
           setRoomEnv(exitInfo.num, 272)
@@ -5142,13 +5259,23 @@ tfe.room_info_update = function()
         end
       
         -- cecho('\n&lt;green&gt;MAPPER: &lt;white&gt;joining ' .. tostring(tfe.roomInfo.num) ..' to room: ' .. tostring(vnum) .. ' - ' .. exit)
-        setExit(tfe.roomInfo.num, exitInfo.num, tfe.consts.stubmap[exit])
-        if (tfe.roomInfo.area == 'The Ways' and exitInfo.area ~= 'The Ways') then
-          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to the ways\n')
-        elseif exitInfo.name == "Plains of Elemental Mist" then
-          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to rooms in the elemental mist\n')
-        else
-          setExit(exitInfo.num, tfe.roomInfo.num, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
+        
+        -- update exits if this is a new room or not on the no updates list
+        if (bNewRoom or not tfe.consts.noRoomExitUpdates[gmcp.Room.Info.area]) then
+          
+          setExitStub(tfe.roomInfo.num, tfe.consts.short[exit], true)
+          setExit(tfe.roomInfo.num, exitInfo.num, tfe.consts.stubmap[exit])          
+          
+          -- set reverse exit
+          if (tfe.roomInfo.area == 'The Ways' and exitInfo.area ~= 'The Ways') then
+            cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to the ways\n')
+          elseif exitInfo.name == "Plains of Elemental Mist" then
+            cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not adding reverse connection to rooms in the elemental mist\n')
+          else
+            setExit(exitInfo.num, tfe.roomInfo.num, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])
+          end
+        else  
+          cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; not updating exists due to zone: ' .. gmcp.Room.Info.area .. '\n')
         end
         
 			end
