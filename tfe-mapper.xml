@@ -2931,7 +2931,7 @@ tfe.turboWalkToRoom = function(vnum, options)
       resetGear(cb)
     end
   
-    local setName = 'tavel' 
+    local setName = 'travel' 
     
     if (gmcp.Char.Score.level &gt;= 55 and player.gearSets.travel55) then
       setName = 'travel55'
