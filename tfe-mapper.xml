@@ -2001,6 +2001,27 @@ mudlet.mapper_script = true
 
 tfe = tfe or {}
 
+
+-- delete janky old maps
+tfe.cleanMaps = function()
+  
+  local deleteMaps = {}
+  
+  local areas = getAreaTable()
+  
+  -- display( areas )
+  
+  for area, id in pairs(areas) do
+
+    if not rex.match(area, [[^.* : \d+$]]) then    
+      display('deleting ' .. area)
+      deleteArea(id)    
+    end
+  end
+
+end
+
+
 tfe.events = {
   ROOM_CHANGED = 'tfe mapper: room found',
   ROOM_CHANGE_PENDING = 'tfe mapper: move pending',
