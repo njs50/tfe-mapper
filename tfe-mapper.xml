@@ -1931,7 +1931,7 @@ njs50.findPlayer = function(name, cb)
 end
 
 murder = murder or {}
-murder.scan = function(reason)
+murder.scan = function(reason, cb)
 
   if (reason) then
     common.log('\n&lt;green&gt;SCANNER:&lt;white&gt; scan because: ' .. reason .. '\n')
@@ -1971,6 +1971,9 @@ murder.scan = function(reason)
       murder.scanPending = nil
       if (scanTimer) then killTimer(scanTimer) end
       killTrigger(blindTrig)
+      if (cb) then
+        cb()
+      end
     end)
     
     send('queue scan')
@@ -3466,6 +3469,8 @@ local lookup = {
   brem = 89000,
   bremBank = 89045,
   grove = 48127,
+  camp = 16093,
+  downfall = 16093,
 }
 
 for name, vnum in pairs(lookup) do
@@ -4429,7 +4434,7 @@ njs50.markRoomsFromInspect = function()
 
 end
 
-njs50.displayRoomsFromInspect = function()
+njs50.showSearchRooms = function()
 
   local areas = getAreaTable()
   local areaId = areas[tfe.roomInfo.area .. ' : ' .. tostring(tfe.roomInfo.area_id)]
@@ -4439,18 +4444,29 @@ njs50.displayRoomsFromInspect = function()
 
   for roomIdx = 0, #rooms do
 
-  -- add in searches from map data
-  local results = getRoomUserData(rooms[roomIdx], "inspectResult")  
-  if (results and results ~= "") then
-    results = yajl.to_value(results)
-    if (#results.searchWords &gt; 0) then
-      cecho('#' .. rooms[roomIdx] .. ': ')
-      for words, text in pairs(results.search) do
-        cecho('search ' .. words)
+    -- add in searches from map data
+    local results = getRoomUserData(rooms[roomIdx], "inspectResult")  
+    if (results and results ~= "") then
+      results = yajl.to_value(results)
+      if (#results.searchWords &gt; 0) then      
+        for _idx, words in ipairs(table.keys(results.search)) do
+          cecho('#' .. rooms[roomIdx] .. ': search ' .. words .. '\n')
+        end       
       end 
-      cecho('\n')
-    end 
-  end    
+    end    
+    
+    -- manual searches
+    results = getRoomUserData(rooms[roomIdx], "manualSearch")  
+    if (results and results ~= "") then
+      results = yajl.to_value(results)
+      if (#results &gt; 0) then
+        
+        for idx, cmd in ipairs(results) do
+          cecho('#' .. rooms[roomIdx] .. ': ' .. cmd .. '\n')
+        end   
+      end 
+    end       
+    
   
   end
   
@@ -4523,6 +4539,18 @@ njs50.search = function(vnum)
       end   
     end 
   end    
+    
+  -- perform any manually added searches
+  results = getRoomUserData(tfe.roomInfo.num, "manualSearch")  
+  if (results and results ~= "") then
+    results = yajl.to_value(results)
+    if (#results &gt; 0) then
+      cecho('&lt;green&gt;MAP&lt;white&gt;: performing manual searches stored in map data\n')
+      for idx, cmd in ipairs(results) do
+        send(cmd)
+      end   
+    end 
+  end   
 
 end</script>
 			<eventHandlerList />
