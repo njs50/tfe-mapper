@@ -91,7 +91,7 @@ else
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>rescan if something died</name>
 				<script>-- 
 if (combat and not combat.active and murder and murder.scan) then
@@ -624,6 +624,45 @@ end</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You trudge onward in what you THINK is the right direction</name>
+				<script>if (tfe.speedwalking and gmcp.Room.Info.area == 'Naraki Desert') then
+  
+  cecho('\n\n&lt;green&gt;MAPPER:&lt;white&gt; lost in desert... advancing\n')
+  
+  if (tfe.speedwalking and tfe.speedwalking.walkType == 'turbo') then
+    
+    tfe.turboWalkPause()    
+    tempTimer(2, tfe.turboWalkResume, 'waiting for turbo to pause before resume')
+  
+  else 
+    
+    tfe.rerouteSpeedwalk()
+    tfe.speedWalkStep()
+    
+  end
+
+  
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You trudge onward in what you THINK is the right direction</string>
+					<string>As you enter the next part of the desert, you know for certain you are lost.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
@@ -1981,7 +2020,7 @@ murder.scan = function(reason, cb)
     
   else
   
-    common.log('\n&lt;yellow&gt;SCANNER:&lt;white&gt; skipped scan due to pending scan...\n')
+    common.log('\n&lt;yellow&gt;SCANNER:&lt;white&gt; skipped scan due to pending scan...(' .. reason .. ')\n')
     
   end
   
@@ -2516,7 +2555,7 @@ tfe.speedWalkStep = function ()
                        
           
         else
-          cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure  how to progress (missing special exit?)\n')
+          cecho('\n\n&lt;red&gt;TFE MAP: &lt;white&gt;unsure how to progress (missing special exit?)\n')
         end
         
       else
@@ -2750,8 +2789,9 @@ tfe.getExpandedPath = function(currentWpt, waypoints)
          table.insert(path, speedWalkPath)
          table.insert(pathDirs, speedWalkDir)
       else
-        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;No known path from ' .. 
-          getRoomName(currentWpt) .. ' to ' .. (getRoomName(waypoint) or 'unknown room') .. '\n')
+        cecho('\n&lt;red&gt;TFE MAP: &lt;white&gt;No known path from ' .. getRoomName(currentWpt) .. ' (' ..         
+             tostring(currentWpt) .. ') to ' .. (getRoomName(waypoint) or 'unknown room') .. 
+             '(' .. tostring(waypoint) .. ')' .. '\n')
         return nil
       end
     
@@ -3282,7 +3322,8 @@ tfe.getPath = function(src, dest, useOpenAlias)
     }
      
   else
-    return { error = 'No known path from ' .. getRoomName(srcRnum) .. ' to ' .. getRoomName(destRnum) }
+    return { error = 'No known path from ' .. getRoomName(srcRnum) .. '(' .. 
+             tostring(srcRnum) .. ') to ' .. getRoomName(destRnum) .. '(' .. tostring(destRnum) .. ')' }
   end
   
 end
@@ -3456,6 +3497,7 @@ local lookup = {
   bloodwash = 76504,
   hakkDock = 50919,
   medDock = 21112,
+  hakk = 50905,
   hakkBank = 50937,
   fireAnts = 42579,
   sphinxes = 21000,
@@ -3471,6 +3513,10 @@ local lookup = {
   grove = 48127,
   camp = 16093,
   downfall = 16093,
+  grove = 48123,
+  ghostWife = 46533,
+  mbears = 82040,
+  marble = 57452,
 }
 
 for name, vnum in pairs(lookup) do
@@ -3524,7 +3570,7 @@ local defaultSearches = {
   },
  
   ['10618'] = {
-    'pick thorn &amp; pick thorn &amp; pick thorn &amp; pick thorn &amp; put all.thorn backpack'
+    'pick thorn &amp; pick thorn &amp; pick thorn &amp; pick thorn'
   },
   
     
@@ -3904,23 +3950,6 @@ local defaultSearches = {
   
   -- brem
 
-  ['17009'] = {
-    'search ash',
-    'search chair'
-  },
-
-  ['17012'] = {
-    'search desk',
-  },
-
-  ['17019'] = {
-    'search chest',
-    'search tub'
-  },
-
-  ['17024'] = {
-    'search box',
-  },
 
   ['17022'] = {
     'search shel',
@@ -3928,18 +3957,6 @@ local defaultSearches = {
 
   ['17023'] = {
     'search shel',
-  },
-
-  ['17034'] = {
-    'search tack',
-  },
-
-  ['17042'] = {
-    'search notch',
-  },
-
-  ['17045'] = {
-    'search hedge',
   },
 
   ['17047'] = {
