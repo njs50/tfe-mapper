@@ -1510,6 +1510,9 @@ common.itemShortenOverride['darkgem'] = 'darkgem'
 common.itemShortenOverride['darklight'] = 'darklight'
 common.itemShortenOverride['shadowbox'] = 'shadowbox'
 
+common.itemShortenOverride['woolen.socks'] = 'woolen.sock'
+common.itemShortenOverride['woolen socks'] = 'woolen.sock'
+
 -- bung keywords on item
 common.itemShortenOverride['orange headband'] = 'orange.strip'
 common.itemShortenOverride['emerald bracelet'] = 'emerald.bracelet'
@@ -1630,7 +1633,7 @@ common.itemSanitize = function(string, keepEnchant)
     return ''
   end
 
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |enchanted,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled )]], '')
+  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled )]], '')
 
   if (keepEnchant ~= true) then
     string = rex.gsub(string, [[(\s\+\d)]], '')  
@@ -1640,6 +1643,14 @@ common.itemSanitize = function(string, keepEnchant)
     string = rex.gsub(string, [[frost-covered,? ]], '')
   end
   
+  -- only use first word in item of 'stupid name'  
+  string = rex.gsub(string, [['(.+?)\s(.+)']], '%1')
+
+  string = rex.gsub(string,[[^an enchanted,? ([aeiou])]], 'an %1')
+  string = rex.gsub(string,[[^an enchanted,?]], 'a')
+  string = rex.gsub(string,[[of enchanted]], 'of')
+  string = rex.gsub(string,[[^enchanted,? ]], '')
+    
   return string
 
 end
@@ -1656,23 +1667,25 @@ end
 
 common.itemShorten = function(item, keepEnchant)
 
-  -- replace "a large chopper 'big daddy'" with "a large chopper big"
-  -- mud can't match big.dad. bah
-  item = rex.gsub(item, [['([^']+)\s[^']+']], '%1')
+  item, itemEnchant = rex.match(item, [[^(.+?)( \+\d)?$]])
 
-  item = common.dotCase(common.itemSanitize(item, keepEnchant))
+  item = catalog.common.dotCase(catalog.common.itemSanitize(item, keepEnchant))
   
-  -- display(common.itemShortenOverride, item)
   
-  if (common.itemShortenOverride[item]) then
-    return common.itemShortenOverride[item]
-  else
-  
-    return rex.gsub(	rex.gsub(item,"'(.*)'",'%1'),
+  if (catalog.common.itemShortenOverride[item]) then
+    item = catalog.common.itemShortenOverride[item]    
+  else  
+    item = rex.gsub(	rex.gsub(item,"'(.*)'",'%1'),
       	'([^.][^.][^.][^.]?)[^.]+',
       	'%1'
     )
   end
+  
+  if keepEnchant and itemEnchant then
+    item = item .. rex.gsub(itemEnchant, ' ', '.')
+  end
+
+  return item
 
 end
 
@@ -2934,22 +2947,26 @@ tfe.turboWalkToRoom = function(vnum, options)
     end
     options = {}
   end
-  
+    
   if (type(vnum) == 'table') then
     
     local oCB = options.callback or function() end
+    
     local co
     
     co = coroutine.create(function()
     
       options.callback = function()        
-        coroutine.resume(co)
+        -- we need the timer to make sure resume happens outside the execution of the yield
+        tempTimer(0, function()
+          coroutine.resume(co)
+        end)
       end      
       
       for idx, num in ipairs(vnum) do      
-        tfe.turboWalkToRoom(num, options)        
+        tfe.turboWalkToRoom(num, options)                                
         coroutine.yield()      
-      end
+      end      
       
       oCB()
       
