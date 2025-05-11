@@ -2174,6 +2174,7 @@ tfe.environment = {
 
   Bridge = 44,
   Mountain = 20,
+  Rock = 61,
   
   Underwater = 36,
   Water = 38,
@@ -2256,6 +2257,8 @@ tfe.environmentColor = {
 
   Bridge = 'dark_olive_green',
   Mountain = 'dark_olive_green',
+  
+  Rock = 'dark_slate_gray',
   
   Underwater = 'navy_blue',
   
@@ -3033,7 +3036,7 @@ tfe.turboWalkToRoom = function(vnum, options)
   end
   
   -- equip a travel set if player has one and going more than 30 rooms
-  if path.distance &gt; 20 and player and player.gearSets and player.gearSets.travel then
+  if path.distance and path.distance &gt; 20 and player and player.gearSets and player.gearSets.travel then
   
     local cb = options.callback
     
@@ -3563,6 +3566,9 @@ local lookup = {
   ghostWife = 46533,
   mbears = 82040,
   marble = 57452,
+  cg = 31148,
+  tss = 31005,
+  
 }
 
 for name, vnum in pairs(lookup) do
