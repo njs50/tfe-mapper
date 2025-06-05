@@ -774,7 +774,9 @@ if (type(rnum) == 'table' or (type(rnum) == 'number' and roomExists(rnum))) then
   	tfe.gotoRoom(rnum, { 
       callback = function () 
       		if (endCmd) then
-      			expandAlias(endCmd)
+          for idx, cmd in ipairs(endCmd:split(' &amp;&amp; ')) do
+      			 expandAlias(cmd)
+          end
       		end
       	end
     })
@@ -837,7 +839,9 @@ if (type(rnum) == 'table' or (type(rnum) == 'number' and roomExists(rnum))) then
   	tfe.turboWalkToRoom(rnum, { 
       callback = function () 
       		if (endCmd) then
-      			expandAlias(endCmd)
+          for idx, cmd in ipairs(endCmd:split(' &amp;&amp; ')) do
+      			 expandAlias(cmd)
+          end
       		end
       	end
     })
