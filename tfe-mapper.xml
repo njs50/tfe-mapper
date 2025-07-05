@@ -1617,9 +1617,9 @@ end
 common.getNumber = function (text)
 
 	local wordToNumberData = {
-  	a = 1,
-  	an = 1,
-  	the = 1,
+    	a = 1,
+    	an = 1,
+    	the = 1,
 		one = 1,
 		two = 2,
 		three = 3,
@@ -1634,6 +1634,11 @@ common.getNumber = function (text)
 		twelve = 12,
 		thrirteen = 13,
 		fourteen = 14,
+    fifteen = 15,
+    twenty = 20,
+    thirty = 30,
+    forty = 40,
+    fifty = 50,
 	}
 
 	local numTxt = rex.match(text, [[^\S+]])
@@ -3477,6 +3482,7 @@ local lookup = {
   fgs = 92559,
   monestry = 28067,
   monastery = 28067,
+  monastary = 28067,
   slens = 76542,
   tgOut = 35817,
   wrath = 33084,
