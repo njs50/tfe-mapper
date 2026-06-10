@@ -916,6 +916,7 @@ if (dir ~= 'cancel') then
   tfe.pendingSpecialExit = njs50.onNextEvent(tfe.events.ROOM_CHANGED, function () 
   
     addSpecialExit(tfe.pendingExit.vnum, tfe.roomInfo.num, cmd)
+    cecho('\n\ngreen&gt;MAP:&lt;white&gt; setting special exit (' .. exit .. ')\n')
     setExit(tfe.pendingExit.vnum, tfe.roomInfo.num, dir)
     setExitWeight(tfe.pendingExit.vnum, dir, 3)
       
@@ -977,6 +978,7 @@ end
 
 if (roomExists(room1) and roomExists(room2)) then
   
+  cecho('\n\ngreen&gt;MAP:&lt;white&gt; setting manual exit\n')
   setExit(room2, room1, dir)
   
   if (cmd) then        
@@ -1034,6 +1036,7 @@ local room2 = tfe.previousRoomInfo.num
 
 if (roomExists(room1) and roomExists(room2)) then
   
+  cecho('\n\ngreen&gt;MAP:&lt;white&gt; setting connected exit\n')
   setExit(room2, room1, dir)
   
   if (cmd) then        
@@ -1671,7 +1674,7 @@ common.itemSanitize = function(string, keepEnchant)
     return ''
   end
 
-  string = rex.gsub(string, [[(\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled )]], '')
+  string = rex.gsub(string, [[(thanatotic,? |sanctified |desecrated |\+chaotic\+,? |\+lawful\+,? |\+evil\+,? |\+good\+,? |acid-dripping,? |divinely flamed,? |empty,? |spiteful,? |jinxing,? |flaming,? |labeled )]], '')
 
   if (keepEnchant ~= true) then
     string = rex.gsub(string, [[(\s\+\d)]], '')  
@@ -1772,6 +1775,7 @@ common.toMurderString = function (victim)
     ["greater faeries"] = 'greater faerie',
     ["bulettes"] = 'bulette',    
     ["swarm of tsetse flies"] = 'swarm tsetse flie',
+    ["zombies"] = 'zombie',
   }
   
   -- display(victim)
@@ -3578,7 +3582,7 @@ local lookup = {
   marble = 57452,
   cg = 31148,
   tss = 31005,
-  
+  botsPub = 3252
 }
 
 for name, vnum in pairs(lookup) do
@@ -4471,12 +4475,41 @@ for k, v in pairs(defaultSearches) do
 end
 
 njs50.addSearchSymbolsToMap = function()
+
   for idx in pairs(njs50.roomSearches) do
     setRoomChar(idx, '#')
   end
+
+
+  local areas = getAreaTable()
+  local areaId = areas[tfe.roomInfo.area .. ' : ' .. tostring(tfe.roomInfo.area_id)]
+
+  local rooms = getAreaRooms(areaId)
+
+
+  for roomIdx = 0, #rooms do
+
+    -- add in searches from map data
+    local results = getRoomUserData(rooms[roomIdx], "inspectResult")  
+    if (results and results ~= "") then
+      results = yajl.to_value(results)
+      if (#results.searchWords &gt; 0) then      
+        setRoomChar(rooms[roomIdx], '#')
+      end 
+    end    
+    
+    -- manual searches
+    results = getRoomUserData(rooms[roomIdx], "manualSearch")  
+    if (results and results ~= "") then
+      results = yajl.to_value(results)
+      if (#results &gt; 0) then
+        setRoomChar(rooms[roomIdx], '#')   
+      end 
+    end       
+    
   
-  
-  
+  end
+    
   
 end
 
@@ -4538,8 +4571,7 @@ njs50.showSearchRooms = function()
     results = getRoomUserData(rooms[roomIdx], "manualSearch")  
     if (results and results ~= "") then
       results = yajl.to_value(results)
-      if (#results &gt; 0) then
-        
+      if (#results &gt; 0) then        
         for idx, cmd in ipairs(results) do
           cecho('#' .. rooms[roomIdx] .. ': ' .. cmd .. '\n')
         end   
@@ -5162,6 +5194,11 @@ end
 
 tfe.room_info_update = function()
   
+  if ((#table.keys(gmcp.Room) == 0) or (#table.keys(gmcp.Room.Info) == 0)) then
+    cecho('\n&lt;yellow&gt;mapper&lt;white&gt;: room updated with no data\n')
+    return
+  end
+  
 -- tfe.flatMapper = 'Mojune'
 -- tfe.showFlatMap = true  
 
@@ -5391,6 +5428,7 @@ tfe.room_info_update = function()
         -- update exits if this is a new room or not on the no updates list
         if (bNewRoom or not tfe.consts.noRoomExitUpdates[gmcp.Room.Info.area]) then
           
+          cecho('\n\n&lt;green&gt;MAP:&lt;white&gt; updating exit (' .. exit .. ')\n')
           setExitStub(tfe.roomInfo.num, tfe.consts.short[exit], true)
           setExit(tfe.roomInfo.num, exitInfo.num, tfe.consts.stubmap[exit])          
           
@@ -5457,6 +5495,7 @@ tfe.room_info_update = function()
           end
         
           -- join rooms
+          cecho('\n\ngreen&gt;MAP:&lt;white&gt; setting exit (' .. exit .. ')\n')
           setExit(tfe.roomInfo.shadowNum, linkedRoomId, tfe.consts.stubmap[exit])
           setExit(linkedRoomId, tfe.roomInfo.shadowNum, tfe.consts.stubmap[tfe.consts.reverse_dirs[exit]])                      
    
