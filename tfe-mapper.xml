@@ -11,11 +11,11 @@
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
+			<mCommand />
+			<packageName />
 			<mFgColor>#ff0000</mFgColor>
 			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
+			<mSoundFile />
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList>
@@ -71,11 +71,11 @@ else
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -108,11 +108,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -139,11 +139,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -163,11 +163,11 @@ send('dismount')
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -241,11 +241,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -285,11 +285,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -308,11 +308,11 @@ tfe.mapFind(dest, 'tell ' .. vic)</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -376,11 +376,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -422,11 +422,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -448,11 +448,11 @@ raiseEvent(tfe.events.ROOM_CHANGE_PENDING, matches[2])</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -478,11 +478,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -533,11 +533,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -554,11 +554,11 @@ end
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -590,11 +590,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -612,11 +612,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -649,11 +649,11 @@ end</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -678,11 +678,11 @@ end)</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand />
+				<packageName />
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile />
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
@@ -715,15 +715,15 @@ if (commands[matches[2]]) then
 else
   cecho('&lt;red&gt;TFE MAP: &lt;white&gt;unknown command - ' .. matches[2] .. '\n\n')
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map (reset)\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map search</name>
 			<script>njs50.search()</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^(map search|ms)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -786,8 +786,8 @@ else
 	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid location: ' .. tostring(rnum) .. '\n')
 end
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^go (\S+)\s?&amp;?\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -850,8 +850,8 @@ if (type(rnum) == 'table' or (type(rnum) == 'number' and roomExists(rnum))) then
 else
 	cecho('\n&lt;red&gt;TFE MAP:&lt;white&gt; Invalid speed walk location: ' .. tostring(rnum) .. '\n')
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^tgo (\S+)\s?&amp;?\s?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -875,8 +875,8 @@ else
   cecho('&lt;green&gt;TFE MAP:&lt;white&gt; to go from ' .. path.from .. ' to ' .. path.to .. ' is: ' .. table.concat(path.path, ' &amp; ') .. '\n')
   
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^path (\S+)\s?(\S+)?$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -889,8 +889,8 @@ local commands = {
 }
 
 commands[matches[2]]()</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^(stop|pause|resume)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -941,8 +941,8 @@ else
   cecho('\n&lt;yellow&gt;TFE MAP: &lt;white&gt; cancelled adding special exit!\n')
 
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map exit (n|e|s|w|u|d|in|out|cancel) ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -997,8 +997,8 @@ else
 
 end
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map add (n|e|s|w|u|d|in|out) (\d+) ?(.*)?$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1055,8 +1055,8 @@ else
 
 end
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map connect (n|e|s|w|u|d|in|out) ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1105,8 +1105,8 @@ end
 
 
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^lw ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1145,8 +1145,8 @@ else
 
   downloadFile(getMudletHomeDir().. "/njs50-map.dat", URL)
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map load ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1158,8 +1158,8 @@ else
   cecho('\n&lt;green&gt;TFE MAP: &lt;white&gt; removing drink target in this room\n')
   clearRoomUserDataItem(gmcp.Room.Info.num, 'drink-target')
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map drink ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1175,8 +1175,8 @@ else
 end
 
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map open (n|e|s|w|u|d) ?(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1211,23 +1211,23 @@ for id,name in pairs(getRooms()) do
   
   
 end</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map fix special exits$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map open door (dir)</name>
 			<script>tfe.openExit(tfe.consts.exitmap[matches[2]])</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^mod (n|e|s|w|u|d|north|east|south|west|up|down)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>map find</name>
 			<script>
 tfe.mapFind(matches[3], 'gstat')</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^(mf|map find) (.+)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1257,8 +1257,8 @@ cecho('&lt;white&gt;path &lt;place&gt; &lt;place&gt; &lt;reset&gt;- display a sp
 cecho('&lt;green&gt;njs50pm:&lt;white&gt; njs50pm update tfe-mapper &lt;reset&gt;- update this package!\n') 
 cecho('&lt;green&gt;MAP:&lt;white&gt; for more info see: https://github.com/njs50/tfe-mapper\n')
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^map help$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1313,8 +1313,8 @@ end, 1)
 
 
 send('scan -o')</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^autoscan (true|false)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
@@ -1345,15 +1345,15 @@ if (locStr ~= '') then
   cecho('     ' .. locStr .. '\n')
 end
 </script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^locations$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
 			<name>list rooms in area</name>
 			<script>njs50.displayRooms()</script>
-			<command></command>
-			<packageName></packageName>
+			<command />
+			<packageName />
 			<regex>^(rlist|roomlist)$</regex>
 		</Alias>
 	</AliasPackage>
@@ -1361,7 +1361,7 @@ end
 	<ScriptPackage>
 		<Script isActive="yes" isFolder="no">
 			<name>configuration</name>
-			<packageName></packageName>
+			<packageName />
 			<script>njs50 = njs50 or {}
 
 njs50.config = {
@@ -1398,7 +1398,7 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>njs50 common</name>
-			<packageName></packageName>
+			<packageName />
 			<script>njs50 = njs50 or {}
 
 njs50.tempTimedNextEvent = function(timeout, evt, callback, failCallback)
@@ -1537,7 +1537,7 @@ common.tempTimedNextEvent = njs50.tempTimedNextEvent</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>formatters</name>
-			<packageName></packageName>
+			<packageName />
 			<script>common = common or {}
 
 -- can add items to override from shortening if they mess up gear swapping
@@ -1774,8 +1774,7 @@ common.toMurderString = function (victim)
     ["ash-spirits"] = 'ash spirits',
     ["greater faeries"] = 'greater faerie',
     ["bulettes"] = 'bulette',    
-    ["swarm of tsetse flies"] = 'swarm tsetse flie',
-    ["zombies"] = 'zombie',
+    ["swarm of tsetse flies"] = 'swarm tsetse flie',    
   }
   
   -- display(victim)
@@ -1790,6 +1789,9 @@ common.toMurderString = function (victim)
 
 	 -- turn mercenaries back into mercanary
 	victim = rex.gsub(victim, [[ies$]], 'y')
+  
+  -- but keep zomby zombies
+  victim = rex.gsub(victim, [[zomby$]], 'zombie')
 
 	-- dump any s's or es's on the end of a plural
 	-- west : two greater cyclopses, vs a greater cyclops
@@ -1876,7 +1878,7 @@ njs50.tableToString = common.tableToString
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>scanner</name>
-			<packageName></packageName>
+			<packageName />
 			<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
@@ -2085,7 +2087,7 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>tfe mapper</name>
-			<packageName></packageName>
+			<packageName />
 			<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
@@ -2138,6 +2140,8 @@ tfe.shadowZones = {
   -- spooky isle
   ['Isle of Broken Promises : 73'] = 'n101 : 78',
   ['n101 : 78'] = 'Isle of Broken Promises : 73',
+  ['Northern Sea Trail : 120'] = 'Medienne Forest : 5',  
+  ['Medienne Forest : 5'] = 'Northern Sea Trail : 120',
 }
   
 
@@ -3428,7 +3432,7 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>speedwalk locations</name>
-			<packageName></packageName>
+			<packageName />
 			<script>tfe.locations = tfe.locations or {}
 
 local lookup = {
@@ -3592,13 +3596,13 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>last script (to trigger dependencies!)</name>
-			<packageName></packageName>
+			<packageName />
 			<script>raiseEvent('tfeMapperLoaded')</script>
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>searches</name>
-			<packageName></packageName>
+			<packageName />
 			<script>njs50 = njs50 or {}
 
 njs50.roomSearches = njs50.roomSearches or {}
@@ -4668,7 +4672,7 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>custom searches example</name>
-			<packageName></packageName>
+			<packageName />
 			<script>njs50 = njs50 or {}
 njs50.roomSearches = njs50.roomSearches or {}
 
@@ -4688,7 +4692,7 @@ end</script>
 		</Script>
 		<Script isActive="yes" isFolder="no">
 			<name>timers</name>
-			<packageName></packageName>
+			<packageName />
 			<script>tfe.timeout = tfe.timeout or {}
 tfe.timeout.timers = tfe.timeout.timers or {}
 
@@ -4749,12 +4753,12 @@ end
 		</Script>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>example-murder-bot</name>
-			<packageName></packageName>
-			<script></script>
+			<packageName />
+			<script />
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
 				<name>generic bot things</name>
-				<packageName></packageName>
+				<packageName />
 				<script>njs50bot =  njs50bot or {}
 
 njs50bot.verbose = true
@@ -4978,7 +4982,7 @@ end</script>
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>mansion.bot</name>
-				<packageName></packageName>
+				<packageName />
 				<script>njs50bot.mansion = function ()
     
   -- gets full then goes to repop then invokes the callback
@@ -5046,12 +5050,12 @@ end</script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>gmcp-events</name>
-			<packageName></packageName>
-			<script></script>
+			<packageName />
+			<script />
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
 				<name>tfe.room_info_update</name>
-				<packageName></packageName>
+				<packageName />
 				<script>tfe = tfe or {}
 
 tfe.consts = tfe.consts or {}
@@ -5574,7 +5578,7 @@ tfe.getAreaID = function(roomInfo)
   if (tfe.shadowZones[area]) then    
     shadowAreaId = getId(tfe.shadowZones[area])    
   end
-  
+  display(area, areaId, shadowAreaId)
   return areaId, shadowAreaId
 
 end
@@ -5623,7 +5627,7 @@ end</script>
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>gmcp handling</name>
-				<packageName></packageName>
+				<packageName />
 				<script>njs50 = njs50 or {}
 
 njs50.gmcp = njs50.gmcp or {}
@@ -5697,7 +5701,7 @@ end
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>tfe.postMapperInstallHandler</name>
-				<packageName></packageName>
+				<packageName />
 				<script>tfe.postMapperInstallHandler = function(evt, name, file)
 
   -- after installing the package manager see if there is a package we should install
@@ -5720,6 +5724,6 @@ end</script>
 	</ScriptPackage>
 	<KeyPackage />
 	<HelpPackage>
-		<helpURL></helpURL>
+		<helpURL />
 	</HelpPackage>
 </MudletPackage>
