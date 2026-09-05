@@ -2962,6 +2962,10 @@ tfe.gotoRoom = function (vnum, options)
     options = {}
   end
   
+  if (type(vnum) == 'table' and #vnum == 1) then
+    vnum = vnum[1]
+  end
+  
   -- make sure vnum is a number
   vnum = tfe.locations[vnum] or vnum
   if (type(vnum) == 'string' and vnum:match([[^%d+$]])) then
