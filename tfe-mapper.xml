@@ -5578,7 +5578,7 @@ tfe.getAreaID = function(roomInfo)
   if (tfe.shadowZones[area]) then    
     shadowAreaId = getId(tfe.shadowZones[area])    
   end
-  display(area, areaId, shadowAreaId)
+  -- display(area, areaId, shadowAreaId)
   return areaId, shadowAreaId
 
 end
